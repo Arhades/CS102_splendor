@@ -1,3 +1,5 @@
+package com.splendor.model;
+
 public final class Card {
     private final int id;
     private final int level;
