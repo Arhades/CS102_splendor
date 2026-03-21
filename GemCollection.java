@@ -48,17 +48,41 @@ public class GemCollection {
     }
 
     public void subtract(GemCollection other) {
-        for (GemColor color: gems.KeySet()) {
+        for (GemColor color: gems.keySet()) {
             gems.put(color, gems.get(color) - other.get(color));
         }
     }
 
     public boolean contains(GemCollection other) {
-        for (GemColor color: other.KeySet()) {
+        for (GemColor color: other.keySet()) {
             if (gems.get(color) < other.get(color)) {
                 return false;
             }
         }
         return true;
+    }
+
+    public boolean containsAfterJoker(GemCollection other) {
+        int joker = gems.get(GemColor.GOLD_JOKER);
+        for (GemColor color: other.keySet()) {
+            if (gems.get(color) + joker < other.get(color)) {
+                return false;
+            } else if (gems.get(color) < other.get(color)) {
+                joker -= (other.get(color) - gems.get(color));
+            }
+        }
+        return true;
+    }
+
+    public int jokerNeeded(GemCollection other) {
+        int joker = gems.get(GemColor.GOLD_JOKER);
+        for (GemColor color: other.keySet()) {
+            if (gems.get(color) + joker < other.get(color)) {
+                return false;
+            } else if (gems.get(color) < other.get(color)) {
+                joker -= (other.get(color) - gems.get(color));
+            }
+        }
+        return gems.get(GemColor.GOLD_JOKER) - joker;
     }
 }
