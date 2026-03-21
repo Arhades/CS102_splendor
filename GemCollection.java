@@ -17,6 +17,10 @@ public class GemCollection {
         this.gems = gems;
     }
 
+    public Map<GemColor, Integer> getGems() {
+        return gems;
+    }
+
     public int getCount(GemColor color) {
         return gems.get(color);
     }
