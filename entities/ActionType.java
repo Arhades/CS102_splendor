@@ -1,0 +1,8 @@
+public enum ActionType {
+    TAKE_THREE_DIFFERENT,
+    TAKE_TWO_SAME,
+    PURCHASE_CARD,
+    RESERVE_CARD
+
+    
+}
