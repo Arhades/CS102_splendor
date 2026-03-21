@@ -15,8 +15,9 @@ public class Cost{
         return cost;
     }
 
-    public Cost afterBonuses(GemCollection bonus) {
-        GemCollection newCost = new GemCollection<>(cost);
-        newCost.subtract(bonus);
+    public Cost afterBonuses(Map<GemColor, Integer> bonus) {
+        GemCollection newCost = new GemCollection(cost.getGems());
+        newCost.subtract(new GemCollection(bonus));
+        return new Cost(newCost.getGems());
     }
 }

@@ -39,7 +39,7 @@ public class GemCollection {
 
     public void add(GemCollection other) {
         for (GemColor color: gems.keySet()) {
-            gems.put(color, gems.get(color) + other.get(color));
+            gems.put(color, gems.get(color) + other.getCount(color));
         }
     }
 
@@ -49,13 +49,13 @@ public class GemCollection {
 
     public void subtract(GemCollection other) {
         for (GemColor color: gems.keySet()) {
-            gems.put(color, gems.get(color) - other.get(color));
+            gems.put(color, gems.get(color) - other.getCount(color));
         }
     }
 
     public boolean contains(GemCollection other) {
-        for (GemColor color: other.keySet()) {
-            if (gems.get(color) < other.get(color)) {
+        for (GemColor color: other.getGems().keySet()) {
+            if (gems.get(color) < other.getCount(color)) {
                 return false;
             }
         }
@@ -64,11 +64,11 @@ public class GemCollection {
 
     public boolean containsAfterJoker(GemCollection other) {
         int joker = gems.get(GemColor.GOLD_JOKER);
-        for (GemColor color: other.keySet()) {
-            if (gems.get(color) + joker < other.get(color)) {
+        for (GemColor color: other.getGems().keySet()) {
+            if (gems.get(color) + joker < other.getCount(color)) {
                 return false;
-            } else if (gems.get(color) < other.get(color)) {
-                joker -= (other.get(color) - gems.get(color));
+            } else if (gems.get(color) < other.getCount(color)) {
+                joker -= (other.getCount(color) - gems.get(color));
             }
         }
         return true;
@@ -76,11 +76,9 @@ public class GemCollection {
 
     public int jokerNeeded(GemCollection other) {
         int joker = gems.get(GemColor.GOLD_JOKER);
-        for (GemColor color: other.keySet()) {
-            if (gems.get(color) + joker < other.get(color)) {
-                return false;
-            } else if (gems.get(color) < other.get(color)) {
-                joker -= (other.get(color) - gems.get(color));
+        for (GemColor color: other.getGems().keySet()) {
+            if (gems.get(color) < other.getCount(color)) {
+                joker -= (other.getCount(color) - gems.get(color));
             }
         }
         return gems.get(GemColor.GOLD_JOKER) - joker;

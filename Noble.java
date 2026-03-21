@@ -12,6 +12,10 @@ public class Noble {
         this.points = 3; 
     }
 
+    public String getName() {
+        return this.name;
+    }
+
     public int getPoints() {
         return points;
     }

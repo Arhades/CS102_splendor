@@ -1,16 +1,22 @@
 import java.util.*;
 
 public class GameRules {
+    private GameState gameState;
+
+    public GameRules(GameState GameState) {
+        this.gameState = gameState;
+    }
+
     public boolean canAffordCard(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
-        cost = cost.afterBonuses();
+        cost = cost.afterBonuses(bonus);
 
         GemCollection gems = player.getGems();
-        GemCollection costCollection = new GemCollection(cost);
+        GemCollection costCollection = cost.getCost();
         if (gems.contains(costCollection)) {
             return true;
-        } else if (gems.containsAfterJoker(GemCollection other)) {
+        } else if (gems.containsAfterJoker(costCollection)) {
             return true;
         }
         return false;
@@ -19,15 +25,15 @@ public class GameRules {
     public GemCollection calculateActualCost(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
-        cost = cost.afterBonuses();
+        cost = cost.afterBonuses(bonus);
 
         GemCollection gems = player.getGems();
-        GemCollection costCollection = new GemCollection(cost);
+        GemCollection costCollection = cost.getCost();
         if (gems.contains(costCollection)) {
             return costCollection;
         }
-        GemCollection newCost = new GemCollection(cost);
-        newCost.put(GemColor.GOLD_JOKER, gems.jokerNeeded(costCollection));
+        GemCollection newCost = new GemCollection(cost.getCost().getGems());
+        newCost.add(GemColor.GOLD_JOKER, gems.jokerNeeded(costCollection));
         return newCost;
     }
 
@@ -68,13 +74,13 @@ public class GameRules {
     }
 
     public boolean canReserveCard(Player player) {
-        return player.getReservedCards() < 3;
+        return player.getReservedCards().size() < 3;
     }
 
     public Player getWinner(List<Player> players) {
         List<Player> winners = new ArrayList<>();
         for (Player player: players) {
-            if (player.hasPlayerWon()) {
+            if (hasPlayerWon(player, gameState.getWinningThreshold())) {
                 winners.add(player);
             }
         }
@@ -91,7 +97,7 @@ public class GameRules {
                 continue;
             }
             if (player.getPoints() > mostPoints) {
-                mostPoints = player.getPoints;
+                mostPoints = player.getPoints();
                 winner = player;
             }
         }
@@ -102,12 +108,12 @@ public class GameRules {
         
         int leastCards = Integer.MAX_VALUE;
         for (Player player: winners) {
-            leastCards = Math.min(leastCards, player.getPurchasedCards() + player.claimedNobles());
+            leastCards = Math.min(leastCards, player.getPurchasedCards().size() + player.getClaimedNobles().size());
         }
 
         winner = winners.get(0);
         for (Player player: winners) {
-            if (player.getPurchasedCards() + player.claimableNobles() == leastCards) {
+            if (player.getPurchasedCards().size() + player.getClaimedNobles().size() == leastCards) {
                 winner = player;
             }
         }
