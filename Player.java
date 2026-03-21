@@ -1,6 +1,6 @@
 import java.util.*;
 
-public abstract class Player {
+public class Player {
     private String name;
     private int turnOrder;
     private List<Card> purchasedCards;
