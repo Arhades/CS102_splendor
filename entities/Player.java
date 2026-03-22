@@ -76,7 +76,7 @@ public abstract class Player {
     }
 
     public Map<GemColor, Integer> calculateBonuses() {
-        // TODO: Iterate through purchasedCards, get their gem colors, and tally them 
+        // Iterate through purchasedCards, get their gem colors, and tally them 
         Map<GemColor, Integer> bonus = new HashMap<>();
         for (Card c : purchasedCard) {
             GemColor gem = c.getBonus();

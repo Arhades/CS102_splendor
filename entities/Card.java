@@ -1,3 +1,5 @@
+package entities;
+
 public class Card {
     private int level;
     private int points;

@@ -3,6 +3,4 @@ public enum ActionType {
     TAKE_TWO_SAME,
     PURCHASE_CARD,
     RESERVE_CARD
-
-    
 }
