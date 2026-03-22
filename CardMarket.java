@@ -1,8 +1,5 @@
-package valueobjects;
 
 import java.util.*;
-import entities.*;
-
 
 public class CardMarket {
     private List<Card> levelOneVisible;
