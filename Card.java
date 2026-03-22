@@ -44,4 +44,8 @@ public class Card {
     public int hashCode() {
         return java.util.Objects.hash(level, points, bonus, cost);
     }
+
+    public String toString() {
+        return String.format("Level: %d, Points: %d, Bonus: %s, Cost: %s", level, points, bonus.name(), cost.getCost().getGems().toString());
+    }
 }

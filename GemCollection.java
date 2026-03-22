@@ -33,6 +33,27 @@ public class GemCollection {
         return sum;
     }
 
+    public boolean isEmpty() {
+        for (Integer count: gems.values()) {
+            if (count > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isEmptyWithouJoker() {
+        for (GemColor color: gems.keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                continue;
+            }
+            if (gems.get(color) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void add(GemColor color, int amount) {
         gems.put(color, gems.get(color) + 1);
     }

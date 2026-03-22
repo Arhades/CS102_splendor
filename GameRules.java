@@ -41,9 +41,35 @@ public class GameRules {
         return gemBank.contains(requested);
     }
 
+    public boolean canTakeThreeDifferentGems(GemCollection gemBank) {
+        int sum = 0;
+        for (GemColor color: gemBank.getGems().keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                continue;
+            }
+            sum += gemBank.getCount(color) > 0? 1: 0;
+        }
+        if (sum >= 3) {
+            return true;
+        }
+        return false;
+    }
+
     public boolean canTakeTwoSameGems(GemColor color, GemCollection gemBank) {
         if (gemBank.getCount(color) >= 4) {
             return true;
+        }
+        return false;
+    }
+
+    public boolean canTakeTwoSameGems(GemCollection gemBank) {
+        for (GemColor color: gemBank.getGems().keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                continue;
+            }
+            if (gemBank.getCount(color) >= 4) {
+                return true;
+            }
         }
         return false;
     }
@@ -118,5 +144,15 @@ public class GameRules {
             }
         }
         return winner;
+    }
+
+    public boolean validColor(String color) {
+        color = color.toUpperCase();
+        for (GemColor col: GemColor.values()) {
+            if (col.name().equals(color)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
