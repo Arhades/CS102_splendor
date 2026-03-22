@@ -23,7 +23,7 @@ public class GameState {
      * @param initialGems the starting gems in the bank
      * @param initialNobles the starting available nobles
      */
-    public GameState(List<Player> players, CardMarket market, GemCollection initialGems, List<Noble> initialNobles) {
+    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles) {
         this.players = players;
         this.currentPlayerIndex = 0;
         this.cardMarket = cardMarket;
