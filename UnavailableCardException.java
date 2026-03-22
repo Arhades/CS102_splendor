@@ -1,4 +1,4 @@
-public class UnavailableCardException extends RunTimeException {
+public class UnavailableCardException extends Exception {
     public UnavailableCardException(String msg) {
         super(msg);
     }

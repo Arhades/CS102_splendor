@@ -1,18 +1,16 @@
-
 import java.util.*;
-
 public class CardMarket {
-    private List<Card> levelOneVisible;
-    private List<Card> levelOneDeck;
-    private List<Card> levelTwoVisible;
-    private List<Card> levelTwoDeck;
-    private List<Card> levelThreeVisible;
-    private List<Card> levelThreeDeck;
+    private final List<Card> levelOneVisible;
+    private final List<Card> levelOneDeck;
+    private final List<Card> levelTwoVisible;
+    private final List<Card> levelTwoDeck;
+    private final List<Card> levelThreeVisible;
+    private final List<Card> levelThreeDeck;
 
     public CardMarket(List<Card> levelOneCards, List<Card> levelTwoCards, List<Card> levelThreeCards) {
         levelOneVisible = splitVisible(levelOneCards);
         levelTwoVisible = splitVisible(levelTwoCards);
-        levelThreeVisible = splitVisibile(levelThreeCards);
+        levelThreeVisible = splitVisible(levelThreeCards);
         levelOneDeck = splitDeck(levelOneCards);
         levelTwoDeck = splitDeck(levelTwoCards);
         levelThreeDeck = splitDeck(levelThreeCards);
@@ -62,47 +60,53 @@ public class CardMarket {
     public int getDeckSize(int level) {
         int size = 0;
         switch (level) {
-            case 1 -> size = levelOneDeck.get(index);
-            case 2 -> size = levelTwoDeck.get(index);
-            case 3 -> size = levelThreeDeck.get(index);
+            case 1 -> size = levelOneDeck.size();
+            case 2 -> size = levelTwoDeck.size();
+            case 3 -> size = levelThreeDeck.size();
             default -> throw new InvalidIndexException("Deck level not valid");
         }
         return size;
     }
 
-    public Card drawCard(int level) {
+    public Card drawCard(int level) throws UnavailableCardException {
         switch (level) {
             case 1:
-                if (levelOneDeck.size() == 0) {
+                if (levelOneDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                return levelTwoDeck.get(index);
+                return levelOneDeck.get(0);
             case 2:
-                if (levelTwoDeck.size() == 0) {
+                if (levelTwoDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                return levelTwoDeck.get(index);
+                return levelTwoDeck.get(0);
             case 3:
-                if (levelThreeDeck.size() == 0) {
+                if (levelThreeDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                return levelThreeDeck.get(index);
-            default -> throw new InvalidIndexException("Deck level not valid");
+                return levelThreeDeck.get(0);
+            default:
+                throw new InvalidIndexException("Deck level not valid");
         }
     }
 
     public void removeAndReplaceCard(int level, int index) {
-        switch (level) {
-            case 1:
-                levelOneVisible.set(index, levelOneDeck.drawCard(1));
-                break;
-            case 2:
-                levelTwoVisible.set(index, levelTwoDeck.drawCard(2));
-                break;
-            case 3:
-                levelThreeVisible.set(index, levelThreeDeck.drawCard(3));
-                break;
-            default -> throw new InvalidIndexException("Card level not valid");
+        try {
+            switch (level) {
+                case 1:
+                    levelOneVisible.set(index, drawCard(1));
+                    break;
+                case 2:
+                    levelTwoVisible.set(index, drawCard(2));
+                    break;
+                case 3:
+                    levelThreeVisible.set(index, drawCard(3));
+                    break;
+                default:
+                    throw new InvalidIndexException("Card level not valid");
+            }
+        } catch (UnavailableCardException e) {
+            System.out.println(e.getMessage());
         }
 
     }
