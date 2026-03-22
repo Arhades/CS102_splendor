@@ -68,7 +68,7 @@ public class GameEngine {
                 return GemColor.DIAMOND;
             case "ONYX":
                 return GemColor.ONYX;
-            case "EMERAlD":
+            case "EMERALD":
                 return GemColor.EMERALD;
             case "RUBY":
                 return GemColor.RUBY;
