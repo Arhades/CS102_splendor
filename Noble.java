@@ -55,4 +55,8 @@ public class Noble {
     public int hashCode() {
         return Objects.hash(name);
     }
+
+    public String toString() {
+        return String.format("Name: %s, Requirements: %s", name, requirements.toString());
+    }
 }

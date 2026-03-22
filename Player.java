@@ -1,8 +1,6 @@
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
-public abstract class Player {
+public class Player {
     private String name;
     private int turnOrder;
     private List<Card> purchasedCards;
@@ -37,6 +35,10 @@ public abstract class Player {
 
     public GemCollection getGems() {
         return gems;
+    }
+
+    public int getSpecificGem(GemColor color) {
+        return gems.getCount(color);
     }
 
     public List<Noble> getClaimedNobles() {
@@ -77,13 +79,12 @@ public abstract class Player {
 
     public Map<GemColor, Integer> calculateBonuses() {
         // Iterate through purchasedCards, get their gem colors, and tally them 
-        Map<GemColor, Integer> bonus = new HashMap<>();
-        for (Card c : purchasedCard) {
+        GemCollection gems = new GemCollection();
+        for (Card c : purchasedCards) {
             GemColor gem = c.getBonus();
-            int currentCount = map.getOrDefault(GemColor.RED, 0);
-            map.put(GemColor.RED, currentCount + 1);
+            gems.add(gem, 1);
         }
-        return bonus;
+        return gems.getGems();
     }
 
     public void addGems(GemCollection newGems) {
