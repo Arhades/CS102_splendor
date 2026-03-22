@@ -185,7 +185,7 @@ public class Player {
     }
 
     /**
-     * Calculates and returns the total number of victory points 
+     * Calculates and returns the total number of points 
      * earned by the player from purchased cards and claimed nobles.
      * 
      * @return the total points of the player
