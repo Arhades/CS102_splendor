@@ -3,16 +3,16 @@ import java.util.*;
 public class GameState {
     private List<Player> players;
     private int currentPlayerIndex;
-    private CardMarket market;
+    private CardMarket cardMarket;
     private GemCollection gemBank;
     private List<Noble> availableNobles;
     private boolean gameOver;
     private int winningThreshold;
 
-    public GameState(List<Player> players, CardMarket market, GemCollection initialGems, List<Noble> initialNobles) {
+    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles) {
         this.players = players;
         this.currentPlayerIndex = 0;
-        this.market = market;
+        this.cardMarket = cardMarket;
         this.gemBank = initialGems;
         this.availableNobles = initialNobles;
         this.gameOver = false;
@@ -32,7 +32,7 @@ public class GameState {
     }
 
     public CardMarket getCardMarket() {
-        return CardMarket;
+        return cardMarket;
     }
 
     public GemCollection getGemBank() {
