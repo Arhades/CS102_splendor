@@ -1,6 +1,8 @@
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 
-public class Player {
+public abstract class Player {
     private String name;
     private int turnOrder;
     private List<Card> purchasedCards;
@@ -74,11 +76,12 @@ public class Player {
     }
 
     public Map<GemColor, Integer> calculateBonuses() {
-        // TODO: Iterate through purchasedCards, get their gem colors, and tally them 
+        // Iterate through purchasedCards, get their gem colors, and tally them 
         Map<GemColor, Integer> bonus = new HashMap<>();
-        for (Card c : purchasedCards) {
+        for (Card c : purchasedCard) {
             GemColor gem = c.getBonus();
-            bonus.put(gem, bonus.get(gem) + 1);
+            int currentCount = map.getOrDefault(GemColor.RED, 0);
+            map.put(GemColor.RED, currentCount + 1);
         }
         return bonus;
     }
