@@ -27,7 +27,7 @@ public class GameState {
         return currentPlayerIndex;
     }
 
-    public List<player> getPlayers() {
+    public List<Player> getPlayers() {
         return players;
     }
 
