@@ -46,6 +46,6 @@ public class Card {
     }
 
     public String toString() {
-        return String.format("Level: %d, Points: %d, Bonus: %s, Cost: %s", level, points, bonus.name(), cost.getCost().getGems().toString());
+        return String.format("Level: %d | Points: %d | Bonus: %s | Cost: %s", level, points, bonus.name(), cost.getCost().getGems().toString());
     }
 }

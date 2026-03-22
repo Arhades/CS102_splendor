@@ -22,7 +22,7 @@ public class GemCollection {
     }
 
     public int getCount(GemColor color) {
-        return gems.get(color);
+        return gems.get(color) == null? 0: gems.get(color);
     }
 
     public int getTotalCount() {
@@ -55,7 +55,7 @@ public class GemCollection {
     }
 
     public void add(GemColor color, int amount) {
-        gems.put(color, gems.get(color) + 1);
+        gems.put(color, gems.get(color) + amount);
     }
 
     public void add(GemCollection other) {
@@ -69,8 +69,8 @@ public class GemCollection {
     }
 
     public void subtract(GemCollection other) {
-        for (GemColor color: gems.keySet()) {
-            gems.put(color, gems.get(color) - other.getCount(color));
+        for (GemColor color: other.getGems().keySet()) {
+            gems.put(color, gems.getOrDefault(color, 0) - other.getCount(color));
         }
     }
 
@@ -103,5 +103,9 @@ public class GemCollection {
             }
         }
         return gems.get(GemColor.GOLD_JOKER) - joker;
+    }
+
+    public String toString() {
+        return gems.toString();
     }
 }

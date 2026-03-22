@@ -8,16 +8,12 @@ public class CardMarket {
     private List<Card> levelThreeDeck;
 
     public CardMarket(List<Card> levelOneCards, List<Card> levelTwoCards, List<Card> levelThreeCards) {
-        // levelOneVisible = splitVisible(levelOneCards);
-        // levelTwoVisible = splitVisible(levelTwoCards);
-        // levelThreeVisible = splitVisible(levelThreeCards);
-        // levelOneDeck = splitDeck(levelOneCards);
-        // levelTwoDeck = splitDeck(levelTwoCards);
-        // levelThreeDeck = splitDeck(levelThreeCards);
-
         levelOneDeck = levelOneCards;
         levelTwoDeck = levelTwoCards;
         levelThreeDeck = levelThreeCards;
+        // levelOneVisible.add(levelOneDeck.get(0));
+        // levelOneVisible.add(levelOneDeck.get(1));
+        // levelOneVisible.add(levelOneDeck.get(2));
         splitVisible(levelOneDeck, levelOneVisible);
         splitVisible(levelTwoDeck, levelTwoVisible);
         splitVisible(levelThreeDeck, levelThreeVisible);
@@ -86,27 +82,31 @@ public class CardMarket {
     }
 
     public Card drawCard(int level) throws UnavailableCardException {
+        Random rand = new Random();
         switch (level) {
             case 1:
                 if (levelOneDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                Card card = levelOneDeck.get(0);
-                levelOneDeck.remove(0);
+                int random = rand.nextInt(levelOneDeck.size());
+                Card card = levelOneDeck.get(random);
+                levelOneDeck.remove(random);
                 return card;
             case 2:
                 if (levelTwoDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                card = levelTwoDeck.get(0);
-                levelTwoDeck.remove(0);
+                random = rand.nextInt(levelTwoDeck.size());
+                card = levelTwoDeck.get(random);
+                levelTwoDeck.remove(random);
                 return card;
             case 3:
                 if (levelThreeDeck.isEmpty()) {
                     throw new UnavailableCardException("No more card left in deck");
                 }
-                card = levelThreeDeck.get(0);
-                levelThreeDeck.remove(0);
+                random = rand.nextInt(levelThreeDeck.size());
+                card = levelThreeDeck.get(random);
+                levelThreeDeck.remove(random);
                 return card;
             default:
                 throw new InvalidIndexException("Deck level not valid");

@@ -57,6 +57,6 @@ public class Noble {
     }
 
     public String toString() {
-        return String.format("Name: %s, Requirements: %s", name, requirements.toString());
+        return String.format("Name: %s | Requirements: %s", name, requirements.toString());
     }
 }

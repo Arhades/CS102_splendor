@@ -3,7 +3,7 @@ import java.util.*;
 public class GameRules {
     private GameState gameState;
 
-    public GameRules(GameState GameState) {
+    public GameRules(GameState gameState) {
         this.gameState = gameState;
     }
 
@@ -125,6 +125,7 @@ public class GameRules {
             if (player.getPoints() > mostPoints) {
                 mostPoints = player.getPoints();
                 winner = player;
+                count = 1;
             }
         }
 
