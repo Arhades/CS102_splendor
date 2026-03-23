@@ -1,4 +1,10 @@
 import java.util.*;
+/**
+ * Represents the card market in the game.
+ * 
+ * Manages visible cards and decks for three different levels.
+ * Each level has a deck of cards and a set of visible cards available to players.
+ */
 public class CardMarket {
     private List<Card> levelOneVisible = new ArrayList<>();
     private List<Card> levelOneDeck;
@@ -6,7 +12,14 @@ public class CardMarket {
     private List<Card> levelTwoDeck;
     private List<Card> levelThreeVisible = new ArrayList<>();
     private List<Card> levelThreeDeck;
-
+    /**
+     * Constructs a CardMarket with decks for each level.
+     * Initializes the visible cards by randomly selecting 4 cards from each deck.
+     *
+     * @param levelOneCards the list of level 1 cards
+     * @param levelTwoCards the list of level 2 cards
+     * @param levelThreeCards the list of level 3 cards
+     */
     public CardMarket(List<Card> levelOneCards, List<Card> levelTwoCards, List<Card> levelThreeCards) {
         levelOneDeck = levelOneCards;
         levelTwoDeck = levelTwoCards;
@@ -18,6 +31,12 @@ public class CardMarket {
         splitVisible(levelTwoDeck, levelTwoVisible);
         splitVisible(levelThreeDeck, levelThreeVisible);
     }
+    
+    /**
+     * Randomly selects 4 cards from the given deck and moves them into the visible list.
+     * @param deck the deck of cards to draw from
+     * @param visible the list to store visible cards
+     */
     
     public void splitVisible(List<Card> deck, List<Card> visible) {
         Random rand = new Random();
@@ -36,7 +55,13 @@ public class CardMarket {
     //     }
     //     return cardDeck;
     // }
-
+    /**
+     * Returns the list of visible cards for the specified level.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @return the list of visible cards at the specified level
+     * @throws InvalidIndexException if the level is not valid
+     */
     public List<Card> getVisibleCards(int level) throws UnavailableCardException {
         List<Card> cards = null;
         switch (level) {
@@ -47,6 +72,14 @@ public class CardMarket {
         }
         return cards;
     }
+
+    /**
+     * Returns the deck of cards for the specified level.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @return the list of cards in the deck
+     * @throws InvalidIndexException if the level is not valid
+     */
 
     public List<Card> getDeckCards(int level) throws UnavailableCardException {
         List<Card> cards = null;
@@ -59,6 +92,15 @@ public class CardMarket {
         return cards;
     }
 
+    /**
+     * Returns a specific visible card from the given level and index.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @param index the index of the card in the visible list
+     * @return the selected card
+     * @throws InvalidIndexException if the level is not valid
+     */
+
     public Card getVisibleCard(int level, int index) {
         Card card = null;
         switch (level) {
@@ -69,7 +111,13 @@ public class CardMarket {
         }
         return card;
     }
-
+    /**
+     * Returns the number of cards remaining in the deck for the specified level.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @return the number of cards in the deck
+     * @throws InvalidIndexException if the level is not valid
+     */
     public int getDeckSize(int level) {
         int size = 0;
         switch (level) {
@@ -80,7 +128,15 @@ public class CardMarket {
         }
         return size;
     }
-
+    /**
+     * Draws a random card from the specified deck level.
+     * The card is removed from the deck.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @return the drawn card
+     * @throws UnavailableCardException if the deck is empty
+     * @throws InvalidIndexException if the level is not valid
+     */
     public Card drawCard(int level) throws UnavailableCardException {
         Random rand = new Random();
         switch (level) {
@@ -133,7 +189,12 @@ public class CardMarket {
     //     }
 
     // }
-
+    /**
+     * Removes a visible card at the specified level and index.
+     *
+     * @param level the card level (1, 2, or 3)
+     * @param index the index of the card to remove
+     */
     public void removeCard(int level, int index) {
         List<Card> cards = null;
         switch (level) {
