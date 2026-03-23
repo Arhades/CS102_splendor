@@ -3,7 +3,7 @@
  * 
  * A card has a level, a point value, a bonus gem color, and a cost required to purchase it.
  * Cards can be bought by players to gain permanent bonuses, which reduces the required cost,
- * and victory points.
+ * and points.
  * 
  */
 public class Card {
@@ -14,7 +14,7 @@ public class Card {
     private int level;
 
     /**
-     * The number of victory points this card gives.
+     * The number of points this card gives.
      */
     private int points;
 
@@ -32,7 +32,7 @@ public class Card {
      * Constructs a card with the specified level, points, bonus, and cost.
      * 
      * @param level the level of the card
-     * @param points the number of victory points the card gives
+     * @param points the number of points the card gives
      * @param bonus the bonus gem color provided by the card
      * @param cost the cost required to purchase the card
      */
@@ -53,7 +53,7 @@ public class Card {
     }
 
     /**
-     * Returns the number of victory points provided by the card.
+     * Returns the number of points provided by the card.
      * 
      * @return the card's point value
      */
