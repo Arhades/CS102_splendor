@@ -12,7 +12,7 @@ public class GameState {
     private GemCollection gemBank;
     private List<Noble> availableNobles;
     private boolean gameOver;
-    private int winningThreshold;
+    private int winningThreshold = 15;
 
     /**
      * Constructs a GameState with the given players, market,
@@ -23,14 +23,14 @@ public class GameState {
      * @param initialGems the starting gems in the bank
      * @param initialNobles the starting available nobles
      */
-    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles) {
+    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles, int winningThreshold) {
         this.players = players;
         this.currentPlayerIndex = 0;
         this.cardMarket = cardMarket;
         this.gemBank = initialGems;
         this.availableNobles = initialNobles;
         this.gameOver = false;
-        this.winningThreshold = 15;
+        this.winningThreshold = winningThreshold;
     }
 
     /**

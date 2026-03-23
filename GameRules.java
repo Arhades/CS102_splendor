@@ -149,7 +149,7 @@ public class GameRules {
      * @return true if the player has enough points, false otherwise
      */
     public boolean hasPlayerWon(Player player, int threshold) {
-        if (player.getPoints() >= 15) {
+        if (player.getPoints() >= threshold) {
             return true;
         }
         return false;

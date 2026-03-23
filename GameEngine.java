@@ -146,7 +146,7 @@ public class GameEngine {
 
             List<Noble> nobles = loadNobles("nobles.csv", numOfPlayers + 1);
 
-            GameState gameState = new GameState(players, cardMarket, initialGems, nobles);
+            GameState gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
             GameRules gameRules = new GameRules(gameState);
 
             boolean canEnd = false;
@@ -345,7 +345,7 @@ public class GameEngine {
         while (!valid) {
             List<String> taken = new ArrayList<>();
             add = new GemCollection();
-            while (!gems.isEmptyWithouJoker() && taken.size() != 3) {
+            while (!gems.isEmptyWithoutJoker() && taken.size() != 3) {
                 System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
                 String color = sc.nextLine();
                 if (color.equalsIgnoreCase("back")) {
@@ -497,6 +497,10 @@ public class GameEngine {
     }
 
     public static boolean handleReserveCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        if (!gameRules.canReserveCard(player)) {
+            System.out.println("No more reserve slot!");
+            return false;
+        }
         CardMarket cardMarket = gameState.getCardMarket();
         GemCollection gemBank = gameState.getGemBank();
 

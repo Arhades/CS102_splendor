@@ -82,7 +82,7 @@ public class GemCollection {
      *
      * @return true if all non-joker gem counts are 0, otherwise false
      */
-    public boolean isEmptyWithoutJoker() { // also i think there was a typo here it was WithouJoker so i added t
+    public boolean isEmptyWithoutJoker() {
         for (GemColor color: gems.keySet()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
                 continue;
