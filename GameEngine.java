@@ -3,17 +3,7 @@ import java.io.*;
 
 public class GameEngine {
     public static void main(String[] args) {
-        // Scanner sc = new Scanner(System.in);
-        // int numOfPlayers = promptNumPlayers(sc);
-        // List<Player> players = createPlayers(sc, numOfPlayers);
-
-        List<Card> levelOneDeck = new ArrayList<>();
-        try {
-            levelOneDeck = loadCards("cards.csv", 2);
-            System.out.println(levelOneDeck.toString());
-        } catch (InvalidFileException e) {
-            System.out.println(e.getMessage());
-        }
+        runGame();
     }
 
     public static int promptNumPlayers(Scanner sc) {
@@ -30,6 +20,7 @@ public class GameEngine {
                 System.out.println("Please enter a digit between 2 and 4\n");
             }
         }
+        System.out.println();
         return num;
     }
 
@@ -42,6 +33,7 @@ public class GameEngine {
             players.add(new Player(name, i + 1));
         }
 
+        System.out.println();
         return players;
     }
 
@@ -61,7 +53,7 @@ public class GameEngine {
                 cost.put(GemColor.RUBY, Integer.parseInt(cur[4]));
                 cost.put(GemColor.SAPPHIRE, Integer.parseInt(cur[5]));
 
-                GemColor color = convertToColor(cur[6]);
+                GemColor color = convertToColor(cur[6].toUpperCase());
                 cards.add(new Card(level, Integer.parseInt(cur[7]), color, new Cost(cost)));
             }
             return cards;
@@ -72,16 +64,562 @@ public class GameEngine {
 
     public static GemColor convertToColor(String color) {
         switch (color) {
-            case "Diamond":
+            case "DIAMOND":
                 return GemColor.DIAMOND;
-            case "Onyx":
+            case "ONYX":
                 return GemColor.ONYX;
-            case "Emerald":
+            case "EMERALD":
                 return GemColor.EMERALD;
-            case "Ruby":
+            case "RUBY":
                 return GemColor.RUBY;
             default:
                 return GemColor.SAPPHIRE;
         }
+    }
+
+    public static List<Noble> loadNobles(String filename, int count) throws InvalidFileException {
+        try (Scanner sc = new Scanner(new File(filename))) {
+            sc.nextLine();
+            List<Noble> nobles = new ArrayList<>();
+            while (sc.hasNext()) {
+                String[] cur = sc.nextLine().split(",");
+                Map<GemColor, Integer> cost = new HashMap<>();
+                cost.put(GemColor.DIAMOND, Integer.parseInt(cur[1]));
+                cost.put(GemColor.ONYX, Integer.parseInt(cur[2]));
+                cost.put(GemColor.EMERALD, Integer.parseInt(cur[3]));
+                cost.put(GemColor.RUBY, Integer.parseInt(cur[4]));
+                cost.put(GemColor.SAPPHIRE, Integer.parseInt(cur[5]));
+
+                nobles.add(new Noble(cur[0], cost));
+            }
+            List<Noble> noblesUsed = new ArrayList<>();
+            Random rand = new Random();
+            for (int i = 0; i < count; i++) {
+                int random = rand.nextInt(nobles.size());
+                noblesUsed.add(nobles.get(random));
+                nobles.remove(random);
+            }
+            return noblesUsed;
+        } catch (FileNotFoundException e) {
+            throw new InvalidFileException(String.format("File (%s) not found!!", filename));
+        }
+    } 
+
+    public static GemCollection buildGemBank(int numPlayers) {
+        int numToAdd = 0;
+        switch (numPlayers) {
+            case 4:
+                numToAdd = 7;
+                break;
+            case 3:
+                numToAdd = 5;
+                break;
+            default:
+                numToAdd = 4;
+        }
+
+        Map<GemColor, Integer> map = new HashMap<>();
+        map.put(GemColor.DIAMOND, numToAdd);
+        map.put(GemColor.ONYX, numToAdd);
+        map.put(GemColor.EMERALD, numToAdd);
+        map.put(GemColor.RUBY, numToAdd);
+        map.put(GemColor.SAPPHIRE, numToAdd);
+        map.put(GemColor.GOLD_JOKER, 5);
+
+        return new GemCollection(map);
+    }
+
+    public static void runGame() {
+        try {
+            Scanner sc = new Scanner(System.in);
+
+            int numOfPlayers = promptNumPlayers(sc);
+            List<Player> players = createPlayers(sc, numOfPlayers);
+
+            List<Card> levelOneDeck = loadCards("cards.csv", 1);
+            List<Card> levelTwoDeck = loadCards("cards.csv", 2);
+            List<Card> levelThreeDeck = loadCards("cards.csv", 3);
+
+            CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
+
+            GemCollection initialGems = buildGemBank(numOfPlayers);
+
+            List<Noble> nobles = loadNobles("nobles.csv", numOfPlayers + 1);
+
+            GameState gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
+            GameRules gameRules = new GameRules(gameState);
+
+            boolean canEnd = false;
+
+            while (!gameState.isGameOver() || !canEnd) {
+                canEnd = false;
+                System.out.println("--------------------------------------------------------------------------------------------------");
+                System.out.println();
+                Player curPlayer = gameState.getCurrentPlayer();
+                printGameState(gameState);
+                boolean validAction = false;
+                    
+                while (!validAction) {
+                    ActionType action = promptAction(sc);
+                    validAction = executeAction(sc, action, curPlayer, gameState, gameRules);
+                    System.out.println();
+                }
+
+                handleGemReturn(sc, curPlayer, gameRules, gameState);
+                handleNobleClaims(curPlayer, gameState, gameRules);
+                checkEndCondition(gameState, gameRules);
+                gameState.advanceToNext();
+                System.out.println();
+                
+                if (gameState.getCurrentPlayerIndex() == 0) {
+                    canEnd = true;
+                }
+            }
+            printWinner(gameState, gameRules);
+        } catch (InvalidFileException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    public static void printGameState(GameState gameState) {
+        printPlayer(gameState);
+        printNobles(gameState);
+        printVisibleCards(gameState);
+        printGemBank(gameState);
+        printPoints(gameState);
+        printReservedCards(gameState.getCurrentPlayer());
+        printPlayerGem(gameState.getCurrentPlayer());
+    }
+
+    public static void printPlayer(GameState gameState) {
+        System.out.println(String.format("%s's turn", gameState.getCurrentPlayer().getName()));
+        System.out.println();
+    }
+
+    public static void printNobles(GameState gameState) {
+        System.out.println("NOBLES AVAILABLE");
+        List<Noble> nobles = gameState.getAvailableNobles();
+        if (nobles.size() == 0) {
+            System.out.println("No more nobles");
+        }
+        for (Noble noble: nobles) {
+            System.out.println("-> " + noble);
+        }
+        System.out.println();
+    }
+
+    public static void printVisibleCards(GameState gameState) {
+        System.out.println("AVAILABLE CARDS FOR PURCHASE");
+        List<Card> cards = new ArrayList<>();
+        CardMarket cardMarket = gameState.getCardMarket();
+
+        for (int i = 1; i <= 3; i++) {
+            try {
+                cards.addAll(cardMarket.getVisibleCards(i));
+            } catch (UnavailableCardException e) {}
+        }
+        
+        int i = 0;
+        for (Card card: cards) {
+            System.out.println(String.format("-> Number: %d | %s", i++, card));
+            if (i == 4) {
+                i = 0;
+            }
+        }
+        System.out.println();
+    }
+
+    public static void printReservedCards(Player player) {
+        System.out.println("PLAYER'S RESERVED CARDS");
+        if (player.getReservedCards().size() == 0) {
+            System.out.println("-> EMPTY\n");
+            return;
+        }
+
+        int i = 0;
+        for (Card card: player.getReservedCards()) {
+            System.out.println(String.format("-> Number: %d | %s", i++, card));
+        }
+        System.out.println();
+    }
+
+    public static void printGemBank(GameState gameState) {
+        System.out.println("GEMBANK");
+        Map<GemColor, Integer> gems = gameState.getGemBank().getGems();
+
+        for (GemColor color: gems.keySet()) {
+            System.out.println(String.format("-> %s: %d", color.name(), gems.get(color)));
+        }
+        System.out.println();
+    }
+
+    public static void printPlayerGem(Player player) {
+        System.out.println("PLAYER'S GEMS");
+        Map<GemColor, Integer> gems = player.getGems().getGems();
+        Map<GemColor, Integer> bonus = player.calculateBonuses();
+
+        for (GemColor color: gems.keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                System.out.println(String.format("-> %s: %d", color.name(), gems.get(color)));
+                continue;
+            }
+            System.out.println(String.format("-> %s: %d / bonus = %d", color.name(), gems.get(color), bonus.get(color)));
+        }
+        System.out.println();
+    }
+
+    public static void printPoints(GameState gameState) {
+        System.out.println("POINTS");
+        for (Player player: gameState.getPlayers()) {
+            System.out.println(String.format("-> name: %s = %d", player.getName(), player.getPoints()));
+        }
+        System.out.println();
+    }
+
+    public static ActionType promptAction(Scanner sc) {
+        System.out.println("Pick an action");
+        System.out.println("-> 1 - TAKE_THREE_DIFFERENT");
+        System.out.println("-> 2 - TAKE_TWO_SAME");
+        System.out.println("-> 3 - PURCHASE_CARD");
+        System.out.println("-> 4 - RESERVE_CARD");
+        System.out.print("Pick a number: ");
+    
+        boolean validAction = false;
+        int action = 0;
+        while (!validAction) {
+            try {
+                action = Integer.parseInt(sc.nextLine());
+                if (action < 1 || action > 4) {
+                    System.out.println("Invalid input");
+                    System.out.print("\nPick a number: ");
+                    continue;
+                }
+                validAction = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+                System.out.print("\nPick a number: ");
+            }
+        }
+
+        switch (action) {
+            case 1:
+                System.out.println();
+                return ActionType.TAKE_THREE_DIFFERENT;
+            case 2:
+                System.out.println();
+                return ActionType.TAKE_TWO_SAME;
+            case 3:
+                System.out.println();
+                return ActionType.PURCHASE_CARD;
+            default:
+                System.out.println();
+                return ActionType.RESERVE_CARD;
+        }
+    }
+
+    public static boolean executeAction(Scanner sc, ActionType action, Player player, GameState gameState, GameRules gameRules) {
+        if (action.equals(ActionType.TAKE_THREE_DIFFERENT)) {
+            return handleTakeThreeDifferent(sc, player, gameState, gameRules);
+        } else if (action.equals(ActionType.TAKE_TWO_SAME)) {
+            return handleTakeTwoSame(sc, player, gameState, gameRules);
+        } else if (action.equals(ActionType.PURCHASE_CARD)) {
+            return handlePurchaseCard(sc, player, gameState, gameRules);
+        } else {
+            return handleReserveCard(sc, player, gameState, gameRules);
+        }
+    }
+
+    public static boolean handleTakeThreeDifferent(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        GemCollection gems = gameState.getGemBank();
+        
+        if (!gameRules.canTakeThreeDifferentGems(gems)) {
+            System.out.println("Not enough gems");
+            return false;
+        }
+
+        printGemBank(gameState);
+        boolean valid = false;
+        GemCollection add = new GemCollection();
+
+        while (!valid) {
+            List<String> taken = new ArrayList<>();
+            add = new GemCollection();
+            while (!gems.isEmptyWithoutJoker() && taken.size() != 3) {
+                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
+                String color = sc.nextLine();
+                if (color.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                color = color.toUpperCase();
+                if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
+                    System.out.println("Invalid input!");
+                    continue;
+                }
+                if (taken.contains(color)) {
+                    System.out.println("Already taken!");
+                    continue;
+                }
+                if (gems.getCount(convertToColor(color)) == 0) {
+                    System.out.println("No more!");
+                    continue;
+                }
+                taken.add(color);
+                add.add(convertToColor(color), 1);
+            }
+            if (gameRules.canTakeThreeDifferentGems(add, gameState.getGemBank())) {
+                valid = true;
+            }
+        }
+        player.addGems(add);
+        gems.subtract(add);
+        return true;
+    }
+
+    public static boolean handleTakeTwoSame(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        GemCollection gems = gameState.getGemBank();
+
+        if (!gameRules.canTakeTwoSameGems(gems)) {
+            System.out.println("Not enough gems");
+            return false;
+        }
+
+        printGemBank(gameState);
+        while (true) {
+            System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
+            String color = sc.nextLine();
+            if (color.equalsIgnoreCase("back")) {
+                return false;
+            }
+            color = color.toUpperCase();
+            if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
+                System.out.println("Invalid input!");
+                continue;
+            }
+            GemColor col = convertToColor(color);
+
+            if (gameRules.canTakeTwoSameGems(col, gems)) {
+                GemCollection add = new GemCollection();
+                add.add(col, 2);
+                player.addGems(add);
+                gems.subtract(add);
+                return true;
+            }
+        }
+    }
+
+    public static boolean handlePurchaseCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        CardMarket cardMarket = gameState.getCardMarket();
+
+        while (true) {
+            try {
+                System.out.print("From table or from reserved?  [\"back\" to return]: ");
+                String str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+
+                if (str.equalsIgnoreCase("reserved")) {
+                    List<Card> reservedCards = player.getReservedCards();
+                    if (reservedCards.size() == 0) {
+                        System.out.println("No reserved cards\n");
+                        return false;
+                    }
+                    printReservedCards(player);
+                    System.out.print("Number to purchase  [\"back\" to return]:");
+                    str = sc.nextLine();
+                    if (str.equalsIgnoreCase("back")) {
+                        return false;
+                    }
+                    int num = Integer.parseInt(str);
+                    if (num < 0 || num >= reservedCards.size()) {
+                        System.out.println("Invalid input");
+                        continue;
+                    }
+                    Card chosen = reservedCards.get(num);
+                    player.addCard(chosen);
+                
+                    GemCollection cost = gameRules.calculateActualCost(player, chosen);
+                    player.deductGems(cost);
+                    player.removeReservedCard(chosen);
+
+                    gameState.addGemsToBank(cost);
+                    return true;
+                }
+
+                printVisibleCards(gameState);
+                System.out.print("Level  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int level = Integer.parseInt(str);
+                if (level < 1 || level > 3) {
+                    System.out.println("Invalid input");
+                    continue;
+                }
+
+                System.out.print("Number (0 to 3)  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int number = Integer.parseInt(str);
+
+                if (number < 0 || number > 3) {
+                    System.out.println("Invalid input");
+                    continue;
+                }
+
+                Card chosen = cardMarket.getVisibleCard(level, number);
+
+                if (!gameRules.canAffordCard(player, chosen)) {
+                    System.out.println("Cannot afford!\n");
+                    continue;
+                }
+
+                player.addCard(chosen);
+                
+                GemCollection cost = gameRules.calculateActualCost(player, chosen);
+                player.deductGems(cost);
+                cardMarket.removeCard(level, number);
+                cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
+
+                gameState.addGemsToBank(cost);
+                return true;
+                
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+            } catch (UnavailableCardException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    public static boolean handleReserveCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        if (!gameRules.canReserveCard(player)) {
+            System.out.println("No more reserve slot!");
+            return false;
+        }
+        CardMarket cardMarket = gameState.getCardMarket();
+        GemCollection gemBank = gameState.getGemBank();
+
+        while (true) {
+            try {
+                printVisibleCards(gameState);
+
+                System.out.print("Level  [\"back\" to return]: ");
+                String str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int level = Integer.parseInt(str);
+                if (level < 1 || level > 3) {
+                    System.out.println("Invalid input");
+                    continue;
+                }
+
+                System.out.print("Number (0 to 4 -> 4 = random)  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int number = Integer.parseInt(str);
+
+                if (number < 0 || number > 4) {
+                    System.out.println("Invalid input");
+                    continue;
+                }
+
+                if (number == 4) {
+                    Card chosen = cardMarket.drawCard(level);
+                    player.addReservedCard(chosen);
+                    if (gemBank.getCount(GemColor.GOLD_JOKER) > 0) {
+                        GemCollection gems = new GemCollection();
+                        gems.add(GemColor.GOLD_JOKER, 1);
+                        gemBank.subtract(gems);
+                        player.addGems(gems);
+                    }
+                    return true;
+                }
+                Card chosen = cardMarket.getVisibleCard(level, number);
+
+                player.addReservedCard(chosen);
+
+                cardMarket.removeCard(level, number);
+                cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
+
+                if (gemBank.getCount(GemColor.GOLD_JOKER) > 0) {
+                    GemCollection gems = new GemCollection();
+                    gems.add(GemColor.GOLD_JOKER, 1);
+                    gemBank.subtract(gems);
+                    player.addGems(gems);
+                }
+                return true;
+                
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+            } catch (UnavailableCardException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    public static void handleGemReturn(Scanner sc, Player player, GameRules gameRules, GameState gameState) {
+        while (gameRules.mustReturnGems(player)) {
+            try {
+                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx): ");
+                String color = sc.nextLine();
+                color = color.toUpperCase();
+
+                if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
+                    System.out.println("Invalid input!");
+                    continue;
+                }
+
+                GemColor col = convertToColor(color);
+                if (player.getSpecificGem(col) < 1) {
+                    System.out.println(String.format("No more %s gem", color));
+                    continue;
+                }
+
+                GemCollection gems = new GemCollection();
+                gems.add(col, 1);
+                player.deductGems(gems);
+
+                gameState.addGemsToBank(gems);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+            }
+        }
+    }
+
+
+    public static void handleNobleClaims(Player player, GameState gameState, GameRules gameRules) {
+        List<Noble> nobles = gameRules.getClaimableNobles(player, gameState.getAvailableNobles());
+        if (nobles.size() == 0) {
+            return;
+        }
+        for (Noble noble: nobles) {
+            player.claimNoble(noble);
+            gameState.removeNoble(noble);
+        }
+    }
+
+    public static boolean checkEndCondition(GameState gameState, GameRules gameRules) {
+        List<Player> players = gameState.getPlayers();
+
+        for (Player player: players) {
+            if (gameRules.hasPlayerWon(player, gameState.getWinningThreshold())) {
+                gameState.setGameOver(true);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void printWinner(GameState gameState, GameRules gameRules) {
+        List<Player> players = gameState.getPlayers();
+        System.out.println(String.format("Winner: %s!!", gameRules.getWinner(players).getName()));
     }
 }

@@ -74,6 +74,20 @@ public class GameRules {
         return gemBank.contains(requested);
     }
 
+    public boolean canTakeThreeDifferentGems(GemCollection gemBank) {
+        int sum = 0;
+        for (GemColor color: gemBank.getGems().keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                continue;
+            }
+            sum += gemBank.getCount(color) > 0? 1: 0;
+        }
+        if (sum >= 3) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Checks if a player can take two gems of the same color.
      * This is only allowed if there are at least 4 gems of that color in the bank.
@@ -89,13 +103,18 @@ public class GameRules {
         return false;
     }
 
-    /**
-     * Checks whether a player must return gems.
-     * A player must return gems if they have more than 10.
-     *
-     * @param player the player being checked
-     * @return true if the player exceeds the gem limit, false otherwise
-     */
+    public boolean canTakeTwoSameGems(GemCollection gemBank) {
+        for (GemColor color: gemBank.getGems().keySet()) {
+            if (color.equals(GemColor.GOLD_JOKER)) {
+                continue;
+            }
+            if (gemBank.getCount(color) >= 4) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean mustReturnGems(Player player) {
         if (player.getGemCount() > 10) {
             return true;
@@ -130,7 +149,7 @@ public class GameRules {
      * @return true if the player has enough points, false otherwise
      */
     public boolean hasPlayerWon(Player player, int threshold) {
-        if (player.getPoints() >= 15) {
+        if (player.getPoints() >= threshold) {
             return true;
         }
         return false;
@@ -178,6 +197,7 @@ public class GameRules {
             if (player.getPoints() > mostPoints) {
                 mostPoints = player.getPoints();
                 winner = player;
+                count = 1;
             }
         }
 
@@ -197,5 +217,15 @@ public class GameRules {
             }
         }
         return winner;
+    }
+
+    public boolean validColor(String color) {
+        color = color.toUpperCase();
+        for (GemColor col: GemColor.values()) {
+            if (col.name().equals(color)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

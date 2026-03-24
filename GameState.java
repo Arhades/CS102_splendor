@@ -8,11 +8,11 @@ import java.util.*;
 public class GameState {
     private List<Player> players;
     private int currentPlayerIndex;
-    private CardMarket market;
+    private CardMarket cardMarket;
     private GemCollection gemBank;
     private List<Noble> availableNobles;
     private boolean gameOver;
-    private int winningThreshold;
+    private int winningThreshold = 15;
 
     /**
      * Constructs a GameState with the given players, market,
@@ -23,14 +23,14 @@ public class GameState {
      * @param initialGems the starting gems in the bank
      * @param initialNobles the starting available nobles
      */
-    public GameState(List<Player> players, CardMarket market, GemCollection initialGems, List<Noble> initialNobles) {
+    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles, int winningThreshold) {
         this.players = players;
         this.currentPlayerIndex = 0;
-        this.market = market;
+        this.cardMarket = cardMarket;
         this.gemBank = initialGems;
         this.availableNobles = initialNobles;
         this.gameOver = false;
-        this.winningThreshold = 15;
+        this.winningThreshold = winningThreshold;
     }
 
     /**
@@ -66,7 +66,7 @@ public class GameState {
      * @return the card market
      */
     public CardMarket getCardMarket() {
-        return market;
+        return cardMarket;
     }
 
     /**
