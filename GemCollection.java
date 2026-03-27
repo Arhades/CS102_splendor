@@ -26,7 +26,10 @@ public class GemCollection {
      */
     
     public GemCollection(Map<GemColor, Integer> gems) {
-        this.gems = gems;
+        this.gems = new HashMap<>();
+        for (GemColor color : gems.keySet()) {
+            this.gems.put(color, gems.get(color));
+        }
     }
     /**
      * Returns the map of gem counts in this collection.

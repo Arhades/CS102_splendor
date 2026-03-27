@@ -8,7 +8,7 @@ public abstract class Bot extends Player {
         this.random = new Random();
     }
 
-    public String takeTurn(BotGameState gameState, BotGameRules gameRules) {
+    public String takeTurn(GameState gameState, GameRules gameRules) {
         String move = chooseMove(gameState, gameRules);
         String returned = returnExtraGems(gameState, gameRules);
         if (!returned.equals("")) {
@@ -17,17 +17,17 @@ public abstract class Bot extends Player {
         return move;
     }
 
-    protected abstract String chooseMove(BotGameState gameState, BotGameRules gameRules);
+    protected abstract String chooseMove(GameState gameState, GameRules gameRules);
 
     protected Random getRandom() {
         return random;
     }
 
-    protected boolean isEarlyGame(BotGameState gameState) {
+    protected boolean isEarlyGame(GameState gameState) {
         return gameState.getTurnCount() < gameState.getPlayers().size() * 2;
     }
 
-    protected List<CardChoice> getVisibleChoices(BotGameState gameState) {
+    protected List<CardChoice> getVisibleChoices(GameState gameState) {
         List<CardChoice> choices = new ArrayList<>();
         for (int level = 1; level <= 3; level++) {
             try {
@@ -49,13 +49,13 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-    protected List<CardChoice> getAllChoices(BotGameState gameState) {
+    protected List<CardChoice> getAllChoices(GameState gameState) {
         List<CardChoice> choices = getVisibleChoices(gameState);
         choices.addAll(getReservedChoices());
         return choices;
     }
 
-    protected List<CardChoice> getAffordableChoices(BotGameState gameState, BotGameRules gameRules) {
+    protected List<CardChoice> getAffordableChoices(GameState gameState, GameRules gameRules) {
         List<CardChoice> choices = new ArrayList<>();
         List<CardChoice> allChoices = getAllChoices(gameState);
         for (CardChoice choice: allChoices) {
@@ -73,11 +73,11 @@ public abstract class Bot extends Player {
         return choices.get(random.nextInt(choices.size()));
     }
 
-    protected int getMissingGems(BotGameRules gameRules, Card card) {
+    protected int getMissingGems(GameRules gameRules, Card card) {
         return gameRules.countMissingGems(this, card);
     }
 
-    protected int getDiscountedCostTotal(BotGameRules gameRules, Card card) {
+    protected int getDiscountedCostTotal(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int total = 0;
         for (GemColor color: GemColor.values()) {
@@ -89,7 +89,7 @@ public abstract class Bot extends Player {
         return total;
     }
 
-    protected int getWasteCount(BotGameRules gameRules, Card card) {
+    protected int getWasteCount(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int waste = 0;
         for (GemColor color: GemColor.values()) {
@@ -118,7 +118,7 @@ public abstract class Bot extends Player {
         return total;
     }
 
-    protected Noble getClosestNoble(BotGameState gameState) {
+    protected Noble getClosestNoble(GameState gameState) {
         Noble best = null;
         int bestColors = Integer.MAX_VALUE;
         int bestBonuses = Integer.MAX_VALUE;
@@ -172,7 +172,7 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-    protected List<GemColor> getNeededColorsForCard(BotGameRules gameRules, Card card) {
+    protected List<GemColor> getNeededColorsForCard(GameRules gameRules, Card card) {
         List<GemColor> colors = new ArrayList<>();
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
 
@@ -206,7 +206,7 @@ public abstract class Bot extends Player {
         }
     }
 
-    protected String buyChoice(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
+    protected String buyChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success;
         if (choice.isReserved()) {
             success = GameActions.purchaseReservedCard(this, gameState, gameRules, choice.getIndex());
@@ -220,7 +220,7 @@ public abstract class Bot extends Player {
         return getName() + " bought " + describeChoice(choice) + ".";
     }
 
-    protected String reserveChoice(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
+    protected String reserveChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveVisibleCard(this, gameState, gameRules, choice.getLevel(), choice.getIndex());
         if (!success) {
             return getName() + " could not reserve the target card.";
@@ -228,7 +228,7 @@ public abstract class Bot extends Player {
         return getName() + " reserved " + describeChoice(choice) + ".";
     }
 
-    protected String reserveHidden(int level, BotGameState gameState, BotGameRules gameRules) {
+    protected String reserveHidden(int level, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveHiddenCard(this, gameState, gameRules, level);
         if (!success) {
             return getName() + " could not reserve a hidden card.";
@@ -236,7 +236,7 @@ public abstract class Bot extends Player {
         return getName() + " reserved a hidden level " + level + " card.";
     }
 
-    protected List<GemColor> getAvailableColors(BotGameState gameState) {
+    protected List<GemColor> getAvailableColors(GameState gameState) {
         List<GemColor> colors = new ArrayList<>();
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -267,7 +267,7 @@ public abstract class Bot extends Player {
         return weights.get(color);
     }
 
-    protected List<GemColor> getBestColors(Map<GemColor, Integer> weights, BotGameState gameState, int limit) {
+    protected List<GemColor> getBestColors(Map<GemColor, Integer> weights, GameState gameState, int limit) {
         List<GemColor> available = getAvailableColors(gameState);
         List<GemColor> best = new ArrayList<>();
 
@@ -290,7 +290,7 @@ public abstract class Bot extends Player {
         return best;
     }
 
-    protected GemColor getBestDoubleColor(Map<GemColor, Integer> weights, BotGameState gameState, BotGameRules gameRules) {
+    protected GemColor getBestDoubleColor(Map<GemColor, Integer> weights, GameState gameState, GameRules gameRules) {
         GemColor chosen = null;
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -316,7 +316,7 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected String takeWeightedGemMove(BotGameState gameState, BotGameRules gameRules, Map<GemColor, Integer> weights) {
+    protected String takeWeightedGemMove(GameState gameState, GameRules gameRules, Map<GemColor, Integer> weights) {
         List<GemColor> best = getBestColors(weights, gameState, 3);
         if (best.size() == 3 && gameRules.canTakeThreeDifferentGems(gameState.getGemBank())) {
             if (GameActions.takeThreeDifferent(this, gameState, gameRules, best)) {
@@ -341,7 +341,7 @@ public abstract class Bot extends Player {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
-    protected String fallbackRandomGemMove(BotGameState gameState, BotGameRules gameRules) {
+    protected String fallbackRandomGemMove(GameState gameState, GameRules gameRules) {
         List<GemColor> available = getAvailableColors(gameState);
         Collections.shuffle(available, random);
 
@@ -375,7 +375,7 @@ public abstract class Bot extends Player {
         return getName() + " had no useful move.";
     }
 
-    protected List<CardChoice> getClosestChoices(BotGameState gameState, BotGameRules gameRules, int limit) {
+    protected List<CardChoice> getClosestChoices(GameState gameState, GameRules gameRules, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> chosen = new ArrayList<>();
 
@@ -398,7 +398,7 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected GemColor chooseGemToReturn(BotGameState gameState, BotGameRules gameRules) {
+    protected GemColor chooseGemToReturn(GameState gameState, GameRules gameRules) {
         List<GemColor> important = new ArrayList<>();
         List<GemColor> nobleColors = getNeededColorsForNoble(getClosestNoble(gameState));
         for (GemColor color: nobleColors) {
@@ -439,7 +439,7 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected String returnExtraGems(BotGameState gameState, BotGameRules gameRules) {
+    protected String returnExtraGems(GameState gameState, GameRules gameRules) {
         List<GemColor> returned = new ArrayList<>();
         while (gameRules.mustReturnGems(this)) {
             GemColor color = chooseGemToReturn(gameState, gameRules);

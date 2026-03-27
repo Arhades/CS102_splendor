@@ -54,8 +54,10 @@ public class Cost{
      */
     public Cost afterBonuses(Map<GemColor, Integer> bonus) {
         GemCollection newCost = new GemCollection(cost.getGems());
-        GemCollection bonusWithoutJoker = new GemCollection(bonus);
-        bonus.remove(GemColor.GOLD_JOKER);
+        Map<GemColor, Integer> bonusCopy = new HashMap<>(bonus);
+        bonusCopy.remove(GemColor.GOLD_JOKER);
+
+        GemCollection bonusWithoutJoker = new GemCollection(bonusCopy);
         newCost.subtract(bonusWithoutJoker);
         for (GemColor color: newCost.getGems().keySet()) {
             if (newCost.getCount(color) < 0) {

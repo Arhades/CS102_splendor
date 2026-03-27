@@ -6,7 +6,7 @@ public class HardBot extends Bot {
     }
 
     @Override
-    protected String chooseMove(BotGameState gameState, BotGameRules gameRules) {
+    protected String chooseMove(GameState gameState, GameRules gameRules) {
         boolean nobleFocus = gameState.getPlayers().size() >= 3;
         List<CardChoice> affordable = getAffordableChoices(gameState, gameRules);
         if (affordable.size() > 0) {
@@ -34,7 +34,7 @@ public class HardBot extends Bot {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
-    private CardChoice getBestChoice(List<CardChoice> choices, BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
+    private CardChoice getBestChoice(List<CardChoice> choices, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         int bestScore = Integer.MIN_VALUE;
         List<CardChoice> bestChoices = new ArrayList<>();
 
@@ -52,7 +52,7 @@ public class HardBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
-    private List<CardChoice> getPriorityTargets(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus, int limit) {
+    private List<CardChoice> getPriorityTargets(GameState gameState, GameRules gameRules, boolean nobleFocus, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> targets = new ArrayList<>();
 
@@ -69,7 +69,7 @@ public class HardBot extends Bot {
         return targets;
     }
 
-    private int getCardScore(CardChoice choice, BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
+    private int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         Card card = choice.getCard();
         int score = card.getPoints() * 10;
         score += getDiscountUsefulness(card, gameState, nobleFocus);
@@ -88,7 +88,7 @@ public class HardBot extends Bot {
         return score;
     }
 
-    private int getDiscountUsefulness(Card card, BotGameState gameState, boolean nobleFocus) {
+    private int getDiscountUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
@@ -120,7 +120,7 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
-    private int getNobleUsefulness(Card card, BotGameState gameState, boolean nobleFocus) {
+    private int getNobleUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
@@ -142,7 +142,7 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
-    private int getTierPenalty(Card card, BotGameState gameState, BotGameRules gameRules) {
+    private int getTierPenalty(Card card, GameState gameState, GameRules gameRules) {
         if (!isEarlyGame(gameState)) {
             return 0;
         }
@@ -160,7 +160,7 @@ public class HardBot extends Bot {
         return 0;
     }
 
-    private int getDenyBonus(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
+    private int getDenyBonus(CardChoice choice, GameState gameState, GameRules gameRules) {
         if (choice.isReserved()) {
             return 0;
         }
@@ -186,7 +186,7 @@ public class HardBot extends Bot {
         return deny;
     }
 
-    private int assessThreat(Player player, BotGameState gameState, BotGameRules gameRules) {
+    private int assessThreat(Player player, GameState gameState, GameRules gameRules) {
         int threat = player.getPoints() * 3;
         if (player.getPoints() >= gameState.getWinningThreshold() - 3) {
             threat += 10;
@@ -219,7 +219,7 @@ public class HardBot extends Bot {
         return threat;
     }
 
-    private CardChoice getReserveChoice(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
+    private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         if (!gameRules.canReserveCard(this)) {
             return null;
         }
@@ -248,7 +248,7 @@ public class HardBot extends Bot {
         return null;
     }
 
-    private String chooseGemMove(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
+    private String chooseGemMove(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> targets = getPriorityTargets(gameState, gameRules, nobleFocus, 4);
 
@@ -300,7 +300,7 @@ public class HardBot extends Bot {
         return move;
     }
 
-    private List<GemColor> getOpeningNobleColors(BotGameState gameState) {
+    private List<GemColor> getOpeningNobleColors(GameState gameState) {
         Map<GemColor, Integer> counts = new HashMap<>();
         for (GemColor color: GemColor.values()) {
             counts.put(color, 0);
@@ -331,7 +331,7 @@ public class HardBot extends Bot {
         return chosen;
     }
 
-    private int getHiddenReserveLevel(BotGameState gameState, boolean nobleFocus) {
+    private int getHiddenReserveLevel(GameState gameState, boolean nobleFocus) {
         int preferred = nobleFocus ? 2 : 3;
         if (gameState.getCardMarket().getDeckSize(preferred) > 0) {
             return preferred;

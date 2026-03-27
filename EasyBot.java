@@ -6,7 +6,7 @@ public class EasyBot extends Bot {
     }
 
     @Override
-    protected String chooseMove(BotGameState gameState, BotGameRules gameRules) {
+    protected String chooseMove(GameState gameState, GameRules gameRules) {
         List<GemColor> preferredColors = getPreferredBonusColors(gameState);
         List<CardChoice> affordable = getAffordableChoices(gameState, gameRules);
 
@@ -42,7 +42,7 @@ public class EasyBot extends Bot {
         return getName() + " had no useful move.";
     }
 
-    private List<GemColor> getPreferredBonusColors(BotGameState gameState) {
+    private List<GemColor> getPreferredBonusColors(GameState gameState) {
         List<GemColor> colors = getNeededColorsForNoble(getClosestNoble(gameState));
         if (colors.size() > 0) {
             return colors;
@@ -59,7 +59,7 @@ public class EasyBot extends Bot {
         return fallback;
     }
 
-    private CardChoice getCheapestAffordableCard(List<CardChoice> choices, BotGameRules gameRules) {
+    private CardChoice getCheapestAffordableCard(List<CardChoice> choices, GameRules gameRules) {
         int bestCost = Integer.MAX_VALUE;
         int bestWaste = Integer.MAX_VALUE;
         List<CardChoice> bestChoices = new ArrayList<>();
@@ -86,7 +86,7 @@ public class EasyBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
-    private CardChoice getReserveChoice(BotGameState gameState, BotGameRules gameRules, List<GemColor> preferredColors) {
+    private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
         List<CardChoice> visible = getVisibleChoices(gameState);
         List<CardChoice> matching = new ArrayList<>();
 
@@ -111,7 +111,7 @@ public class EasyBot extends Bot {
         return chosen;
     }
 
-    private String chooseGemMove(BotGameState gameState, BotGameRules gameRules, List<GemColor> preferredColors) {
+    private String chooseGemMove(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> visible = getVisibleChoices(gameState);
         List<CardChoice> targets = new ArrayList<>();
