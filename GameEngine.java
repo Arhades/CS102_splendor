@@ -98,18 +98,8 @@ public class GameEngine {
         }
     } 
 
-    public static GemCollection buildGemBank(int numPlayers) {
-        int numToAdd = 0;
-        switch (numPlayers) {
-            case 4:
-                numToAdd = 7;
-                break;
-            case 3:
-                numToAdd = 5;
-                break;
-            default:
-                numToAdd = 4;
-        }
+    public static GemCollection buildGemBank(int numPlayers, GameConfig gameConfig) {
+        int numToAdd = gameConfig.getGemCountPerColor(numPlayers);
 
         Map<GemColor, Integer> map = new HashMap<>();
         map.put(GemColor.DIAMOND, numToAdd);
@@ -117,7 +107,7 @@ public class GameEngine {
         map.put(GemColor.EMERALD, numToAdd);
         map.put(GemColor.RUBY, numToAdd);
         map.put(GemColor.SAPPHIRE, numToAdd);
-        map.put(GemColor.GOLD_JOKER, 5);
+        map.put(GemColor.GOLD_JOKER, gameConfig.getGoldGems());
 
         return new GemCollection(map);
     }
@@ -125,21 +115,22 @@ public class GameEngine {
     public static void runGame() {
         try {
             Scanner sc = new Scanner(System.in);
+            GameConfig gameConfig = GameConfig.load("config.properties");
 
             int numOfPlayers = promptNumPlayers(sc);
             List<Player> players = createPlayers(sc, numOfPlayers);
 
-            List<Card> levelOneDeck = loadCards("cards.csv", 1);
-            List<Card> levelTwoDeck = loadCards("cards.csv", 2);
-            List<Card> levelThreeDeck = loadCards("cards.csv", 3);
+            List<Card> levelOneDeck = loadCards(gameConfig.getCardsFile(), 1);
+            List<Card> levelTwoDeck = loadCards(gameConfig.getCardsFile(), 2);
+            List<Card> levelThreeDeck = loadCards(gameConfig.getCardsFile(), 3);
 
             CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
-            GemCollection initialGems = buildGemBank(numOfPlayers);
+            GemCollection initialGems = buildGemBank(numOfPlayers, gameConfig);
 
-            List<Noble> nobles = loadNobles("nobles.csv");
+            List<Noble> nobles = loadNobles(gameConfig.getNoblesFile());
 
-            GameState gameState = new GameState(players, cardMarket, initialGems, nobles);
+            GameState gameState = new GameState(players, cardMarket, initialGems, nobles, gameConfig.getWinningThreshold());
             GameRules gameRules = new GameRules(gameState);
 
             while (!gameState.isGameOver()) {

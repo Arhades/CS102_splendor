@@ -7,16 +7,16 @@ public class GameConfig {
     private int winningThreshold;
     private int twoPlayerGems;
     private int threePlayerGems;
-    private int fourPlusPlayerGems;
+    private int fourPlayerGems;
     private int goldGems;
 
-    private GameConfig(String cardsFile, String noblesFile, int winningThreshold, int twoPlayerGems, int threePlayerGems, int fourPlusPlayerGems, int goldGems) {
+    private GameConfig(String cardsFile, String noblesFile, int winningThreshold, int twoPlayerGems, int threePlayerGems, int fourPlayerGems, int goldGems) {
         this.cardsFile = cardsFile;
         this.noblesFile = noblesFile;
         this.winningThreshold = winningThreshold;
         this.twoPlayerGems = twoPlayerGems;
         this.threePlayerGems = threePlayerGems;
-        this.fourPlusPlayerGems = fourPlusPlayerGems;
+        this.fourPlayerGems = fourPlayerGems;
         this.goldGems = goldGems;
     }
 
@@ -35,10 +35,10 @@ public class GameConfig {
         int winningThreshold = parsePositiveInt(properties, "winning.threshold", 15);
         int twoPlayerGems = parsePositiveInt(properties, "gems.two.players", 4);
         int threePlayerGems = parsePositiveInt(properties, "gems.three.players", 5);
-        int fourPlusPlayerGems = parsePositiveInt(properties, "gems.four.plus.players", 7);
+        int fourPlayerGems = parsePositiveInt(properties, "gems.four.players", 7);
         int goldGems = parseNonNegativeInt(properties, "gems.gold", 5);
 
-        return new GameConfig(cardsFile, noblesFile, winningThreshold, twoPlayerGems, threePlayerGems, fourPlusPlayerGems, goldGems);
+        return new GameConfig(cardsFile, noblesFile, winningThreshold, twoPlayerGems, threePlayerGems, fourPlayerGems, goldGems);
     }
 
     public String getCardsFile() {
@@ -60,7 +60,7 @@ public class GameConfig {
         if (numPlayers == 3) {
             return threePlayerGems;
         }
-        return fourPlusPlayerGems;
+        return fourPlayerGems;
     }
 
     public int getGoldGems() {

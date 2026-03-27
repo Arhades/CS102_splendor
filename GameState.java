@@ -9,14 +9,14 @@ public class GameState {
     private boolean gameOver;
     private int winningThreshold;
 
-    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles) {
+    public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles, int winningThreshold) {
         this.players = players;
         this.currentPlayerIndex = 0;
         this.cardMarket = cardMarket;
         this.gemBank = initialGems;
         this.availableNobles = initialNobles;
         this.gameOver = false;
-        this.winningThreshold = 15;
+        this.winningThreshold = winningThreshold;
     }
 
     public Player getCurrentPlayer() {
