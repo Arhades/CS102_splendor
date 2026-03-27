@@ -68,7 +68,7 @@ public class GameEngine {
                 return GemColor.DIAMOND;
             case "ONYX":
                 return GemColor.ONYX;
-            case "EMERAlD":
+            case "EMERALD":
                 return GemColor.EMERALD;
             case "RUBY":
                 return GemColor.RUBY;
@@ -77,7 +77,7 @@ public class GameEngine {
         }
     }
 
-    public static List<Noble> loadNobles(String filename) throws InvalidFileException {
+    public static List<Noble> loadNobles(String filename, int count) throws InvalidFileException {
         try (Scanner sc = new Scanner(new File(filename))) {
             sc.nextLine();
             List<Noble> nobles = new ArrayList<>();
@@ -92,7 +92,14 @@ public class GameEngine {
 
                 nobles.add(new Noble(cur[0], cost));
             }
-            return nobles;
+            List<Noble> noblesUsed = new ArrayList<>();
+            Random rand = new Random();
+            for (int i = 0; i < count; i++) {
+                int random = rand.nextInt(nobles.size());
+                noblesUsed.add(nobles.get(random));
+                nobles.remove(random);
+            }
+            return noblesUsed;
         } catch (FileNotFoundException e) {
             throw new InvalidFileException(String.format("File (%s) not found!!", filename));
         }
@@ -133,7 +140,10 @@ public class GameEngine {
             GameState gameState = new GameState(players, cardMarket, initialGems, nobles, gameConfig.getWinningThreshold());
             GameRules gameRules = new GameRules(gameState);
 
-            while (!gameState.isGameOver()) {
+            boolean canEnd = false;
+
+            while (!gameState.isGameOver() || !canEnd) {
+                canEnd = false;
                 System.out.println("--------------------------------------------------------------------------------------------------");
                 System.out.println();
                 Player curPlayer = gameState.getCurrentPlayer();
@@ -143,6 +153,7 @@ public class GameEngine {
                 while (!validAction) {
                     ActionType action = promptAction(sc);
                     validAction = executeAction(sc, action, curPlayer, gameState, gameRules);
+                    System.out.println();
                 }
 
                 handleGemReturn(sc, curPlayer, gameRules, gameState);
@@ -150,6 +161,10 @@ public class GameEngine {
                 checkEndCondition(gameState, gameRules);
                 gameState.advanceToNext();
                 System.out.println();
+                
+                if (gameState.getCurrentPlayerIndex() == 0) {
+                    canEnd = true;
+                }
             }
             printWinner(gameState, gameRules);
         } catch (InvalidFileException e) {
@@ -195,9 +210,13 @@ public class GameEngine {
                 cards.addAll(cardMarket.getVisibleCards(i));
             } catch (UnavailableCardException e) {}
         }
-
+        
+        int i = 0;
         for (Card card: cards) {
-            System.out.println("-> " + card);
+            System.out.println(String.format("-> Number: %d | %s", i++, card));
+            if (i == 4) {
+                i = 0;
+            }
         }
         System.out.println();
     }
@@ -209,8 +228,9 @@ public class GameEngine {
             return;
         }
 
+        int i = 0;
         for (Card card: player.getReservedCards()) {
-            System.out.println("-> " + card);
+            System.out.println(String.format("-> Number: %d | %s", i++, card));
         }
         System.out.println();
     }
@@ -243,7 +263,7 @@ public class GameEngine {
     public static void printPoints(GameState gameState) {
         System.out.println("POINTS");
         for (Player player: gameState.getPlayers()) {
-            System.out.println(String.format("-> name: %s: %d", player.getName(), player.getPoints()));
+            System.out.println(String.format("-> name: %s = %d", player.getName(), player.getPoints()));
         }
         System.out.println();
     }
@@ -309,15 +329,19 @@ public class GameEngine {
             return false;
         }
 
+        printGemBank(gameState);
         boolean valid = false;
         GemCollection add = new GemCollection();
 
         while (!valid) {
             List<String> taken = new ArrayList<>();
             add = new GemCollection();
-            while (!gems.isEmptyWithouJoker() && taken.size() != 3) {
-                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx): ");
+            while (!gems.isEmptyWithoutJoker() && taken.size() != 3) {
+                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
                 String color = sc.nextLine();
+                if (color.equalsIgnoreCase("back")) {
+                    return false;
+                }
                 color = color.toUpperCase();
                 if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
                     System.out.println("Invalid input!");
@@ -325,6 +349,10 @@ public class GameEngine {
                 }
                 if (taken.contains(color)) {
                     System.out.println("Already taken!");
+                    continue;
+                }
+                if (gems.getCount(convertToColor(color)) == 0) {
+                    System.out.println("No more!");
                     continue;
                 }
                 taken.add(color);
@@ -347,12 +375,16 @@ public class GameEngine {
             return false;
         }
 
-
+        printGemBank(gameState);
         while (true) {
-            System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx, Gold_Joker): ");
+            System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
             String color = sc.nextLine();
+            if (color.equalsIgnoreCase("back")) {
+                return false;
+            }
             color = color.toUpperCase();
-            if (!gameRules.validColor(color)) {
+            if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
+                System.out.println("Invalid input!");
                 continue;
             }
             GemColor col = convertToColor(color);
@@ -372,15 +404,58 @@ public class GameEngine {
 
         while (true) {
             try {
-                System.out.print("Level: ");
-                int level = Integer.parseInt(sc.nextLine());
+                System.out.print("From table or from reserved?  [\"back\" to return]: ");
+                String str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+
+                if (str.equalsIgnoreCase("reserved")) {
+                    List<Card> reservedCards = player.getReservedCards();
+                    if (reservedCards.size() == 0) {
+                        System.out.println("No reserved cards\n");
+                        return false;
+                    }
+                    printReservedCards(player);
+                    System.out.print("Number to purchase  [\"back\" to return]:");
+                    str = sc.nextLine();
+                    if (str.equalsIgnoreCase("back")) {
+                        return false;
+                    }
+                    int num = Integer.parseInt(str);
+                    if (num < 0 || num >= reservedCards.size()) {
+                        System.out.println("Invalid input");
+                        continue;
+                    }
+                    Card chosen = reservedCards.get(num);
+                    player.addCard(chosen);
+                
+                    GemCollection cost = gameRules.calculateActualCost(player, chosen);
+                    player.deductGems(cost);
+                    player.removeReservedCard(chosen);
+
+                    gameState.addGemsToBank(cost);
+                    return true;
+                }
+
+                printVisibleCards(gameState);
+                System.out.print("Level  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int level = Integer.parseInt(str);
                 if (level < 1 || level > 3) {
                     System.out.println("Invalid input");
                     continue;
                 }
 
-                System.out.print("Number (0 to 3): ");
-                int number = Integer.parseInt(sc.nextLine());
+                System.out.print("Number (0 to 3)  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int number = Integer.parseInt(str);
 
                 if (number < 0 || number > 3) {
                     System.out.println("Invalid input");
@@ -413,20 +488,34 @@ public class GameEngine {
     }
 
     public static boolean handleReserveCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+        if (!gameRules.canReserveCard(player)) {
+            System.out.println("No more reserve slot!");
+            return false;
+        }
         CardMarket cardMarket = gameState.getCardMarket();
         GemCollection gemBank = gameState.getGemBank();
 
         while (true) {
             try {
-                System.out.print("Level: ");
-                int level = Integer.parseInt(sc.nextLine());
+                printVisibleCards(gameState);
+
+                System.out.print("Level  [\"back\" to return]: ");
+                String str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int level = Integer.parseInt(str);
                 if (level < 1 || level > 3) {
                     System.out.println("Invalid input");
                     continue;
                 }
 
-                System.out.print("Number (0 to 4 -> 4 = random): ");
-                int number = Integer.parseInt(sc.nextLine());
+                System.out.print("Number (0 to 4 -> 4 = random)  [\"back\" to return]: ");
+                str = sc.nextLine();
+                if (str.equalsIgnoreCase("back")) {
+                    return false;
+                }
+                int number = Integer.parseInt(str);
 
                 if (number < 0 || number > 4) {
                     System.out.println("Invalid input");
@@ -436,6 +525,12 @@ public class GameEngine {
                 if (number == 4) {
                     Card chosen = cardMarket.drawCard(level);
                     player.addReservedCard(chosen);
+                    if (gemBank.getCount(GemColor.GOLD_JOKER) > 0) {
+                        GemCollection gems = new GemCollection();
+                        gems.add(GemColor.GOLD_JOKER, 1);
+                        gemBank.subtract(gems);
+                        player.addGems(gems);
+                    }
                     return true;
                 }
                 Card chosen = cardMarket.getVisibleCard(level, number);
@@ -464,16 +559,18 @@ public class GameEngine {
     public static void handleGemReturn(Scanner sc, Player player, GameRules gameRules, GameState gameState) {
         while (gameRules.mustReturnGems(player)) {
             try {
-                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx, Gold_Joker): ");
+                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx): ");
                 String color = sc.nextLine();
                 color = color.toUpperCase();
 
-                if (!gameRules.validColor(color)) {
+                if (!gameRules.validColor(color) || color.equals("GOLD_JOKER")) {
+                    System.out.println("Invalid input!");
                     continue;
                 }
 
                 GemColor col = convertToColor(color);
                 if (player.getSpecificGem(col) < 1) {
+                    System.out.println(String.format("No more %s gem", color));
                     continue;
                 }
 
@@ -514,6 +611,6 @@ public class GameEngine {
 
     public static void printWinner(GameState gameState, GameRules gameRules) {
         List<Player> players = gameState.getPlayers();
-        System.out.println(gameRules.getWinner(players));
+        System.out.println(String.format("Winner: %s!!", gameRules.getWinner(players).getName()));
     }
 }

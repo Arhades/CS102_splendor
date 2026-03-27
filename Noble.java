@@ -129,6 +129,6 @@ public class Noble {
      * @return a string containing the noble's details
      */
     public String toString() {
-        return String.format("Name: %s, Requirements: %s", name, requirements.toString());
+        return String.format("Name: %s | Requirements: %s", name, requirements.toString());
     }
 }

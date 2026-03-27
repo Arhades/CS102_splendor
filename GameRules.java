@@ -1,12 +1,30 @@
 import java.util.*;
 
+/**
+ * The GameRules class contains the logic that enforces the rules of the game.
+ * It determines whether actions such as buying cards, taking gems,
+ * reserving cards, and winning conditions are valid.
+ */
 public class GameRules {
     private GameState gameState;
 
-    public GameRules(GameState GameState) {
+    /**
+     * Constructs a GameRules object with the given game state.
+     *
+     * @param gameState the current state of the game
+     */
+    public GameRules(GameState gameState) {
         this.gameState = gameState;
     }
 
+    /**
+     * Checks whether a player can afford a given card.
+     * Takes into account bonuses and joker (gold) gems.
+     *
+     * @param player the player attempting to buy the card
+     * @param card the card to be purchased
+     * @return true if the player can afford the card, false otherwise
+     */
     public boolean canAffordCard(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
@@ -22,6 +40,14 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Calculates the actual cost a player needs to pay for a card,
+     * including the use of joker gems if necessary.
+     *
+     * @param player the player purchasing the card
+     * @param card the card to be purchased
+     * @return a GemCollection representing the actual cost to be paid
+     */
     public GemCollection calculateActualCost(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
@@ -37,6 +63,13 @@ public class GameRules {
         return newCost;
     }
 
+    /**
+     * Checks if a player can take three different gems from the bank.
+     *
+     * @param requested the gems the player wants to take
+     * @param gemBank the current gems available in the bank
+     * @return true if the bank contains the requested gems, false otherwise
+     */
     public boolean canTakeThreeDifferentGems(GemCollection requested, GemCollection gemBank) {
         return gemBank.contains(requested);
     }
@@ -55,6 +88,14 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Checks if a player can take two gems of the same color.
+     * This is only allowed if there are at least 4 gems of that color in the bank.
+     *
+     * @param color the gem color requested
+     * @param gemBank the current gems available in the bank
+     * @return true if the player can take two gems of that color, false otherwise
+     */
     public boolean canTakeTwoSameGems(GemColor color, GemCollection gemBank) {
         if (gemBank.getCount(color) >= 4) {
             return true;
@@ -81,6 +122,14 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Returns a list of nobles that the player can claim
+     * based on their current bonuses.
+     *
+     * @param player the player attempting to claim nobles
+     * @param nobles the list of available nobles
+     * @return a list of nobles that can be claimed
+     */
     public List<Noble> getClaimableNobles(Player player, List<Noble> nobles) {
         List<Noble> claimableNobles = new ArrayList<>();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
@@ -92,17 +141,40 @@ public class GameRules {
         return claimableNobles;
     }
 
+    /**
+     * Checks whether a player has reached the winning condition.
+     *
+     * @param player the player being checked
+     * @param threshold the number of points required to win
+     * @return true if the player has enough points, false otherwise
+     */
     public boolean hasPlayerWon(Player player, int threshold) {
-        if (player.getPoints() >= 15) {
+        if (player.getPoints() >= threshold) {
             return true;
         }
         return false;
     }
 
+    /**
+     * Checks whether a player can reserve another card.
+     * A player can only reserve up to 3 cards.
+     *
+     * @param player the player attempting to reserve a card
+     * @return true if the player can reserve more cards, false otherwise
+     */
     public boolean canReserveCard(Player player) {
         return player.getReservedCards().size() < 3;
     }
 
+    /**
+     * Determines the winner among players who have reached the winning condition.
+     * If multiple players qualify, tie-breakers are applied:
+     * 1. Highest points
+     * 2. Fewest total cards (purchased + nobles)
+     *
+     * @param players the list of players in the game
+     * @return the winning player
+     */
     public Player getWinner(List<Player> players) {
         List<Player> winners = new ArrayList<>();
         for (Player player: players) {
@@ -125,6 +197,7 @@ public class GameRules {
             if (player.getPoints() > mostPoints) {
                 mostPoints = player.getPoints();
                 winner = player;
+                count = 1;
             }
         }
 
