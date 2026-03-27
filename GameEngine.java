@@ -135,7 +135,7 @@ public class GameEngine {
 
             GemCollection initialGems = buildGemBank(numOfPlayers, gameConfig);
 
-            List<Noble> nobles = loadNobles(gameConfig.getNoblesFile());
+            List<Noble> nobles = loadNobles(gameConfig.getNoblesFile(), numOfPlayers + 1);
 
             GameState gameState = new GameState(players, cardMarket, initialGems, nobles, gameConfig.getWinningThreshold());
             GameRules gameRules = new GameRules(gameState);
