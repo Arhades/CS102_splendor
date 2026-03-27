@@ -13,6 +13,7 @@ public class GameState {
     private List<Noble> availableNobles;
     private boolean gameOver;
     private int winningThreshold = 15;
+    private int turnCount = 0;
 
     /**
      * Constructs a GameState with the given players, market,
@@ -22,6 +23,7 @@ public class GameState {
      * @param market the card market
      * @param initialGems the starting gems in the bank
      * @param initialNobles the starting available nobles
+     * @param winningThreshold the number of points to win
      */
     public GameState(List<Player> players, CardMarket cardMarket, GemCollection initialGems, List<Noble> initialNobles, int winningThreshold) {
         this.players = players;
@@ -105,11 +107,16 @@ public class GameState {
         return winningThreshold;
     }
 
+    public int getTurnCount() {
+        return turnCount;
+    }
+
     /**
      * Advances the game to the next player's turn.
      * Wraps around to the first player after the last.
      */
     public void advanceToNext() {
+        turnCount++;
         currentPlayerIndex++;
         if (currentPlayerIndex == players.size()) {
             currentPlayerIndex = 0;

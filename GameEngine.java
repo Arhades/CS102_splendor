@@ -1,5 +1,5 @@
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class GameEngine {
     public static void main(String[] args) {
@@ -24,13 +24,49 @@ public class GameEngine {
         return num;
     }
 
-    public static List<Player> createPlayers(Scanner sc, int n) {
+    public static int promptPlayerType(Scanner sc, int playerNumber) {
+        while (true) {
+            try {
+                System.out.printf("Player %d type (1 = Human, 2 = Easy Bot, 3 = Hard Bot): ", playerNumber);
+                int type = Integer.parseInt(sc.nextLine());
+                if (type >= 1 && type <= 3) {
+                    return type;
+                }
+            } catch (NumberFormatException e) {
+            }
+            System.out.println("Invalid input\n");
+        }
+    }
+
+    public static String promptPlayerName(Scanner sc, int playerNumber, String defaultName) {
+        System.out.printf("Player %d name (blank for \"%s\"): ", playerNumber, defaultName);
+        String name = sc.nextLine().trim();
+        if (name.equals("")) {
+            return defaultName;
+        }
+        return name;
+    }
+
+    public static List<Player> createPlayers(Scanner sc, int numPlayers) {
         List<Player> players = new ArrayList<>();
 
-        for (int i = 0; i < n; i++) {
-            System.out.printf("Player %d name: ", i + 1);
-            String name = sc.nextLine();
-            players.add(new Player(name, i + 1));
+        for (int i = 0; i < numPlayers; i++) {
+            int type = promptPlayerType(sc, i + 1);
+            String defaultName = "Player " + (i + 1);
+            if (type == 2) {
+                defaultName = "EasyBot " + (i + 1);
+            } else if (type == 3) {
+                defaultName = "HardBot " + (i + 1);
+            }
+
+            String name = promptPlayerName(sc, i + 1, defaultName);
+            if (type == 1) {
+                players.add(new Player(name, i + 1));
+            } else if (type == 2) {
+                players.add(new EasyBot(name, i + 1));
+            } else {
+                players.add(new HardBot(name, i + 1));
+            }
         }
 
         System.out.println();
@@ -105,18 +141,8 @@ public class GameEngine {
         }
     } 
 
-    public static GemCollection buildGemBank(int numPlayers) {
-        int numToAdd = 0;
-        switch (numPlayers) {
-            case 4:
-                numToAdd = 7;
-                break;
-            case 3:
-                numToAdd = 5;
-                break;
-            default:
-                numToAdd = 4;
-        }
+    public static GemCollection buildGemBank(int numPlayers, GameConfig gameConfig) {
+        int numToAdd = gameConfig.getGemCountPerColor(numPlayers);
 
         Map<GemColor, Integer> map = new HashMap<>();
         map.put(GemColor.DIAMOND, numToAdd);
@@ -124,7 +150,7 @@ public class GameEngine {
         map.put(GemColor.EMERALD, numToAdd);
         map.put(GemColor.RUBY, numToAdd);
         map.put(GemColor.SAPPHIRE, numToAdd);
-        map.put(GemColor.GOLD_JOKER, 5);
+        map.put(GemColor.GOLD_JOKER, gameConfig.getGoldGems());
 
         return new GemCollection(map);
     }
@@ -132,21 +158,22 @@ public class GameEngine {
     public static void runGame() {
         try {
             Scanner sc = new Scanner(System.in);
+            GameConfig gameConfig = GameConfig.load("config.properties");
 
             int numOfPlayers = promptNumPlayers(sc);
             List<Player> players = createPlayers(sc, numOfPlayers);
 
-            List<Card> levelOneDeck = loadCards("cards.csv", 1);
-            List<Card> levelTwoDeck = loadCards("cards.csv", 2);
-            List<Card> levelThreeDeck = loadCards("cards.csv", 3);
+            List<Card> levelOneDeck = loadCards(gameConfig.getCardsFile(), 1);
+            List<Card> levelTwoDeck = loadCards(gameConfig.getCardsFile(), 2);
+            List<Card> levelThreeDeck = loadCards(gameConfig.getCardsFile(), 3);
 
             CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
-            GemCollection initialGems = buildGemBank(numOfPlayers);
+            GemCollection initialGems = buildGemBank(numOfPlayers, gameConfig);
 
-            List<Noble> nobles = loadNobles("nobles.csv", numOfPlayers + 1);
+            List<Noble> nobles = loadNobles(gameConfig.getNoblesFile(), numOfPlayers + 1);
 
-            GameState gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
+            GameState gameState = new GameState(players, cardMarket, initialGems, nobles, gameConfig.getWinningThreshold());
             GameRules gameRules = new GameRules(gameState);
 
             boolean canEnd = false;
@@ -158,15 +185,20 @@ public class GameEngine {
                 Player curPlayer = gameState.getCurrentPlayer();
                 printGameState(gameState);
                 boolean validAction = false;
-                    
-                while (!validAction) {
-                    ActionType action = promptAction(sc);
-                    validAction = executeAction(sc, action, curPlayer, gameState, gameRules);
-                    System.out.println();
+
+                if (curPlayer instanceof Bot) {
+                    Bot bot = (Bot) curPlayer;
+                    System.out.println(bot.takeTurn(gameState, gameRules));
+                } else {
+                    while (!validAction) {
+                        ActionType action = promptAction(sc);
+                        validAction = executeAction(sc, action, curPlayer, gameState, gameRules);
+                        System.out.println();
+                    }
                 }
 
                 handleGemReturn(sc, curPlayer, gameRules, gameState);
-                handleNobleClaims(curPlayer, gameState, gameRules);
+                handleNobleClaims(curPlayer, gameState, gameRules, sc);
                 checkEndCondition(gameState, gameRules);
                 gameState.advanceToNext();
                 System.out.println();
@@ -595,15 +627,40 @@ public class GameEngine {
     }
 
 
-    public static void handleNobleClaims(Player player, GameState gameState, GameRules gameRules) {
+    public static void handleNobleClaims(Player player, GameState gameState, GameRules gameRules, Scanner sc) {
         List<Noble> nobles = gameRules.getClaimableNobles(player, gameState.getAvailableNobles());
         if (nobles.size() == 0) {
             return;
         }
-        for (Noble noble: nobles) {
-            player.claimNoble(noble);
-            gameState.removeNoble(noble);
+        if (nobles.size() == 1 || player instanceof Bot) {
+            player.claimNoble(nobles.get(0));
+            gameState.removeNoble(nobles.get(0));
+            return;
         }
+        int i = 0;
+
+        for (Noble noble: nobles) {
+            System.out.println("Number: " + i + "| " + noble);
+            i++;
+        }
+        System.out.println();
+
+        System.out.printf("Which noble to pick? (Number 0 to %d)", i - 1);
+        while (true) {
+            try {
+                int option = Integer.parseInt(sc.nextLine());
+                if (option < 0 || option >= nobles.size()) {
+                    continue;
+                }
+                player.claimNoble(nobles.get(option));
+                gameState.removeNoble(nobles.get(option));
+                return;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+            }
+        }
+
+        
     }
 
     public static boolean checkEndCondition(GameState gameState, GameRules gameRules) {

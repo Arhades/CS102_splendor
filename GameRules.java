@@ -53,14 +53,31 @@ public class GameRules {
         Map<GemColor, Integer> bonus = player.calculateBonuses();
         cost = cost.afterBonuses(bonus);
 
-        GemCollection gems = player.getGems();
-        GemCollection costCollection = cost.getCost();
-        if (gems.contains(costCollection)) {
-            return costCollection;
+        GemCollection required = cost.getCost();
+        GemCollection playerGems = player.getGems();
+        GemCollection actualCost = new GemCollection();
+
+        for (GemColor color : required.getGems().keySet()) {
+            int need = required.getCount(color);
+            int have = playerGems.getCount(color);
+
+            if (have >= need) {
+                actualCost.add(color, need);
+            } else {
+                actualCost.add(color, have);
+                actualCost.add(GemColor.GOLD_JOKER, need - have);
+            }
         }
-        GemCollection newCost = new GemCollection(cost.getCost().getGems());
-        newCost.add(GemColor.GOLD_JOKER, gems.jokerNeeded(costCollection));
-        return newCost;
+
+        return actualCost;
+    }
+
+    public Map<GemColor, Integer> getDiscountedCost(Player player, Card card) {
+        Cost cost = card.getCost();
+        Map<GemColor, Integer> bonus = player.calculateBonuses();
+        cost = cost.afterBonuses(bonus);
+
+        return new HashMap<>(cost.getCost().getGems());
     }
 
     /**
@@ -227,5 +244,26 @@ public class GameRules {
             }
         }
         return false;
+    }
+
+    public int countMissingGems(Player player, Card card) {
+        Cost cost = card.getCost();
+        Map<GemColor, Integer> bonus = player.calculateBonuses();
+        cost = cost.afterBonuses(bonus);
+
+        GemCollection required = cost.getCost();
+        int missing = 0;
+
+        for (GemColor color : required.getGems().keySet()) {
+            int need = required.getCount(color);
+            int owned = player.getSpecificGem(color);
+
+            if (owned < need) {
+                missing += need - owned;
+            }
+        }
+
+        missing -= player.getSpecificGem(GemColor.GOLD_JOKER);
+        return Math.max(0, missing);
     }
 }

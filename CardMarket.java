@@ -40,7 +40,7 @@ public class CardMarket {
     
     public void splitVisible(List<Card> deck, List<Card> visible) {
         Random rand = new Random();
-        while (visible.size() != 4) {
+        while (visible.size() != 4 && deck.size() != 0) {
             int random = rand.nextInt(deck.size());
 
             visible.add(deck.get(random));
