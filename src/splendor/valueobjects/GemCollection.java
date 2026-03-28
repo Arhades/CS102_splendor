@@ -1,4 +1,8 @@
+package splendor.valueobjects;
+
 import java.util.*;
+import splendor.entity.*;
+
 /**
  * This represents a collection of gems and their quantities.
  * stores the no of gems for each color

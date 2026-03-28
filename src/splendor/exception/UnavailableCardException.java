@@ -1,3 +1,5 @@
+package splendor.exception;
+
 /**
  * Exception thrown when a requested card is not available.
  * This may occur when the card is not present in the market

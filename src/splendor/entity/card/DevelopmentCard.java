@@ -1,12 +1,10 @@
-/**
- * Represents a development card in the game.
- * 
- * A card has a level, a point value, a bonus gem color, and a cost required to purchase it.
- * Cards can be bought by players to gain permanent bonuses, which reduces the required cost,
- * and points.
- * 
- */
-public class Card {
+// REDO THE DOCUMENTATION
+package splendor.entity.card;
+
+import splendor.entity.*;
+import splendor.valueobjects.*;
+
+public class DevelopmentCard extends Card {
 
     /**
      * The level of the card.
@@ -14,19 +12,9 @@ public class Card {
     private int level;
 
     /**
-     * The number of points this card gives.
-     */
-    private int points;
-
-    /**
      * The bonus gem color of the card.
      */
     private GemColor bonus;
-
-    /**
-     * The cost required to purchase this card.
-     */
-    private Cost cost;
 
     /**
      * Constructs a card with the specified level, points, bonus, and cost.
@@ -36,11 +24,10 @@ public class Card {
      * @param bonus the bonus gem color provided by the card
      * @param cost the cost required to purchase the card
      */
-    public Card(int level, int points, GemColor bonus, Cost cost) {
+    public DevelopmentCard(int level, int points, GemColor bonus, Cost cost) {
+        super(points, cost);
         this.level = level;
-        this.points = points;
         this.bonus = bonus;
-        this.cost = cost;
     }
 
     /**
@@ -53,30 +40,12 @@ public class Card {
     }
 
     /**
-     * Returns the number of points provided by the card.
-     * 
-     * @return the card's point value
-     */
-    public int getPoints() {
-        return points;
-    }
-
-    /**
      * Returns the bonus gem color of the card.
      * 
      * @return the bonus gem color
      */
     public GemColor getBonus() {
         return bonus;
-    }
-
-    /**
-     * Returns the cost required to purchase a card.
-     * 
-     * @return the card cost
-     */
-    public Cost getCost() {
-        return cost;
     }
 
     /**
@@ -91,14 +60,14 @@ public class Card {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Card)) return false;
+        if (!(obj instanceof DevelopmentCard)) return false;
         
-        Card other = (Card) obj;
+        DevelopmentCard other = (DevelopmentCard) obj;
         
         return this.level == other.level &&
-               this.points == other.points &&
+               this.getPoints() == other.getPoints() &&
                this.bonus == other.bonus && 
-               this.cost.equals(other.cost); 
+               this.getCost().equals(other.getCost()); 
     }
 
     /**
@@ -110,7 +79,7 @@ public class Card {
      */
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(level, points, bonus, cost);
+        return java.util.Objects.hash(level, getPoints(), bonus, getCost());
     }
 
     /**
@@ -118,7 +87,8 @@ public class Card {
      * 
      * @return a string containing the card's details
      */
+    @Override
     public String toString() {
-        return String.format("Level: %d | Points: %d | Bonus: %s | Cost: %s", level, points, bonus.name(), cost.getCost().getGems().toString());
+        return String.format("Level: %d | Points: %d | Bonus: %s | Cost: %s", level, getPoints(), bonus.name(), super.getCost().getCost().getGems().toString());
     }
 }

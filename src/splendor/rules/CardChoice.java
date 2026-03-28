@@ -1,25 +1,29 @@
+package splendor.rules;
+
+import splendor.entity.card.*;
+
 public class CardChoice {
-    private Card card;
+    private DevelopmentCard card;
     private int level;
     private int index;
     private boolean reserved;
 
-    private CardChoice(Card card, int level, int index, boolean reserved) {
+    private CardChoice(DevelopmentCard card, int level, int index, boolean reserved) {
         this.card = card;
         this.level = level;
         this.index = index;
         this.reserved = reserved;
     }
 
-    public static CardChoice createVisible(Card card, int level, int index) {
+    public static CardChoice createVisible(DevelopmentCard card, int level, int index) {
         return new CardChoice(card, level, index, false);
     }
 
-    public static CardChoice createReserved(Card card, int index) {
+    public static CardChoice createReserved(DevelopmentCard card, int index) {
         return new CardChoice(card, 0, index, true);
     }
 
-    public Card getCard() {
+    public DevelopmentCard getCard() {
         return card;
     }
 

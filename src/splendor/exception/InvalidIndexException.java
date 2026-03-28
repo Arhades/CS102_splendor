@@ -1,3 +1,5 @@
+package splendor.exception;
+
 /**
  * Exception thrown when an invalid index is used.
  * This may occur when accessing elements outside the valid range

@@ -1,4 +1,12 @@
+package splendor.entity.bot;
+
 import java.util.*;
+import splendor.rules.*;
+import splendor.entity.player.*;
+import splendor.entity.card.*;
+import splendor.entity.*;
+import splendor.exception.*;
+import splendor.valueobjects.*;
 
 public abstract class Bot extends Player {
     private Random random;
@@ -31,7 +39,7 @@ public abstract class Bot extends Player {
         List<CardChoice> choices = new ArrayList<>();
         for (int level = 1; level <= 3; level++) {
             try {
-                List<Card> cards = gameState.getCardMarket().getVisibleCards(level);
+                List<DevelopmentCard> cards = gameState.getCardMarket().getVisibleCards(level);
                 for (int i = 0; i < cards.size(); i++) {
                     choices.add(CardChoice.createVisible(cards.get(i), level, i));
                 }

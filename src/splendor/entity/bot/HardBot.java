@@ -1,4 +1,10 @@
+package splendor.entity.bot;
+
 import java.util.*;
+import splendor.rules.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.entity.*;
 
 public class HardBot extends Bot {
     public HardBot(String name, int turnOrder) {
@@ -89,6 +95,7 @@ public class HardBot extends Bot {
     }
 
     private int getDiscountUsefulness(Card card, GameState gameState, boolean nobleFocus) {
+        DevelopmentCard card2 = (DevelopmentCard) card;
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
@@ -97,36 +104,38 @@ public class HardBot extends Bot {
             if (other.equals(card)) {
                 continue;
             }
-            if (other.getCost().getRequired(card.getBonus()) > 0) {
+            if (other.getCost().getRequired(card2.getBonus()) > 0) {
                 usefulness += other.getPoints() + 1;
             }
         }
 
         for (Card reserved: getReservedCards()) {
-            if (reserved.equals(card)) {
+            DevelopmentCard reserved2 = (DevelopmentCard) reserved;
+            if (reserved2.equals(card2)) {
                 continue;
             }
-            if (reserved.getCost().getRequired(card.getBonus()) > 0) {
+            if (reserved.getCost().getRequired(card2.getBonus()) > 0) {
                 usefulness += 2;
             }
         }
 
-        if (bonuses.get(card.getBonus()) < 3) {
-            usefulness += (3 - bonuses.get(card.getBonus())) * 2;
+        if (bonuses.get(card2.getBonus()) < 3) {
+            usefulness += (3 - bonuses.get(card2.getBonus())) * 2;
         }
-        if (nobleFocus && getOpeningNobleColors(gameState).contains(card.getBonus())) {
+        if (nobleFocus && getOpeningNobleColors(gameState).contains(card2.getBonus())) {
             usefulness += 4;
         }
         return usefulness;
     }
 
     private int getNobleUsefulness(Card card, GameState gameState, boolean nobleFocus) {
+        DevelopmentCard card2 = (DevelopmentCard) card;
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
         for (Noble noble: gameState.getAvailableNobles()) {
-            int required = noble.getRequirements().get(card.getBonus());
-            if (required <= bonuses.get(card.getBonus())) {
+            int required = noble.getRequirements().get(card2.getBonus());
+            if (required <= bonuses.get(card2.getBonus())) {
                 continue;
             }
             usefulness += noble.getPoints();
@@ -143,18 +152,19 @@ public class HardBot extends Bot {
     }
 
     private int getTierPenalty(Card card, GameState gameState, GameRules gameRules) {
+        DevelopmentCard card2 = (DevelopmentCard) card;
         if (!isEarlyGame(gameState)) {
             return 0;
         }
 
-        int missing = getMissingGems(gameRules, card);
-        if (card.getLevel() == 3 && missing >= 4) {
+        int missing = getMissingGems(gameRules, card2);
+        if (card2.getLevel() == 3 && missing >= 4) {
             return 8 + missing;
         }
-        if (card.getLevel() == 2 && missing >= 3) {
+        if (card2.getLevel() == 2 && missing >= 3) {
             return 4 + missing;
         }
-        if (card.getLevel() == 1 && missing >= 4) {
+        if (card2.getLevel() == 1 && missing >= 4) {
             return 2;
         }
         return 0;
@@ -272,7 +282,10 @@ public class HardBot extends Bot {
                     addWeight(weights, color, base);
                 }
             }
-            addWeight(weights, choice.getCard().getBonus(), base - 2);
+            if (choice.getCard() instanceof DevelopmentCard) {
+                DevelopmentCard card = (DevelopmentCard) choice.getCard();
+                addWeight(weights, card.getBonus(), base - 2);
+            }
         }
 
         if (nobleFocus) {

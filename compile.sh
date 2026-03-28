@@ -1,0 +1,1 @@
+javac -d output -cp "src" src/splendor/rules/GameEngine.java

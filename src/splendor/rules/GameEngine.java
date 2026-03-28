@@ -1,5 +1,13 @@
+package splendor.rules;
+
 import java.io.*;
 import java.util.*;
+import splendor.entity.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.entity.bot.*;
+import splendor.exception.*;
+import splendor.valueobjects.*;
 
 public class GameEngine {
     public static void main(String[] args) {
@@ -73,10 +81,16 @@ public class GameEngine {
         return players;
     }
 
-    public static List<Card> loadCards(String filename, int level) throws InvalidFileException {
-        try (Scanner sc = new Scanner(new File(filename))) {
+    public static List<DevelopmentCard> loadCards(String filename, int level) throws InvalidFileException {
+        InputStream inputStream = DevelopmentCard.class.getClassLoader().getResourceAsStream(filename);
+
+        if (inputStream == null) {
+            throw new InvalidFileException(String.format("File (%s) not found in classpath!!", filename));
+        }
+
+        try (Scanner sc = new Scanner(inputStream)) {
             sc.nextLine();
-            List<Card> cards = new ArrayList<>();
+            List<DevelopmentCard> cards = new ArrayList<>();
             while (sc.hasNext()) {
                 String[] cur = sc.nextLine().split(",");
                 if (Integer.parseInt(cur[0]) != level) {
@@ -90,11 +104,11 @@ public class GameEngine {
                 cost.put(GemColor.SAPPHIRE, Integer.parseInt(cur[5]));
 
                 GemColor color = convertToColor(cur[6].toUpperCase());
-                cards.add(new Card(level, Integer.parseInt(cur[7]), color, new Cost(cost)));
+                cards.add(new DevelopmentCard(level, Integer.parseInt(cur[7]), color, new Cost(cost)));
             }
             return cards;
-        } catch (FileNotFoundException e) {
-            throw new InvalidFileException(String.format("File (%s) not found!!", filename));
+        } catch (Exception e) {
+            throw new InvalidFileException("Failed to load cards from " + filename);
         }
     } 
 
@@ -114,7 +128,13 @@ public class GameEngine {
     }
 
     public static List<Noble> loadNobles(String filename, int count) throws InvalidFileException {
-        try (Scanner sc = new Scanner(new File(filename))) {
+        InputStream inputStream = DevelopmentCard.class.getClassLoader().getResourceAsStream(filename);
+
+        if (inputStream == null) {
+            throw new InvalidFileException(String.format("File (%s) not found in classpath!!", filename));
+        }
+
+        try (Scanner sc = new Scanner(inputStream)) {
             sc.nextLine();
             List<Noble> nobles = new ArrayList<>();
             while (sc.hasNext()) {
@@ -136,8 +156,8 @@ public class GameEngine {
                 nobles.remove(random);
             }
             return noblesUsed;
-        } catch (FileNotFoundException e) {
-            throw new InvalidFileException(String.format("File (%s) not found!!", filename));
+        } catch (Exception e) {
+            throw new InvalidFileException("Failed to load cards " + filename);
         }
     } 
 
@@ -163,9 +183,9 @@ public class GameEngine {
             int numOfPlayers = promptNumPlayers(sc);
             List<Player> players = createPlayers(sc, numOfPlayers);
 
-            List<Card> levelOneDeck = loadCards(gameConfig.getCardsFile(), 1);
-            List<Card> levelTwoDeck = loadCards(gameConfig.getCardsFile(), 2);
-            List<Card> levelThreeDeck = loadCards(gameConfig.getCardsFile(), 3);
+            List<DevelopmentCard> levelOneDeck = loadCards(gameConfig.getCardsFile(), 1);
+            List<DevelopmentCard> levelTwoDeck = loadCards(gameConfig.getCardsFile(), 2);
+            List<DevelopmentCard> levelThreeDeck = loadCards(gameConfig.getCardsFile(), 3);
 
             CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
@@ -452,7 +472,7 @@ public class GameEngine {
                 }
 
                 if (str.equalsIgnoreCase("reserved")) {
-                    List<Card> reservedCards = player.getReservedCards();
+                    List<DevelopmentCard> reservedCards = player.getReservedCards();
                     if (reservedCards.size() == 0) {
                         System.out.println("No reserved cards\n");
                         return false;
@@ -468,7 +488,7 @@ public class GameEngine {
                         System.out.println("Invalid input");
                         continue;
                     }
-                    Card chosen = reservedCards.get(num);
+                    DevelopmentCard chosen = reservedCards.get(num);
                     player.addCard(chosen);
                 
                     GemCollection cost = gameRules.calculateActualCost(player, chosen);
@@ -503,7 +523,7 @@ public class GameEngine {
                     continue;
                 }
 
-                Card chosen = cardMarket.getVisibleCard(level, number);
+                DevelopmentCard chosen = cardMarket.getVisibleCard(level, number);
 
                 if (!gameRules.canAffordCard(player, chosen)) {
                     System.out.println("Cannot afford!\n");
@@ -564,7 +584,7 @@ public class GameEngine {
                 }
 
                 if (number == 4) {
-                    Card chosen = cardMarket.drawCard(level);
+                    DevelopmentCard chosen = cardMarket.drawCard(level);
                     player.addReservedCard(chosen);
                     if (gemBank.getCount(GemColor.GOLD_JOKER) > 0) {
                         GemCollection gems = new GemCollection();
@@ -574,7 +594,7 @@ public class GameEngine {
                     }
                     return true;
                 }
-                Card chosen = cardMarket.getVisibleCard(level, number);
+                DevelopmentCard chosen = cardMarket.getVisibleCard(level, number);
 
                 player.addReservedCard(chosen);
 
