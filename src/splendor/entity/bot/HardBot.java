@@ -20,14 +20,14 @@ public class HardBot extends Bot {
             return buyChoice(choice, gameState, gameRules);
         }
 
-        CardChoice reserveChoice = getReserveChoice(gameState, gameRules, nobleFocus);
-        if (reserveChoice != null) {
-            return reserveChoice(reserveChoice, gameState, gameRules);
-        }
-
         String gemMove = chooseGemMove(gameState, gameRules, nobleFocus);
         if (!gemMove.equals("")) {
             return gemMove;
+        }
+        
+        CardChoice reserveChoice = getReserveChoice(gameState, gameRules, nobleFocus);
+        if (reserveChoice != null) {
+            return reserveChoice(reserveChoice, gameState, gameRules);
         }
 
         if (gameRules.canReserveCard(this) && isEarlyGame(gameState)) {
@@ -77,7 +77,7 @@ public class HardBot extends Bot {
 
     private int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         Card card = choice.getCard();
-        int score = card.getPoints() * 10;
+        int score = card.getPoints() * 4;
         score += getDiscountUsefulness(card, gameState, nobleFocus);
         score += getNobleUsefulness(card, gameState, nobleFocus);
         score -= getMissingGems(gameRules, card) * 2;
@@ -90,6 +90,9 @@ public class HardBot extends Bot {
         }
         if (!nobleFocus) {
             score += card.getPoints() * 2;
+        }
+        if (isEarlyGame(gameState) && card.getLevel() == 1 && card.getPoints() == 0) {
+            score += 8;
         }
         return score;
     }
@@ -245,7 +248,7 @@ public class HardBot extends Bot {
         int deny = getDenyBonus(best, gameState, gameRules);
 
         if (isEarlyGame(gameState) && getReservedCards().size() < 2) {
-            if (score >= 12 || missing <= 3 || nobleFocus && getOpeningNobleColors(gameState).contains(best.getCard().getBonus())) {
+            if (score >= 12 || missing <= 1 || nobleFocus && getOpeningNobleColors(gameState).contains(best.getCard().getBonus())) {
                 return best;
             }
         }
@@ -300,7 +303,9 @@ public class HardBot extends Bot {
             if (color.equals(GemColor.GOLD_JOKER)) {
                 continue;
             }
-            addWeight(weights, color, -bonus.get(color) * 2);
+            if (bonus.get(color) >= 3) {
+                addWeight(weights, color, -(bonus.get(color) - 2) * 2);
+            }
             if (getSpecificGem(color) > 2) {
                 addWeight(weights, color, -(getSpecificGem(color) - 2) * 2);
             }
