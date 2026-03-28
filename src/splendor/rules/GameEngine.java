@@ -16,52 +16,11 @@ public class GameEngine {
         runGame();
     }
 
-    public static int promptNumPlayers(Scanner sc) {
-        int num = 0;
-        while (num < 2 || num > 4) {
-            try {
-                System.out.print("How many players? (2 - 4): ");
-                num = Integer.parseInt(sc.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a digit between 2 and 4\n");
-                continue;
-            }
-            if (num < 2 || num > 4) {
-                System.out.println("Please enter a digit between 2 and 4\n");
-            }
-        }
-        System.out.println();
-        return num;
-    }
-
-    public static int promptPlayerType(Scanner sc, int playerNumber) {
-        while (true) {
-            try {
-                System.out.printf("Player %d type (1 = Human, 2 = Easy Bot, 3 = Hard Bot): ", playerNumber);
-                int type = Integer.parseInt(sc.nextLine());
-                if (type >= 1 && type <= 3) {
-                    return type;
-                }
-            } catch (NumberFormatException e) {
-            }
-            System.out.println("Invalid input\n");
-        }
-    }
-
-    public static String promptPlayerName(Scanner sc, int playerNumber, String defaultName) {
-        System.out.printf("Player %d name (blank for \"%s\"): ", playerNumber, defaultName);
-        String name = sc.nextLine().trim();
-        if (name.equals("")) {
-            return defaultName;
-        }
-        return name;
-    }
-
-    public static List<Player> createPlayers(Scanner sc, int numPlayers) {
+    public static List<Player> createPlayers(Scanner sc, int numPlayers, DisplayUI display) {
         List<Player> players = new ArrayList<>();
 
         for (int i = 0; i < numPlayers; i++) {
-            int type = promptPlayerType(sc, i + 1);
+            int type = display.promptPlayerType(sc, i + 1);
             String defaultName = "Player " + (i + 1);
             if (type == 2) {
                 defaultName = "EasyBot " + (i + 1);
@@ -69,7 +28,7 @@ public class GameEngine {
                 defaultName = "HardBot " + (i + 1);
             }
 
-            String name = promptPlayerName(sc, i + 1, defaultName);
+            String name = display.promptPlayerName(sc, i + 1, defaultName);
             if (type == 1) {
                 players.add(new Player(name, i + 1));
             } else if (type == 2) {
@@ -183,8 +142,8 @@ public class GameEngine {
             GameConfig gameConfig = GameConfig.load("config.properties");
             DisplayUI display = new DisplayUI();
 
-            int numOfPlayers = promptNumPlayers(sc);
-            List<Player> players = createPlayers(sc, numOfPlayers);
+            int numOfPlayers = display.promptNumPlayers(sc);
+            List<Player> players = createPlayers(sc, numOfPlayers, display);
 
             List<DevelopmentCard> levelOneDeck = loadCards(gameConfig.getCardsFile(), 1);
             List<DevelopmentCard> levelTwoDeck = loadCards(gameConfig.getCardsFile(), 2);
@@ -214,7 +173,7 @@ public class GameEngine {
                     System.out.println(bot.takeTurn(gameState, gameRules));
                 } else {
                     while (!validAction) {
-                        ActionType action = promptAction(sc);
+                        ActionType action = display.promptAction(sc);
                         validAction = executeAction(sc, action, curPlayer, gameState, gameRules, display);
                         System.out.println();
                     }
@@ -235,47 +194,6 @@ public class GameEngine {
             System.out.println(e.getMessage());
         }
 
-    }
-
-    public static ActionType promptAction(Scanner sc) {
-        System.out.println("Pick an action");
-        System.out.println("-> 1 - TAKE_THREE_DIFFERENT");
-        System.out.println("-> 2 - TAKE_TWO_SAME");
-        System.out.println("-> 3 - PURCHASE_CARD");
-        System.out.println("-> 4 - RESERVE_CARD");
-        System.out.print("Pick a number: ");
-    
-        boolean validAction = false;
-        int action = 0;
-        while (!validAction) {
-            try {
-                action = Integer.parseInt(sc.nextLine());
-                if (action < 1 || action > 4) {
-                    System.out.println("Invalid input");
-                    System.out.print("\nPick a number: ");
-                    continue;
-                }
-                validAction = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input");
-                System.out.print("\nPick a number: ");
-            }
-        }
-
-        switch (action) {
-            case 1:
-                System.out.println();
-                return ActionType.TAKE_THREE_DIFFERENT;
-            case 2:
-                System.out.println();
-                return ActionType.TAKE_TWO_SAME;
-            case 3:
-                System.out.println();
-                return ActionType.PURCHASE_CARD;
-            default:
-                System.out.println();
-                return ActionType.RESERVE_CARD;
-        }
     }
 
     public static boolean executeAction(Scanner sc, ActionType action, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
