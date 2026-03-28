@@ -1,4 +1,4 @@
-package splendor.rules;
+package splendor.config;
 
 import java.io.*;
 import java.util.*;

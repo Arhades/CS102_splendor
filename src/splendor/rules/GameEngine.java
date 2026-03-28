@@ -8,6 +8,8 @@ import splendor.entity.player.*;
 import splendor.entity.bot.*;
 import splendor.exception.*;
 import splendor.valueobjects.*;
+import splendor.config.*;
+import splendor.display.*;
 
 public class GameEngine {
     public static void main(String[] args) {
@@ -179,6 +181,7 @@ public class GameEngine {
         try {
             Scanner sc = new Scanner(System.in);
             GameConfig gameConfig = GameConfig.load("config.properties");
+            DisplayUI display = new DisplayUI();
 
             int numOfPlayers = promptNumPlayers(sc);
             List<Player> players = createPlayers(sc, numOfPlayers);
@@ -203,7 +206,7 @@ public class GameEngine {
                 System.out.println("--------------------------------------------------------------------------------------------------");
                 System.out.println();
                 Player curPlayer = gameState.getCurrentPlayer();
-                printGameState(gameState);
+                display.printGameState(gameState);
                 boolean validAction = false;
 
                 if (curPlayer instanceof Bot) {
@@ -212,7 +215,7 @@ public class GameEngine {
                 } else {
                     while (!validAction) {
                         ActionType action = promptAction(sc);
-                        validAction = executeAction(sc, action, curPlayer, gameState, gameRules);
+                        validAction = executeAction(sc, action, curPlayer, gameState, gameRules, display);
                         System.out.println();
                     }
                 }
@@ -227,106 +230,11 @@ public class GameEngine {
                     canEnd = true;
                 }
             }
-            printWinner(gameState, gameRules);
+            display.printWinner(gameState, gameRules);
         } catch (InvalidFileException e) {
             System.out.println(e.getMessage());
         }
 
-    }
-
-    public static void printGameState(GameState gameState) {
-        printPlayer(gameState);
-        printNobles(gameState);
-        printVisibleCards(gameState);
-        printGemBank(gameState);
-        printPoints(gameState);
-        printReservedCards(gameState.getCurrentPlayer());
-        printPlayerGem(gameState.getCurrentPlayer());
-    }
-
-    public static void printPlayer(GameState gameState) {
-        System.out.println(String.format("%s's turn", gameState.getCurrentPlayer().getName()));
-        System.out.println();
-    }
-
-    public static void printNobles(GameState gameState) {
-        System.out.println("NOBLES AVAILABLE");
-        List<Noble> nobles = gameState.getAvailableNobles();
-        if (nobles.size() == 0) {
-            System.out.println("No more nobles");
-        }
-        for (Noble noble: nobles) {
-            System.out.println("-> " + noble);
-        }
-        System.out.println();
-    }
-
-    public static void printVisibleCards(GameState gameState) {
-        System.out.println("AVAILABLE CARDS FOR PURCHASE");
-        List<Card> cards = new ArrayList<>();
-        CardMarket cardMarket = gameState.getCardMarket();
-
-        for (int i = 1; i <= 3; i++) {
-            try {
-                cards.addAll(cardMarket.getVisibleCards(i));
-            } catch (UnavailableCardException e) {}
-        }
-        
-        int i = 0;
-        for (Card card: cards) {
-            System.out.println(String.format("-> Number: %d | %s", i++, card));
-            if (i == 4) {
-                i = 0;
-            }
-        }
-        System.out.println();
-    }
-
-    public static void printReservedCards(Player player) {
-        System.out.println("PLAYER'S RESERVED CARDS");
-        if (player.getReservedCards().size() == 0) {
-            System.out.println("-> EMPTY\n");
-            return;
-        }
-
-        int i = 0;
-        for (Card card: player.getReservedCards()) {
-            System.out.println(String.format("-> Number: %d | %s", i++, card));
-        }
-        System.out.println();
-    }
-
-    public static void printGemBank(GameState gameState) {
-        System.out.println("GEMBANK");
-        Map<GemColor, Integer> gems = gameState.getGemBank().getGems();
-
-        for (GemColor color: gems.keySet()) {
-            System.out.println(String.format("-> %s: %d", color.name(), gems.get(color)));
-        }
-        System.out.println();
-    }
-
-    public static void printPlayerGem(Player player) {
-        System.out.println("PLAYER'S GEMS");
-        Map<GemColor, Integer> gems = player.getGems().getGems();
-        Map<GemColor, Integer> bonus = player.calculateBonuses();
-
-        for (GemColor color: gems.keySet()) {
-            if (color.equals(GemColor.GOLD_JOKER)) {
-                System.out.println(String.format("-> %s: %d", color.name(), gems.get(color)));
-                continue;
-            }
-            System.out.println(String.format("-> %s: %d / bonus = %d", color.name(), gems.get(color), bonus.get(color)));
-        }
-        System.out.println();
-    }
-
-    public static void printPoints(GameState gameState) {
-        System.out.println("POINTS");
-        for (Player player: gameState.getPlayers()) {
-            System.out.println(String.format("-> name: %s = %d", player.getName(), player.getPoints()));
-        }
-        System.out.println();
     }
 
     public static ActionType promptAction(Scanner sc) {
@@ -370,19 +278,19 @@ public class GameEngine {
         }
     }
 
-    public static boolean executeAction(Scanner sc, ActionType action, Player player, GameState gameState, GameRules gameRules) {
+    public static boolean executeAction(Scanner sc, ActionType action, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
         if (action.equals(ActionType.TAKE_THREE_DIFFERENT)) {
-            return handleTakeThreeDifferent(sc, player, gameState, gameRules);
+            return handleTakeThreeDifferent(sc, player, gameState, gameRules, display);
         } else if (action.equals(ActionType.TAKE_TWO_SAME)) {
-            return handleTakeTwoSame(sc, player, gameState, gameRules);
+            return handleTakeTwoSame(sc, player, gameState, gameRules, display);
         } else if (action.equals(ActionType.PURCHASE_CARD)) {
-            return handlePurchaseCard(sc, player, gameState, gameRules);
+            return handlePurchaseCard(sc, player, gameState, gameRules, display);
         } else {
-            return handleReserveCard(sc, player, gameState, gameRules);
+            return handleReserveCard(sc, player, gameState, gameRules, display);
         }
     }
 
-    public static boolean handleTakeThreeDifferent(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+    public static boolean handleTakeThreeDifferent(Scanner sc, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
         GemCollection gems = gameState.getGemBank();
         
         if (!gameRules.canTakeThreeDifferentGems(gems)) {
@@ -390,7 +298,7 @@ public class GameEngine {
             return false;
         }
 
-        printGemBank(gameState);
+        display.printGemBank(gameState);
         boolean valid = false;
         GemCollection add = new GemCollection();
 
@@ -428,7 +336,7 @@ public class GameEngine {
         return true;
     }
 
-    public static boolean handleTakeTwoSame(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+    public static boolean handleTakeTwoSame(Scanner sc, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
         GemCollection gems = gameState.getGemBank();
 
         if (!gameRules.canTakeTwoSameGems(gems)) {
@@ -436,7 +344,7 @@ public class GameEngine {
             return false;
         }
 
-        printGemBank(gameState);
+        display.printGemBank(gameState);
         while (true) {
             System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx)  [\"back\" to return]: ");
             String color = sc.nextLine();
@@ -460,7 +368,7 @@ public class GameEngine {
         }
     }
 
-    public static boolean handlePurchaseCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+    public static boolean handlePurchaseCard(Scanner sc, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
         CardMarket cardMarket = gameState.getCardMarket();
 
         while (true) {
@@ -477,7 +385,7 @@ public class GameEngine {
                         System.out.println("No reserved cards\n");
                         return false;
                     }
-                    printReservedCards(player);
+                    display.printReservedCards(player);
                     System.out.print("Number to purchase  [\"back\" to return]:");
                     str = sc.nextLine();
                     if (str.equalsIgnoreCase("back")) {
@@ -499,7 +407,7 @@ public class GameEngine {
                     return true;
                 }
 
-                printVisibleCards(gameState);
+                display.printVisibleCards(gameState);
                 System.out.print("Level  [\"back\" to return]: ");
                 str = sc.nextLine();
                 if (str.equalsIgnoreCase("back")) {
@@ -548,7 +456,7 @@ public class GameEngine {
         }
     }
 
-    public static boolean handleReserveCard(Scanner sc, Player player, GameState gameState, GameRules gameRules) {
+    public static boolean handleReserveCard(Scanner sc, Player player, GameState gameState, GameRules gameRules, DisplayUI display) {
         if (!gameRules.canReserveCard(player)) {
             System.out.println("No more reserve slot!");
             return false;
@@ -558,7 +466,7 @@ public class GameEngine {
 
         while (true) {
             try {
-                printVisibleCards(gameState);
+                display.printVisibleCards(gameState);
 
                 System.out.print("Level  [\"back\" to return]: ");
                 String str = sc.nextLine();
@@ -693,10 +601,5 @@ public class GameEngine {
             }
         }
         return false;
-    }
-
-    public static void printWinner(GameState gameState, GameRules gameRules) {
-        List<Player> players = gameState.getPlayers();
-        System.out.println(String.format("Winner: %s!!", gameRules.getWinner(players).getName()));
     }
 }
