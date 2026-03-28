@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.time.*;
 
 public class ClientHandler implements Runnable {
     
@@ -7,6 +8,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
     private String playerName;
+    private LocalDate playerBirthDate;
     
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -21,7 +23,9 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            playerName = in.readLine();
+            String temp =  in.readLine();
+            String[] parts = temp.split(":");
+            playerName = parts[1];
             System.out.println(playerName + " has joined the server!");
             
             SplendorServer.broadcast("SERVER: " + playerName + " joined the lobby.");
@@ -45,8 +49,20 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public void setPlayerName(String name) {
+        playerName = name;
+    }
+
     public String getPlayerName() {
         return playerName;
+    }
+
+    public void setBirthDate(LocalDate date) {
+        playerBirthDate = date;
+    }
+
+    public LocalDate getBirthDate() {
+        return playerBirthDate;
     }
 
     public void sendMessage(String message) {
