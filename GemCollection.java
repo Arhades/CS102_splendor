@@ -196,4 +196,19 @@ public class GemCollection {
     public String toString() {
         return gems.toString();
     }
+
+    /**
+     * Converts the current gem counts into a network-friendly string.
+     * Example output: "DIAMOND-5,ONYX-5,EMERALD-4,RUBY-5,SAPPHIRE-5,GOLD-5"
+     */
+    public String getBankAsString() {
+        // NOTE: Change these variable names if your class uses 
+        // a Map or different integer names (like 'diamondCount')
+        return "DIAMOND-" + GemColor.DIAMOND + "," +
+               "ONYX-" + GemColor.ONYX + "," +
+               "EMERALD-" + GemColor.EMERALD + "," +
+               "RUBY-" + GemColor.RUBY + "," +
+               "SAPPHIRE-" + GemColor.SAPPHIRE + "," +
+               "GOLD_JOKER-" + GemColor.GOLD_JOKER; 
+    }
 }

@@ -216,5 +216,42 @@ public class Player {
         return gems.getGems();
     }
 
+    /**
+     * Packages the player's score, tokens, and bonuses into a string.
+     * Example output: "SCORE-15,TOKENS:[DIAMOND-2,ONYX-1...],BONUSES:[RUBY-3,EMERALD-1...]"
+     */
+    public String getPlayerStateAsString() {
+        StringBuilder sb = new StringBuilder();
+        
+        // 1. Add the player's Prestige Points (Score)
+        sb.append("SCORE-").append(getPoints()).append(",");
+        
+        // 2. Add the player's physical tokens in hand
+        sb.append("TOKENS:[").append(gems.getBankAsString()).append("],");
+        
+        // 3. Add the player's permanent card bonuses
+        GemCollection temporaryBonuses = new GemCollection();
+        for (Card c : purchasedCards) {
+            temporaryBonuses.add(c.getBonus(), 1);
+        }
+        sb.append("BONUSES:[").append(temporaryBonuses.getBankAsString()).append("]");
+
+        sb.append(",RESERVED:[");
+        if (reservedCards != null && !reservedCards.isEmpty()) {
+            for (Card c : reservedCards) {
+                // Formatting as COLOR-POINTS (e.g., RUBY-2)
+                sb.append(c.getBonus().name()).append("-").append(c.getPoints()).append(",");
+            }
+            // Strip off the final comma if we added any cards
+            if (sb.charAt(sb.length() - 1) == ',') {
+                sb.setLength(sb.length() - 1);
+            }
+        } else {
+            sb.append("NONE");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     
 }
