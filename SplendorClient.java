@@ -7,9 +7,10 @@ import java.util.*;
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
-    private static final String SERVER_IP = "172.20.10.7"; 
+    private static final String SERVER_IP = "172.29.144.1"; 
     private static final int SERVER_PORT = 9090;
-    protected static boolean gameStarted = false;
+    protected static volatile boolean gameStarted = false;
+    protected static volatile boolean waitingForServer = false;
 
     public static void main(String[] args) {
         try {
@@ -90,13 +91,14 @@ public class SplendorClient {
                             System.out.print("Enter third color: ");
                             String color3 = scanner.nextLine().toUpperCase();
                             
-                            // read using BufferedReader
+                            waitingForServer = true;
                             out.println("TAKE THREE:" + color1 + ":" + color2 + ":" + color3);
                             break;
                             
                         case "2":
                             System.out.print("Enter the color you want 2 of: ");
                             String color = scanner.nextLine().toUpperCase();
+                            waitingForServer = true;
                             out.println("TAKE TWO:" + color);
                             break;
                             
@@ -106,12 +108,14 @@ public class SplendorClient {
                             if (choice.equalsIgnoreCase("reserved")) {
                                 System.out.println("Which card? (1 for the first card and so on):");
                                 String res = scanner.nextLine();
+                                waitingForServer = true;
                                 out.println("PURCHASE:RESERVED:" + res);
                             } else {
                                 System.out.print("Which deck level (1-3)? ");
                                 String level = scanner.nextLine();
                                 System.out.print("Which card index (0-3)? ");
                                 String index = scanner.nextLine();
+                                waitingForServer = true;
                                 out.println("PURCHASE:" + level + ":" + index);
                             }
                             break;
@@ -121,12 +125,21 @@ public class SplendorClient {
                             String resLevel = scanner.nextLine();
                             System.out.print("Which card index (0-3)? ");
                             String resIndex = scanner.nextLine();
+                            waitingForServer = true;
                             out.println("RESERVE:" + resLevel + ":" + resIndex);
                             break;
                             
                         default:
                             System.out.println("Invalid choice. Please type 1, 2, 3, or 4.");
                             break;
+                    }
+                    while (waitingForServer) {
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            System.out.println("The server was interrupted.");
+                        }
                     }
                 }
             }
@@ -139,11 +152,7 @@ public class SplendorClient {
         }
     }
 
-    /**
-     * Takes the raw board state string from the server and prints a clean UI.
-     */
     public static void renderBoard(String rawState) {
-         // 1. Remove the "BOARD_STATE:" prefix
         String cleanState = rawState.replace("BOARD_STATE:", "");
         String[] sections = cleanState.split("\\|");
 
@@ -151,7 +160,6 @@ public class SplendorClient {
         System.out.println("           SPLENDOR GAME BOARD          ");
         System.out.println("========================================");
 
-        // 3. Loop through each section and print it nicely
         for (String section : sections) {
             
             if (section.startsWith("BANK=")) {
@@ -171,14 +179,12 @@ public class SplendorClient {
             
             else if (section.startsWith("PLAYER=")) {
                 System.out.println("\n--- PLAYER STATS ---");
-                // Example format: PLAYER=Player 1,SCORE-15,TOKENS:...
                 String[] playerParts = section.replace("PLAYER=", "").split(",", 2);
                 
                 String playerName = playerParts[0];
                 String stats = playerParts.length > 1 ? playerParts[1] : "No stats";
                 
                 System.out.println(playerName.toUpperCase() + ":");
-                // Make the tokens and bonuses print on their own indented lines
                 stats = stats.replace(",TOKENS:", "\n  Tokens: ")
                              .replace(",BONUSES:", "\n  Bonuses: ")
                              .replace(",RESERVED:", "\n  Reserved: ");
