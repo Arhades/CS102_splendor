@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.time.*;
+import java.time.format.*;
 import java.util.*;
 
 public class SplendorServer {
@@ -52,49 +54,57 @@ public class SplendorServer {
         System.out.println("Received from " + playerName + ": " + actionCommand);
 
         // action command example: 
-        // TAKE_THREE:RUBY:ONYX:EMERALD
+        // TAKE THREE:RUBY:ONYX:EMERALD
         // ACTION:PURCHASE:RESERVED:0
         // ACTION:PURCHASE:1:2
         String[] parts = actionCommand.split(":");
-        if (parts.length < 2) {
-            return;
-        }
-        String actionType = parts[0];
-        if (actionType.equals("START GAME")) {
-            if (clients.size() < 2) {
-                sendToSpecificPlayer(playerName, "You need at least 2 players to start!");
-            } else if (playerName.equals("Player 1")) {
-                gameStarted = true;
-                broadcast(playerName + " has forced the game to start!");
-            } else {
-                sendToSpecificPlayer(playerName, ("Only " + playerName + "(the Host) can start the game."));
-            }
+        if (parts.length < 1 || parts[0].trim().isEmpty()) {
             return;
         }
 
-        if (gameState == null) {
+
+        String actionType = parts[0].trim().toUpperCase();
+
+        if (gameState == null && !actionType.equals("START GAME")) {
             sendToSpecificPlayer(playerName, "The game has not started yet.");
             return;
         }
 
-        Player expectedPlayer = gameState.getCurrentPlayer();
-        if (!playerName.equals(expectedPlayer.getName())) {
-            sendToSpecificPlayer(playerName, "It is not your turn yet.");
-            return;
+        Player expectedPlayer = null;
+        if (gameState != null && !actionType.equals("START GAME")) {
+            expectedPlayer = gameState.getCurrentPlayer();
+            if (!playerName.equals(expectedPlayer.getName())) {
+                sendToSpecificPlayer(playerName, "It is not your turn yet.");
+                return;
+            }
         }
+
 
         boolean moveSuccessful = false;
 
         try {
             switch (actionType) {
-                case "START_GAME":
+                case "START GAME":
+                    if (gameStarted) {
+                        sendToSpecificPlayer(playerName, "The game has already started!");
+                        return; 
+                    }
                     if (clients.size() < 2) {
                         sendToSpecificPlayer(playerName, "You need at least 2 players to start!");
                         return;
                     } 
-                    if (gameStarted) {
-                        sendToSpecificPlayer(playerName, "The game has already started!");
-                        return;
+                    clients.sort((c1, c2) -> {
+                        if (c1.getBirthDate() == null && c2.getBirthDate() == null) return 0;
+                        if (c1.getBirthDate() == null) return 1;
+                        if (c2.getBirthDate() == null) return -1;
+                        return c2.getBirthDate().compareTo(c1.getBirthDate());
+                    });
+
+                    String youngestName = clients.get(0).getPlayerName();
+                    if (!playerName.equals(youngestName)) {
+                        sendToSpecificPlayer(playerName, "Only the youngest player (" + youngestName + ") can start the game.");
+                        sendToSpecificPlayer(playerName, "AND YOU ARE OLD");
+                        return; 
                     }
                     try {
                         System.out.println("Loading cards and nobles...");
@@ -106,36 +116,41 @@ public class SplendorServer {
                             id++;
                         }
 
-                        // 2. Load the decks and build the market
                         List<Card> levelOneDeck = GameEngine.loadCards("cards.csv", 1);
                         List<Card> levelTwoDeck = GameEngine.loadCards("cards.csv", 2);
                         List<Card> levelThreeDeck = GameEngine.loadCards("cards.csv", 3);
                         CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
-                        // 3. Build the bank and nobles based on player count
                         GemCollection initialGems = GameEngine.buildGemBank(numOfPlayers);
                         List<Noble> nobles = GameEngine.loadNobles("nobles.csv", numOfPlayers + 1);
 
-                        // 4. Create the official GameState and GameRules!
                         gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
                         gameRules = new GameRules(gameState);
-                        
-                        // 5. Lock the lobby and announce the start!
+
                         gameStarted = true;
                         System.out.println("Game board successfully initialized!");
                         
-                        broadcast("The game has started with " + numOfPlayers + " players!");
+                        broadcast("The game has started with " + numOfPlayers + " players with " + youngestName + " being the youngest player!");
                         broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
                         broadcastGameState();
 
-                    } catch (Exception e) {
-                        System.out.println("Failed to load CSV files or initialize game.");
+                    } catch (NullPointerException e) {
+                        System.out.println("Client does not exist");
                         e.printStackTrace();
-                        broadcast("Server failed to load game files.");
+                        broadcast("Player missing");
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid Argument");
+                        e.printStackTrace();
+                        broadcast("Wrong input by player.");
+                    }
+                    catch (Exception e) {
+                        System.out.println("Failed to initialize game.");
+                        e.printStackTrace();
+                        broadcast("The game crashed");
                     }
                     return;
                 
-                case "TAKE_TWO":
+                case "TAKE TWO":
                     System.out.println("Taking two gems: " + parts[1]);
                     
                     // get the color they requested and convert it
@@ -162,7 +177,7 @@ public class SplendorServer {
                     }
                     break;
                     
-                case "TAKE_THREE":
+                case "TAKE THREE":
                     if (parts.length < 4) {
                         sendToSpecificPlayer(playerName, "You must select exactly 3 gem colors.");
                         break; 
@@ -204,23 +219,26 @@ public class SplendorServer {
                     break;
                     
                 case "PURCHASE":
-                    if (parts.length < 4) {
+                    if (parts.length < 3) {
                         sendToSpecificPlayer(playerName, "Invalid purchase command format.");
                         break;
                     }
                     
                     // this is the "1", "2", "3", or "RESERVED"
                     String sourceOrLevel = parts[1].toUpperCase();
-                    int index;
-                    try {
-                        index = Integer.parseInt(parts[2]);
-                    } catch (NumberFormatException e) {
-                        sendToSpecificPlayer(playerName, "Card index must be a number.");
-                        break;
+                    int index = 0;
+                    int index2 = 0;
+                    if (!(sourceOrLevel.equals("RESERVED"))) {
+                        try {
+                            index = Integer.parseInt(parts[2]);
+                            index2 = Integer.parseInt(parts[1]);
+                        } catch (NumberFormatException e) {
+                            sendToSpecificPlayer(playerName, "Card index must be a number.");
+                            break;
+                        }
+
+                        System.out.println("Processing purchase for Card level " + sourceOrLevel + " and Index " + index);
                     }
-
-                    System.out.println("Processing purchase for " + sourceOrLevel + " Index " + index);
-
                     Card cardToBuy = null;
                     try {
                         if (sourceOrLevel.equals("RESERVED")) {
@@ -255,6 +273,8 @@ public class SplendorServer {
                     } catch (UnavailableCardException e) {
                         sendToSpecificPlayer(playerName, "That card is no longer available to be bought.");
                         break;
+                    } catch (NullPointerException e) {
+                        sendToSpecificPlayer(playerName, "You do not have such a reserved card.");
                     }
 
                     if (!gameRules.canAffordCard(expectedPlayer, cardToBuy)) {
@@ -273,7 +293,7 @@ public class SplendorServer {
                     break;
                     
                 case "RESERVE":
-                    if (parts.length < 4) {
+                    if (parts.length < 3) {
                         sendToSpecificPlayer(playerName, "Invalid reserve command format.");
                         break;
                     }
@@ -354,6 +374,8 @@ public class SplendorServer {
             }
 
         } catch (Exception e) {
+            System.out.println("CRASH DURING ACTION: " + actionType);
+            e.printStackTrace(); 
             sendToSpecificPlayer(playerName, "Invalid Input");
         }
     }
@@ -373,20 +395,19 @@ public class SplendorServer {
         }
     }
 
-    /**
-     * Receives a message from a specific client's thread and routes it to the game logic.
-     * The 'synchronized' keyword ensures that if two players click a button at the 
-     * exact same millisecond, the server processes them one at a time so the game 
-     * state doesn't get corrupted!
-     */
     public static synchronized void processClientMessage(ClientHandler sender, String message) {
-        // Forward the message to the massive switch statement you already wrote!
-        processPlayerAction(message, sender.getPlayerName());
+        if (message.startsWith("JOINED:")) {
+            String[] parts = message.split(":");
+            sender.setPlayerName(parts[1]);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate date = LocalDate.parse(parts[2], formatter);
+            sender.setBirthDate(date);
+            System.out.println(parts[1] + " successfully joined");
+        } else {
+            processPlayerAction(message, sender.getPlayerName());
+        }
     }
 
-    /**
-     * Safely removes a disconnected client from the server's list.
-     */
     public static synchronized void removeClient(ClientHandler client) {
         clients.remove(client);
         System.out.println(client.getPlayerName() + " left the game.");
@@ -397,9 +418,6 @@ public class SplendorServer {
         }
     }
 
-    /**
-     * Packages the entire board into a single String and sends it to all players.
-     */
     public static void broadcastGameState() {
         if (gameState == null) {
             return;
