@@ -1,1 +1,1 @@
-javac -d output -cp "src" src/splendor/rules/GameEngine.java
+javac -d classes -cp "src" src/splendor/rules/GameEngine.java
