@@ -1,4 +1,10 @@
+package splendor.rules;
+
 import java.util.*;
+import splendor.entity.player.*;
+import splendor.entity.card.*;
+import splendor.valueobjects.*;
+import splendor.entity.*;
 
 /**
  * The GameRules class contains the logic that enforces the rules of the game.

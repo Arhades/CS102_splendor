@@ -1,0 +1,1 @@
+java -cp "output:config:data" splendor.rules.GameEngine

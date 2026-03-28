@@ -1,3 +1,5 @@
+package splendor.exception;
+
 import java.io.*;
 
 /**

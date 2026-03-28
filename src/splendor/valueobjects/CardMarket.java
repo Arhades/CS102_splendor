@@ -1,4 +1,8 @@
+package splendor.valueobjects;
+
 import java.util.*;
+import splendor.entity.card.*;
+import splendor.exception.*;
 /**
  * Represents the card market in the game.
  * 
@@ -6,12 +10,12 @@ import java.util.*;
  * Each level has a deck of cards and a set of visible cards available to players.
  */
 public class CardMarket {
-    private List<Card> levelOneVisible = new ArrayList<>();
-    private List<Card> levelOneDeck;
-    private List<Card> levelTwoVisible = new ArrayList<>();
-    private List<Card> levelTwoDeck;
-    private List<Card> levelThreeVisible = new ArrayList<>();
-    private List<Card> levelThreeDeck;
+    private List<DevelopmentCard> levelOneVisible = new ArrayList<>();
+    private List<DevelopmentCard> levelOneDeck;
+    private List<DevelopmentCard> levelTwoVisible = new ArrayList<>();
+    private List<DevelopmentCard> levelTwoDeck;
+    private List<DevelopmentCard> levelThreeVisible = new ArrayList<>();
+    private List<DevelopmentCard> levelThreeDeck;
     /**
      * Constructs a CardMarket with decks for each level.
      * Initializes the visible cards by randomly selecting 4 cards from each deck.
@@ -20,7 +24,7 @@ public class CardMarket {
      * @param levelTwoCards the list of level 2 cards
      * @param levelThreeCards the list of level 3 cards
      */
-    public CardMarket(List<Card> levelOneCards, List<Card> levelTwoCards, List<Card> levelThreeCards) {
+    public CardMarket(List<DevelopmentCard> levelOneCards, List<DevelopmentCard> levelTwoCards, List<DevelopmentCard> levelThreeCards) {
         levelOneDeck = levelOneCards;
         levelTwoDeck = levelTwoCards;
         levelThreeDeck = levelThreeCards;
@@ -38,7 +42,7 @@ public class CardMarket {
      * @param visible the list to store visible cards
      */
     
-    public void splitVisible(List<Card> deck, List<Card> visible) {
+    public void splitVisible(List<DevelopmentCard> deck, List<DevelopmentCard> visible) {
         Random rand = new Random();
         while (visible.size() != 4 && deck.size() != 0) {
             int random = rand.nextInt(deck.size());
@@ -62,8 +66,8 @@ public class CardMarket {
      * @return the list of visible cards at the specified level
      * @throws InvalidIndexException if the level is not valid
      */
-    public List<Card> getVisibleCards(int level) throws UnavailableCardException {
-        List<Card> cards = null;
+    public List<DevelopmentCard> getVisibleCards(int level) throws UnavailableCardException {
+        List<DevelopmentCard> cards = null;
         switch (level) {
             case 1 -> cards = levelOneVisible;
             case 2 -> cards = levelTwoVisible;
@@ -81,8 +85,8 @@ public class CardMarket {
      * @throws InvalidIndexException if the level is not valid
      */
 
-    public List<Card> getDeckCards(int level) throws UnavailableCardException {
-        List<Card> cards = null;
+    public List<DevelopmentCard> getDeckCards(int level) throws UnavailableCardException {
+        List<DevelopmentCard> cards = null;
         switch (level) {
             case 1 -> cards = levelOneDeck;
             case 2 -> cards = levelTwoDeck;
@@ -101,8 +105,8 @@ public class CardMarket {
      * @throws InvalidIndexException if the level is not valid
      */
 
-    public Card getVisibleCard(int level, int index) {
-        Card card = null;
+    public DevelopmentCard getVisibleCard(int level, int index) {
+        DevelopmentCard card = null;
         switch (level) {
             case 1 -> card = levelOneVisible.get(index);
             case 2 -> card = levelTwoVisible.get(index);
@@ -137,7 +141,7 @@ public class CardMarket {
      * @throws UnavailableCardException if the deck is empty
      * @throws InvalidIndexException if the level is not valid
      */
-    public Card drawCard(int level) throws UnavailableCardException {
+    public DevelopmentCard drawCard(int level) throws UnavailableCardException {
         Random rand = new Random();
         switch (level) {
             case 1:
@@ -145,7 +149,7 @@ public class CardMarket {
                     throw new UnavailableCardException("No more card left in deck");
                 }
                 int random = rand.nextInt(levelOneDeck.size());
-                Card card = levelOneDeck.get(random);
+                DevelopmentCard card = levelOneDeck.get(random);
                 levelOneDeck.remove(random);
                 return card;
             case 2:
@@ -196,7 +200,7 @@ public class CardMarket {
      * @param index the index of the card to remove
      */
     public void removeCard(int level, int index) {
-        List<Card> cards = null;
+        List<DevelopmentCard> cards = null;
         switch (level) {
             case 1:
                 cards = levelOneVisible;
@@ -218,11 +222,12 @@ public class CardMarket {
                 sb.append("L").append(level).append(":");
                 
                 // Get visible cards for this level
-                List<Card> visible = getVisibleCards(level);
-                for (Card c : visible) {
+                List<DevelopmentCard> visible = getVisibleCards(level);
+                for (DevelopmentCard c : visible) {
                     if (c != null) {
                         // Send minimal data: Color and Points (e.g., "RUBY-2")
-                        sb.append(c.getBonus().name()).append("-").append(c.getPoints()).append(",");
+                        DevelopmentCard c2 = (DevelopmentCard) c;
+                        sb.append(c2.getBonus().name()).append("-").append(c2.getPoints()).append(",");
                     } else {
                         sb.append("EMPTY,");
                     }

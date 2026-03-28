@@ -1,3 +1,4 @@
+package splendor.entity;
 /*
  * Enumeration of all possible player actions in the game.
  

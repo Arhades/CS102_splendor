@@ -1,5 +1,9 @@
+package splendor.entity.card;
+
 import java.util.Map;
 import java.util.Objects;
+import splendor.entity.*;
+import splendor.valueobjects.*;
 
 /**
  * Represents a noble title in the game.
@@ -10,23 +14,12 @@ import java.util.Objects;
  * Nobles award points when claimed.
  * 
  */
-public class Noble {
+public class Noble extends Card {
 
     /**
      * The name of the noble.
      */
     private String name;
-
-    /**
-     * The number of points awarded by this noble.
-     */
-    private int points;
-
-    /**
-     * The bonus card requirements needed to claim this noble.
-     * Each gem color maps to the required number of bonuses.
-     */
-    private Map<GemColor, Integer> requirements;
 
     /**
      * Constructs a nobe with the specified name and requirements.
@@ -35,9 +28,8 @@ public class Noble {
      * @param requirements the bonus card requirements needed to claim the noble
      */
     public Noble(String name, Map<GemColor, Integer> requirements) {
+        super(3, new Cost(requirements));
         this.name = name;
-        this.requirements = requirements;
-        this.points = 3; 
     }
 
     /**
@@ -50,21 +42,12 @@ public class Noble {
     }
 
     /**
-     * Returns the number of points awarded by this noble.
-     * 
-     * @return the noble's point value
-     */
-    public int getPoints() {
-        return points;
-    }
-
-    /**
      * Returns the requirements needed to claim this noble.
      * 
      * @return a map of gem colors to required bonus counts
      */
     public Map<GemColor, Integer> getRequirements() {
-        return requirements;
+        return super.getCost().getCost().getGems();
     }
 
     /**
@@ -120,7 +103,7 @@ public class Noble {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name, getCost(), getPoints());
     }
 
     /**
@@ -129,6 +112,6 @@ public class Noble {
      * @return a string containing the noble's details
      */
     public String toString() {
-        return String.format("Name: %s | Requirements: %s", name, requirements.toString());
+        return String.format("Name: %s | Requirements: %s", name, getRequirements().toString());
     }
 }

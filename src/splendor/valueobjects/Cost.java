@@ -1,4 +1,7 @@
+package splendor.valueobjects;
+
 import java.util.*;
+import splendor.entity.*;
 
 /**
  * Represents the gem cost required to obtain a card.
