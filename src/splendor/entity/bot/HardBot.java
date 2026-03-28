@@ -76,7 +76,7 @@ public class HardBot extends Bot {
     }
 
     private int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
-        Card card = choice.getCard();
+        DevelopmentCard card = choice.getCard();
         int score = card.getPoints() * 4;
         score += getDiscountUsefulness(card, gameState, nobleFocus);
         score += getNobleUsefulness(card, gameState, nobleFocus);
