@@ -210,4 +210,34 @@ public class CardMarket {
 
         cards.remove(index);
     }
+
+    public String getMarketAsString() {
+        StringBuilder sb = new StringBuilder();
+        try {
+            for (int level = 1; level <= 3; level++) {
+                sb.append("L").append(level).append(":");
+                
+                // Get visible cards for this level
+                List<Card> visible = getVisibleCards(level);
+                for (Card c : visible) {
+                    if (c != null) {
+                        // Send minimal data: Color and Points (e.g., "RUBY-2")
+                        sb.append(c.getBonus().name()).append("-").append(c.getPoints()).append(",");
+                    } else {
+                        sb.append("EMPTY,");
+                    }
+                }
+                // Remove trailing comma, add a semicolon to separate levels
+                if (sb.length() > 0 && sb.charAt(sb.length()-1) == ',') {
+                    sb.setLength(sb.length() - 1);
+                }
+                sb.append(";");
+            }
+        } catch (UnavailableCardException e) {
+            System.out.println("Invalid Level");
+        }
+        
+        
+        return sb.toString();
+    }
 }
