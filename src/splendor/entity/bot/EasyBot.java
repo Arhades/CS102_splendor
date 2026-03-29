@@ -1,4 +1,8 @@
+package splendor.entity.bot;
+
 import java.util.*;
+import splendor.rules.*;
+import splendor.entity.*;
 
 public class EasyBot extends Bot {
     public EasyBot(String name, int turnOrder) {

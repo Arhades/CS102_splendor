@@ -1,4 +1,11 @@
+package splendor.rules;
+
 import java.util.*;
+import splendor.entity.player.*;
+import splendor.entity.*;
+import splendor.valueobjects.*;
+import splendor.exception.*;
+import splendor.entity.card.*;
 
 public final class GameActions {
     private GameActions() {
@@ -53,7 +60,7 @@ public final class GameActions {
     public static boolean purchaseVisibleCard(Player player, GameState gameState, GameRules gameRules, int level, int index) {
         CardMarket cardMarket = gameState.getCardMarket();
         try {
-            Card chosen = cardMarket.getVisibleCard(level, index);
+            DevelopmentCard chosen = cardMarket.getVisibleCard(level, index);
             if (!gameRules.canAffordCard(player, chosen)) {
                 return false;
             }
@@ -77,7 +84,7 @@ public final class GameActions {
             return false;
         }
 
-        Card chosen = player.getReservedCards().get(index);
+        DevelopmentCard chosen = player.getReservedCards().get(index);
         if (!gameRules.canAffordCard(player, chosen)) {
             return false;
         }
@@ -97,7 +104,7 @@ public final class GameActions {
 
         CardMarket cardMarket = gameState.getCardMarket();
         try {
-            Card chosen = cardMarket.getVisibleCard(level, index);
+            DevelopmentCard chosen = cardMarket.getVisibleCard(level, index);
             player.addReservedCard(chosen);
             cardMarket.removeCard(level, index);
             cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
@@ -116,7 +123,7 @@ public final class GameActions {
         }
 
         try {
-            Card chosen = gameState.getCardMarket().drawCard(level);
+            DevelopmentCard chosen = gameState.getCardMarket().drawCard(level);
             player.addReservedCard(chosen);
             giveGoldJoker(player, gameState);
             return true;

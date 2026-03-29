@@ -1,4 +1,9 @@
+package splendor.rules;
+
 import java.util.*;
+import splendor.entity.player.*;
+import splendor.valueobjects.*;
+import splendor.entity.card.*;
 
 /**
  * The GameState class represents the current state of the game.

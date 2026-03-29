@@ -1,4 +1,10 @@
+package splendor.entity.player;
+
 import java.util.*;
+import splendor.entity.card.*;
+import splendor.valueobjects.*;
+import splendor.entity.*;
+
 /**
  * This represents a player in the game.
  * 
@@ -24,12 +30,12 @@ public class Player {
     /**
      * The list of cards purchased by the player.
      */
-    private List<Card> purchasedCards;
+    private List<DevelopmentCard> purchasedCards;
 
     /**
      * The list of cards reserved by the player.
      */
-    private List<Card> reservedCards;
+    private List<DevelopmentCard> reservedCards;
 
     /**
      * The gem collection currently owned by the player.
@@ -79,7 +85,7 @@ public class Player {
      * 
      * @return the list of purchased cards
      */
-    public List<Card> getPurchasedCards() {
+    public List<DevelopmentCard> getPurchasedCards() {
         return purchasedCards;
     }
 
@@ -88,7 +94,7 @@ public class Player {
      * 
      * @return the list of reserved cards
      */
-    public List<Card> getReservedCards() {
+    public List<DevelopmentCard> getReservedCards() {
         return reservedCards;
     }
 
@@ -125,7 +131,7 @@ public class Player {
      * 
      * @param card the card to be added
      */
-    public void addCard(Card card) {
+    public void addCard(DevelopmentCard card) {
         this.purchasedCards.add(card);
     }
 
@@ -134,7 +140,7 @@ public class Player {
      * 
      * @param card the card to reserve
      */
-    public void addReservedCard(Card card) {
+    public void addReservedCard(DevelopmentCard card) {
         this.reservedCards.add(card);
     }
 
@@ -210,10 +216,50 @@ public class Player {
         // Iterate through purchasedCards, get their gem colors, and tally them 
         GemCollection gems = new GemCollection();
         for (Card c : purchasedCards) {
-            GemColor gem = c.getBonus();
+            DevelopmentCard c2 = (DevelopmentCard) c;
+            GemColor gem = c2.getBonus();
             gems.add(gem, 1);
         }
         return gems.getGems();
+    }
+
+    /**
+     * Packages the player's score, tokens, and bonuses into a string.
+     * Example output: "SCORE-15,TOKENS:[DIAMOND-2,ONYX-1...],BONUSES:[RUBY-3,EMERALD-1...]"
+     */
+    public String getPlayerStateAsString() {
+        StringBuilder sb = new StringBuilder();
+        
+        // 1. Add the player's Prestige Points (Score)
+        sb.append("SCORE-").append(getPoints()).append(",");
+        
+        // 2. Add the player's physical tokens in hand
+        sb.append("TOKENS:[").append(gems.getBankAsString()).append("],");
+        
+        // 3. Add the player's permanent card bonuses
+        GemCollection temporaryBonuses = new GemCollection();
+        for (Card c : purchasedCards) {
+            DevelopmentCard c2 = (DevelopmentCard) c;
+            temporaryBonuses.add(c2.getBonus(), 1);
+        }
+        sb.append("BONUSES:[").append(temporaryBonuses.getBankAsString()).append("]");
+
+        sb.append(",RESERVED:[");
+        if (reservedCards != null && !reservedCards.isEmpty()) {
+            for (Card c : reservedCards) {
+                // Formatting as COLOR-POINTS (e.g., RUBY-2)
+                DevelopmentCard c2 = (DevelopmentCard) c;
+                sb.append(c2.getBonus().name()).append("-").append(c2.getPoints()).append(",");
+            }
+            // Strip off the final comma if we added any cards
+            if (sb.charAt(sb.length() - 1) == ',') {
+                sb.setLength(sb.length() - 1);
+            }
+        } else {
+            sb.append("NONE");
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     

@@ -1,5 +1,8 @@
+package splendor.config;
+
 import java.io.*;
 import java.util.*;
+import splendor.exception.*;
 
 public class GameConfig {
     private String cardsFile;
@@ -22,10 +25,12 @@ public class GameConfig {
 
     public static GameConfig load(String filename) throws InvalidFileException {
         Properties properties = new Properties();
-        try (FileInputStream fileName = new FileInputStream(filename)) {
-            properties.load(fileName);
-        } catch (FileNotFoundException e) {
+        InputStream input = GameConfig.class.getClassLoader().getResourceAsStream(filename);
+        if (input == null) {
             throw new InvalidFileException(String.format("Configuration file (%s) not found!", filename));
+        }
+        try (InputStream in = input) {
+            properties.load(in);
         } catch (IOException e) {
             throw new InvalidFileException(String.format("Unable to read configuration file (%s)", filename));
         }
