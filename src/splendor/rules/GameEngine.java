@@ -283,6 +283,8 @@ public class GameEngine {
                 gems.subtract(add);
                 return true;
             }
+
+            System.out.println("Insufficient\n");
         }
     }
 
@@ -446,7 +448,8 @@ public class GameEngine {
     public static void handleGemReturn(Scanner sc, Player player, GameRules gameRules, GameState gameState) {
         while (gameRules.mustReturnGems(player)) {
             try {
-                System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx): ");
+                System.out.println("More than 10 gems!!");
+                System.out.print("Colour to return (Diamond, Sapphire, Emerald, Ruby, Onyx): ");
                 String color = sc.nextLine();
                 color = color.toUpperCase();
 
