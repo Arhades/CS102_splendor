@@ -1,0 +1,1 @@
+javac -d output -cp "src" src/splendor/network/client/ServerListener.java src/splendor/network/client/SplendorClient.java 
