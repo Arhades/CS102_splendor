@@ -132,6 +132,8 @@ public class DisplayUI {
         System.out.println();
         System.out.println("  --- S P L E N D O R ---              Turn " + (gameState.getTurnCount() + 1));
         System.out.println();
+        System.out.println("  > " + gameState.getCurrentPlayer().getName() + "'s turn");
+        System.out.println();
 
         printPoints(gameState);
         printNobles(gameState);
@@ -139,8 +141,6 @@ public class DisplayUI {
         printGemBank(gameState);
         printPlayerGem(gameState.getCurrentPlayer());
         printReservedCards(gameState.getCurrentPlayer());
-
-        System.out.println("  > " + gameState.getCurrentPlayer().getName() + "'s turn");
     }
 
     public static void printPoints(GameState gameState) {
