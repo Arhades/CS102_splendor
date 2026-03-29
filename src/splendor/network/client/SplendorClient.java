@@ -12,7 +12,8 @@ public class SplendorClient {
     // on the second computer, use the actual server IP
     private static final String SERVER_IP = "localhost"; 
     private static final int SERVER_PORT = 9090;
-    protected static boolean gameStarted = false;
+    protected static volatile boolean gameStarted = false;
+    protected static volatile boolean waitingForServer = false;
 
     public static void main(String[] args) {
         try {
@@ -93,13 +94,14 @@ public class SplendorClient {
                             System.out.print("Enter third color: ");
                             String color3 = scanner.nextLine().toUpperCase();
                             
-                            // read using BufferedReader
+                            waitingForServer = true;
                             out.println("TAKE THREE:" + color1 + ":" + color2 + ":" + color3);
                             break;
                             
                         case "2":
                             System.out.print("Enter the color you want 2 of: ");
                             String color = scanner.nextLine().toUpperCase();
+                            waitingForServer = true;
                             out.println("TAKE TWO:" + color);
                             break;
                             
@@ -109,12 +111,14 @@ public class SplendorClient {
                             if (choice.equalsIgnoreCase("reserved")) {
                                 System.out.println("Which card? (1 for the first card and so on):");
                                 String res = scanner.nextLine();
+                                waitingForServer = true;
                                 out.println("PURCHASE:RESERVED:" + res);
                             } else {
                                 System.out.print("Which deck level (1-3)? ");
                                 String level = scanner.nextLine();
                                 System.out.print("Which card index (0-3)? ");
                                 String index = scanner.nextLine();
+                                waitingForServer = true;
                                 out.println("PURCHASE:" + level + ":" + index);
                             }
                             break;
@@ -124,12 +128,21 @@ public class SplendorClient {
                             String resLevel = scanner.nextLine();
                             System.out.print("Which card index (0-3)? ");
                             String resIndex = scanner.nextLine();
+                            waitingForServer = true;
                             out.println("RESERVE:" + resLevel + ":" + resIndex);
                             break;
                             
                         default:
                             System.out.println("Invalid choice. Please type 1, 2, 3, or 4.");
                             break;
+                    }
+                    while (waitingForServer) {
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            System.out.println("The server was interrupted.");
+                        }
                     }
                 }
             }
@@ -142,9 +155,6 @@ public class SplendorClient {
         }
     }
 
-    /**
-     * Takes the raw board state string from the server and prints a clean UI.
-     */
     public static void renderBoard(String rawState) {
         String cleanState = rawState.replace("BOARD_STATE:", "");
         String[] sections = cleanState.split("\\|");

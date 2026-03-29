@@ -1,1 +1,1 @@
-java -cp "output:config:data" splendor.rules.GameEngine
+java -cp "classes:config:data" splendor.rules.GameEngine

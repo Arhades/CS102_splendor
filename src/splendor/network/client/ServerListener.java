@@ -24,6 +24,8 @@ public class ServerListener extends Thread {
                     System.out.println("\n[SERVER]: " + serverMessage);
                     System.out.print("> ");
                 }
+
+                SplendorClient.waitingForServer = false;
             }
         } catch (IOException e) {
             System.out.println("Disconnected from server.");
