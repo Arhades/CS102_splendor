@@ -1,0 +1,1 @@
+java -cp output splendor.network.client.SplendorClient
