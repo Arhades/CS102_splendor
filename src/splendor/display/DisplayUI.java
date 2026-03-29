@@ -1,5 +1,5 @@
 package splendor.display;
-
+ 
 import java.util.*;
 import splendor.entity.player.*;
 import splendor.entity.*;
@@ -7,9 +7,9 @@ import splendor.entity.card.*;
 import splendor.valueobjects.*;
 import splendor.exception.*;
 import splendor.rules.*;
-
+ 
 public class DisplayUI {
-
+ 
     private static String gemName(GemColor c) {
         switch (c) {
             case DIAMOND:    return "Diamond";
@@ -21,28 +21,35 @@ public class DisplayUI {
             default:         return "?";
         }
     }
-
+ 
     private static void clear() {
         System.out.print("\033[2J\033[H");
         System.out.flush();
     }
-
+ 
     private static int gemTotal(Player p) {
         int total = 0;
         for (int v : p.getGems().getGems().values()) total += v;
         return total;
     }
-
+ 
     private static int g(Map<GemColor, Integer> m, GemColor c) {
         return m.getOrDefault(c, 0);
     }
-
+ 
     private static final String P_LINE =
-        "  +--------------+-------+---------+----------+---------+------+------+------+-------+";
+        "  +--------------+-------+---------+----------+---------+------+------+------+-------+-----+";
     private static final String P_HEAD =
-        "  | Name         | Score | Diamond | Sapphire | Emerald | Ruby | Onyx | Gold | Total |";
+        "  | Name         | Score | Diamond | Sapphire | Emerald | Ruby | Onyx | Gold | Total | Res |";
     private static final String P_FMT =
-        "  | %-12s | %5s | %7d | %8d | %7d | %4d | %4d | %4d | %5d |%n";
+        "  | %-12s | %5s | %7d | %8d | %7d | %4d | %4d | %4d | %5d | %3d |%n";
+
+    private static final String BO_LINE =
+        "  +--------------+---------+----------+---------+------+------+";
+    private static final String BO_HEAD =
+        "  | Name         | Diamond | Sapphire | Emerald | Ruby | Onyx |";
+    private static final String BO_FMT =
+        "  | %-12s | %7d | %8d | %7d | %4d | %4d |%n";
 
     private static final String N_LINE =
         "  +--------------+------+---------+----------+---------+------+------+";
@@ -65,21 +72,13 @@ public class DisplayUI {
     private static final String B_FMT =
         "  | %7d | %8d | %7d | %4d | %4d | %4d |%n";
 
-    private static final String BO_LINE =
-        "  +---------+----------+---------+------+------+";
-    private static final String BO_HEAD =
-        "  | Diamond | Sapphire | Emerald | Ruby | Onyx |";
-    private static final String BO_FMT =
-        "  | %7d | %8d | %7d | %4d | %4d |%n";
-
     private static final String F_LINE =
         "  +--------------+-------+-------+---------+";
     private static final String F_HEAD =
         "  | Name         |  Pts  | Cards | Nobles  |";
     private static final String F_FMT =
         "  | %-12s | %5d | %5d | %7d |%n";
-
-
+ 
     public static int promptNumPlayers(Scanner sc) {
         clear();
         System.out.println();
@@ -101,7 +100,7 @@ public class DisplayUI {
         System.out.println();
         return num;
     }
-
+ 
     public static int promptPlayerType(Scanner sc, int playerNumber) {
         while (true) {
             try {
@@ -112,13 +111,13 @@ public class DisplayUI {
             System.out.println("  Invalid input.\n");
         }
     }
-
+ 
     public static String promptPlayerName(Scanner sc, int playerNumber, String defaultName) {
         System.out.print("  Player " + playerNumber + " name (blank = \"" + defaultName + "\"): ");
         String name = sc.nextLine().trim();
         return name.isEmpty() ? defaultName : name;
     }
-
+ 
     public static ActionType promptAction(Scanner sc) {
         System.out.println();
         System.out.println("  1. Take 3 different gems");
@@ -126,7 +125,7 @@ public class DisplayUI {
         System.out.println("  3. Purchase a card");
         System.out.println("  4. Reserve a card");
         System.out.print("  Choose: ");
-
+ 
         while (true) {
             try {
                 int action = Integer.parseInt(sc.nextLine());
@@ -143,20 +142,20 @@ public class DisplayUI {
             System.out.print("  Pick 1-4: ");
         }
     }
-
+ 
     public static void printGameState(GameState gameState) {
         clear();
         System.out.println();
-        System.out.println("  --- S P L E N D O R ---" + "                                            Turn " + (gameState.getTurnCount() + 1));
+        System.out.println("  --- S P L E N D O R ---" + "                                                 Turn " + (gameState.getTurnCount() + 1));
         System.out.println();
-
+ 
         printPlayers(gameState);
+        printAllBonuses(gameState);
         printNobles(gameState);
         printVisibleCards(gameState);
         printGemBank(gameState);
-        printBonuses(gameState.getCurrentPlayer());
         printReservedCards(gameState.getCurrentPlayer());
-
+ 
         System.out.println("  > " + gameState.getCurrentPlayer().getName() + "'s turn");
     }
 
@@ -165,14 +164,14 @@ public class DisplayUI {
         System.out.println(P_LINE);
         System.out.println(P_HEAD);
         System.out.println(P_LINE);
-
+ 
         int threshold = gameState.getWinningThreshold();
         for (Player p : gameState.getPlayers()) {
             boolean cur = (p == gameState.getCurrentPlayer());
             String label = (cur ? "> " : "  ") + p.getName();
             if (label.length() > 12) label = label.substring(0, 12);
             Map<GemColor, Integer> gems = p.getGems().getGems();
-
+ 
             System.out.printf(P_FMT,
                 label,
                 p.getPoints() + "/" + threshold,
@@ -182,14 +181,39 @@ public class DisplayUI {
                 g(gems, GemColor.RUBY),
                 g(gems, GemColor.ONYX),
                 g(gems, GemColor.GOLD_JOKER),
-                gemTotal(p));
+                gemTotal(p),
+                p.getReservedCards().size());
         }
         System.out.println(P_LINE);
         System.out.println();
     }
-
+ 
     public static void printPoints(GameState gameState) {
         printPlayers(gameState);
+    }
+
+    private static void printAllBonuses(GameState gameState) {
+        System.out.println("  BONUSES (from purchased cards)");
+        System.out.println(BO_LINE);
+        System.out.println(BO_HEAD);
+        System.out.println(BO_LINE);
+ 
+        for (Player p : gameState.getPlayers()) {
+            boolean cur = (p == gameState.getCurrentPlayer());
+            String label = (cur ? "> " : "  ") + p.getName();
+            if (label.length() > 12) label = label.substring(0, 12);
+            Map<GemColor, Integer> b = p.calculateBonuses();
+ 
+            System.out.printf(BO_FMT,
+                label,
+                g(b, GemColor.DIAMOND),
+                g(b, GemColor.SAPPHIRE),
+                g(b, GemColor.EMERALD),
+                g(b, GemColor.RUBY),
+                g(b, GemColor.ONYX));
+        }
+        System.out.println(BO_LINE);
+        System.out.println();
     }
 
     public static void printNobles(GameState gameState) {
@@ -213,17 +237,17 @@ public class DisplayUI {
         }
         System.out.println();
     }
-
+ 
     public static void printVisibleCards(GameState gameState) {
         CardMarket market = gameState.getCardMarket();
-
+ 
         for (int level = 3; level >= 1; level--) {
             int deckSz;
             try { deckSz = market.getDeckSize(level); }
             catch (Exception e) { deckSz = 0; }
-
+ 
             System.out.println("  CARD MARKET - Level " + level + " (" + deckSz + " in deck)");
-
+ 
             try {
                 List<DevelopmentCard> cards = market.getVisibleCards(level);
                 if (cards.isEmpty()) {
@@ -243,7 +267,7 @@ public class DisplayUI {
             System.out.println();
         }
     }
-
+ 
     private static void printCardRow(DevelopmentCard c, int index) {
         Map<GemColor, Integer> cost = c.getCost().getCost().getGems();
         String pts = c.getPoints() > 0 ? String.valueOf(c.getPoints()) : "-";
@@ -251,7 +275,7 @@ public class DisplayUI {
             g(cost, GemColor.DIAMOND), g(cost, GemColor.SAPPHIRE),
             g(cost, GemColor.EMERALD), g(cost, GemColor.RUBY), g(cost, GemColor.ONYX));
     }
-
+ 
     public static void printGemBank(GameState gameState) {
         System.out.println("  GEM BANK");
         Map<GemColor, Integer> gems = gameState.getGemBank().getGems();
@@ -265,23 +289,10 @@ public class DisplayUI {
         System.out.println(B_LINE);
         System.out.println();
     }
-
-    private static void printBonuses(Player player) {
-        System.out.println("  YOUR BONUSES");
-        Map<GemColor, Integer> b = player.calculateBonuses();
-        System.out.println(BO_LINE);
-        System.out.println(BO_HEAD);
-        System.out.println(BO_LINE);
-        System.out.printf(BO_FMT,
-            g(b, GemColor.DIAMOND), g(b, GemColor.SAPPHIRE),
-            g(b, GemColor.EMERALD), g(b, GemColor.RUBY), g(b, GemColor.ONYX));
-        System.out.println(BO_LINE);
-        System.out.println();
-    }
-
+  
     public static void printReservedCards(Player player) {
         int count = player.getReservedCards().size();
-        System.out.println("  RESERVED CARDS (" + count + "/3)");
+        System.out.println("  YOUR RESERVED CARDS (" + count + "/3)");
         if (count == 0) {
             System.out.println("  (none)");
         } else {
@@ -295,7 +306,7 @@ public class DisplayUI {
         }
         System.out.println();
     }
-
+ 
     public static void printPlayerGem(Player player) {
         System.out.println("  YOUR GEMS");
         Map<GemColor, Integer> gems = player.getGems().getGems();
@@ -310,16 +321,16 @@ public class DisplayUI {
         System.out.println("  Total: " + gemTotal(player) + "/10");
         System.out.println();
     }
-
+ 
     public static void printWinner(GameState gameState, GameRules gameRules) {
         Player winner = gameRules.getWinner(gameState.getPlayers());
-
+ 
         System.out.println();
         System.out.println("  =========================================================");
         System.out.println("  GAME OVER -- " + winner.getName() + " wins with " + winner.getPoints() + " points!");
         System.out.println("  =========================================================");
         System.out.println();
-
+ 
         System.out.println("  FINAL STANDINGS");
         System.out.println(F_LINE);
         System.out.println(F_HEAD);
