@@ -1,3 +1,6 @@
+package splendor.network.client;
+
+import splendor.network.server.*;
 import java.io.*;
 import java.net.*;
 import java.time.*;
@@ -7,7 +10,7 @@ import java.util.*;
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
-    private static final String SERVER_IP = "172.20.10.7"; 
+    private static final String SERVER_IP = "localhost"; 
     private static final int SERVER_PORT = 9090;
     protected static boolean gameStarted = false;
 
@@ -143,7 +146,6 @@ public class SplendorClient {
      * Takes the raw board state string from the server and prints a clean UI.
      */
     public static void renderBoard(String rawState) {
-         // 1. Remove the "BOARD_STATE:" prefix
         String cleanState = rawState.replace("BOARD_STATE:", "");
         String[] sections = cleanState.split("\\|");
 
@@ -151,7 +153,6 @@ public class SplendorClient {
         System.out.println("           SPLENDOR GAME BOARD          ");
         System.out.println("========================================");
 
-        // 3. Loop through each section and print it nicely
         for (String section : sections) {
             
             if (section.startsWith("BANK=")) {
@@ -171,14 +172,12 @@ public class SplendorClient {
             
             else if (section.startsWith("PLAYER=")) {
                 System.out.println("\n--- PLAYER STATS ---");
-                // Example format: PLAYER=Player 1,SCORE-15,TOKENS:...
                 String[] playerParts = section.replace("PLAYER=", "").split(",", 2);
                 
                 String playerName = playerParts[0];
                 String stats = playerParts.length > 1 ? playerParts[1] : "No stats";
                 
                 System.out.println(playerName.toUpperCase() + ":");
-                // Make the tokens and bonuses print on their own indented lines
                 stats = stats.replace(",TOKENS:", "\n  Tokens: ")
                              .replace(",BONUSES:", "\n  Bonuses: ")
                              .replace(",RESERVED:", "\n  Reserved: ");

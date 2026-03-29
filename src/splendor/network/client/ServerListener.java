@@ -1,3 +1,5 @@
+package splendor.network.client;
+
 import java.io.*;
 
 public class ServerListener extends Thread {

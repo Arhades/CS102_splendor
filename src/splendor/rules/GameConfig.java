@@ -13,7 +13,7 @@ public class GameConfig {
     private int fourPlayerGems;
     private int goldGems;
 
-    private GameConfig(String cardsFile, String noblesFile, int winningThreshold, int twoPlayerGems, int threePlayerGems, int fourPlayerGems, int goldGems) {
+    public GameConfig(String cardsFile, String noblesFile, int winningThreshold, int twoPlayerGems, int threePlayerGems, int fourPlayerGems, int goldGems) {
         this.cardsFile = cardsFile;
         this.noblesFile = noblesFile;
         this.winningThreshold = winningThreshold;

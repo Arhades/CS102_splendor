@@ -1,12 +1,21 @@
+package splendor.network.server;
+
 import java.io.*;
 import java.net.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import splendor.entity.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.exception.*;
+import splendor.rules.*;
+import splendor.valueobjects.*;
+
 
 public class SplendorServer {
     private static final int PORT = 9090;
-    private static List<ClientHandler> clients = new ArrayList<>();
+    private static final List<ClientHandler> clients = new ArrayList<>();
     private static GameState gameState;
     private static GameRules gameRules;
     public static volatile boolean gameStarted = false;
@@ -116,15 +125,21 @@ public class SplendorServer {
                             id++;
                         }
 
-                        List<Card> levelOneDeck = GameEngine.loadCards("cards.csv", 1);
-                        List<Card> levelTwoDeck = GameEngine.loadCards("cards.csv", 2);
-                        List<Card> levelThreeDeck = GameEngine.loadCards("cards.csv", 3);
+                        GameConfig config = GameConfig.load("config.properties");
+
+                        List<DevelopmentCard> levelOneDeck = GameEngine.loadCards(config.getCardsFile(), 1);
+                        List<DevelopmentCard> levelTwoDeck = GameEngine.loadCards(config.getCardsFile(), 2);
+                        List<DevelopmentCard> levelThreeDeck = GameEngine.loadCards(config.getCardsFile(), 3);
                         CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
-                        GemCollection initialGems = GameEngine.buildGemBank(numOfPlayers);
-                        List<Noble> nobles = GameEngine.loadNobles("nobles.csv", numOfPlayers + 1);
+                        List<Noble> nobles = GameEngine.loadNobles(config.getNoblesFile(), numOfPlayers + 1);
 
-                        gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
+                        int standardGemCount = config.getGemCountPerColor(numOfPlayers);
+                        
+                        GemCollection initialGems = GameEngine.buildGemBank(standardGemCount, config);
+
+                        // Initialize GameState with the winning threshold from config
+                        gameState = new GameState(players, cardMarket, initialGems, nobles, config.getWinningThreshold());
                         gameRules = new GameRules(gameState);
 
                         gameStarted = true;
@@ -239,10 +254,10 @@ public class SplendorServer {
 
                         System.out.println("Processing purchase for Card level " + sourceOrLevel + " and Index " + index);
                     }
-                    Card cardToBuy = null;
+                    DevelopmentCard cardToBuy = null;
                     try {
                         if (sourceOrLevel.equals("RESERVED")) {
-                            List<Card> reservedCards = expectedPlayer.getReservedCards();
+                            List<DevelopmentCard> reservedCards = expectedPlayer.getReservedCards();
                             if (index < 0 || index >= reservedCards.size()) {
                                 sendToSpecificPlayer(playerName, "Invalid reserved card index.");
                                 break;
@@ -315,7 +330,7 @@ public class SplendorServer {
                         break;
                     }
 
-                    Card cardToReserve = null;
+                    DevelopmentCard cardToReserve = null;
 
                     try {
                         if (reserveLevel < 1 || reserveLevel > 3 || reserveIndex < 0 || reserveIndex > 3) {
