@@ -10,40 +10,16 @@ import splendor.rules.*;
 
 public class DisplayUI {
 
-    private static final GemColor[] REGULAR = {
-        GemColor.DIAMOND, GemColor.SAPPHIRE, GemColor.EMERALD, GemColor.RUBY, GemColor.ONYX
-    };
-    private static final GemColor[] ALL_COLORS = {
-        GemColor.DIAMOND, GemColor.SAPPHIRE, GemColor.EMERALD, GemColor.RUBY, GemColor.ONYX, GemColor.GOLD_JOKER
-    };
-
-    private static String repeat(char ch, int n) {
-        if (n <= 0) return "";
-        char[] arr = new char[n];
-        Arrays.fill(arr, ch);
-        return new String(arr);
-    }
-
-    private static String gem(GemColor c) {
+    private static String gemName(GemColor c) {
         switch (c) {
-            case DIAMOND:    return "Dia";
-            case SAPPHIRE:   return "Sap";
-            case EMERALD:    return "Eme";
-            case RUBY:       return "Rub";
-            case ONYX:       return "Ony";
-            case GOLD_JOKER: return "Gld";
-            default:         return "???";
+            case DIAMOND:    return "Diamond";
+            case SAPPHIRE:   return "Sapphire";
+            case EMERALD:    return "Emerald";
+            case RUBY:       return "Ruby";
+            case ONYX:       return "Onyx";
+            case GOLD_JOKER: return "Gold";
+            default:         return "?";
         }
-    }
-
-    private static void divider() {
-        System.out.println("  " + repeat('-', 56));
-    }
-
-    private static void heading(String title) {
-        divider();
-        System.out.println("  " + title);
-        divider();
     }
 
     private static void clear() {
@@ -51,17 +27,58 @@ public class DisplayUI {
         System.out.flush();
     }
 
-    private static String costStr(Map<GemColor, Integer> cost) {
-        StringBuilder sb = new StringBuilder();
-        for (GemColor c : REGULAR) {
-            int amt = cost.getOrDefault(c, 0);
-            if (amt > 0) {
-                if (sb.length() > 0) sb.append(" ");
-                sb.append(amt).append(gem(c));
-            }
-        }
-        return sb.toString();
+    private static int gemTotal(Player p) {
+        int total = 0;
+        for (int v : p.getGems().getGems().values()) total += v;
+        return total;
     }
+
+    private static int g(Map<GemColor, Integer> m, GemColor c) {
+        return m.getOrDefault(c, 0);
+    }
+
+    private static final String P_LINE =
+        "  +--------------+-------+---------+----------+---------+------+------+------+-------+";
+    private static final String P_HEAD =
+        "  | Name         | Score | Diamond | Sapphire | Emerald | Ruby | Onyx | Gold | Total |";
+    private static final String P_FMT =
+        "  | %-12s | %5s | %7d | %8d | %7d | %4d | %4d | %4d | %5d |%n";
+
+    private static final String N_LINE =
+        "  +--------------+------+---------+----------+---------+------+------+";
+    private static final String N_HEAD =
+        "  | Name         | Pts  | Diamond | Sapphire | Emerald | Ruby | Onyx |";
+    private static final String N_FMT =
+        "  | %-12s | %4d | %7d | %8d | %7d | %4d | %4d |%n";
+
+    private static final String C_LINE =
+        "  +-----+----------+------+---------+----------+---------+------+------+";
+    private static final String C_HEAD =
+        "  | No. | Bonus    | Pts  | Diamond | Sapphire | Emerald | Ruby | Onyx |";
+    private static final String C_FMT =
+        "  | %3d | %-8s | %4s | %7d | %8d | %7d | %4d | %4d |%n";
+
+    private static final String B_LINE =
+        "  +---------+----------+---------+------+------+------+";
+    private static final String B_HEAD =
+        "  | Diamond | Sapphire | Emerald | Ruby | Onyx | Gold |";
+    private static final String B_FMT =
+        "  | %7d | %8d | %7d | %4d | %4d | %4d |%n";
+
+    private static final String BO_LINE =
+        "  +---------+----------+---------+------+------+";
+    private static final String BO_HEAD =
+        "  | Diamond | Sapphire | Emerald | Ruby | Onyx |";
+    private static final String BO_FMT =
+        "  | %7d | %8d | %7d | %4d | %4d |%n";
+
+    private static final String F_LINE =
+        "  +--------------+-------+-------+---------+";
+    private static final String F_HEAD =
+        "  | Name         |  Pts  | Cards | Nobles  |";
+    private static final String F_FMT =
+        "  | %-12s | %5d | %5d | %7d |%n";
+
 
     public static int promptNumPlayers(Scanner sc) {
         clear();
@@ -130,54 +147,74 @@ public class DisplayUI {
     public static void printGameState(GameState gameState) {
         clear();
         System.out.println();
-        System.out.println("  --- S P L E N D O R ---              Turn " + (gameState.getTurnCount() + 1));
-        System.out.println();
-        System.out.println("  > " + gameState.getCurrentPlayer().getName() + "'s turn");
+        System.out.println("  --- S P L E N D O R ---" + "                                            Turn " + (gameState.getTurnCount() + 1));
         System.out.println();
 
-        printPoints(gameState);
+        printPlayers(gameState);
         printNobles(gameState);
         printVisibleCards(gameState);
         printGemBank(gameState);
-        printPlayerGem(gameState.getCurrentPlayer());
+        printBonuses(gameState.getCurrentPlayer());
         printReservedCards(gameState.getCurrentPlayer());
+
+        System.out.println("  > " + gameState.getCurrentPlayer().getName() + "'s turn");
     }
 
-    public static void printPoints(GameState gameState) {
-        heading("SCOREBOARD");
+    private static void printPlayers(GameState gameState) {
+        System.out.println("  PLAYERS");
+        System.out.println(P_LINE);
+        System.out.println(P_HEAD);
+        System.out.println(P_LINE);
+
         int threshold = gameState.getWinningThreshold();
         for (Player p : gameState.getPlayers()) {
             boolean cur = (p == gameState.getCurrentPlayer());
-            String arrow = cur ? "> " : "  ";
-            System.out.printf("  %s%-14s  %d/%d%n", arrow, p.getName(), p.getPoints(), threshold);
+            String label = (cur ? "> " : "  ") + p.getName();
+            if (label.length() > 12) label = label.substring(0, 12);
+            Map<GemColor, Integer> gems = p.getGems().getGems();
+
+            System.out.printf(P_FMT,
+                label,
+                p.getPoints() + "/" + threshold,
+                g(gems, GemColor.DIAMOND),
+                g(gems, GemColor.SAPPHIRE),
+                g(gems, GemColor.EMERALD),
+                g(gems, GemColor.RUBY),
+                g(gems, GemColor.ONYX),
+                g(gems, GemColor.GOLD_JOKER),
+                gemTotal(p));
         }
+        System.out.println(P_LINE);
         System.out.println();
     }
 
+    public static void printPoints(GameState gameState) {
+        printPlayers(gameState);
+    }
+
     public static void printNobles(GameState gameState) {
-        heading("NOBLES");
+        System.out.println("  NOBLES");
         List<Noble> nobles = gameState.getAvailableNobles();
         if (nobles.isEmpty()) {
             System.out.println("  (none remaining)");
         } else {
+            System.out.println(N_LINE);
+            System.out.println(N_HEAD);
+            System.out.println(N_LINE);
             for (Noble n : nobles) {
-                Map<GemColor, Integer> reqs = n.getRequirements();
-                StringBuilder reqStr = new StringBuilder();
-                for (GemColor c : REGULAR) {
-                    int amt = reqs.getOrDefault(c, 0);
-                    if (amt > 0) {
-                        if (reqStr.length() > 0) reqStr.append(" ");
-                        reqStr.append(amt).append(gem(c));
-                    }
-                }
-                System.out.println("  " + n.getName() + " (" + n.getPoints() + "pts)  needs: " + reqStr);
+                Map<GemColor, Integer> r = n.getRequirements();
+                String name = n.getName();
+                if (name.length() > 12) name = name.substring(0, 12);
+                System.out.printf(N_FMT, name, n.getPoints(),
+                    g(r, GemColor.DIAMOND), g(r, GemColor.SAPPHIRE),
+                    g(r, GemColor.EMERALD), g(r, GemColor.RUBY), g(r, GemColor.ONYX));
             }
+            System.out.println(N_LINE);
         }
         System.out.println();
     }
 
     public static void printVisibleCards(GameState gameState) {
-        heading("CARD MARKET");
         CardMarket market = gameState.getCardMarket();
 
         for (int level = 3; level >= 1; level--) {
@@ -185,71 +222,92 @@ public class DisplayUI {
             try { deckSz = market.getDeckSize(level); }
             catch (Exception e) { deckSz = 0; }
 
-            System.out.println("  Lv." + level + "  (" + deckSz + " in deck)");
+            System.out.println("  CARD MARKET - Level " + level + " (" + deckSz + " in deck)");
 
             try {
                 List<DevelopmentCard> cards = market.getVisibleCards(level);
-                for (int i = 0; i < cards.size(); i++) {
-                    DevelopmentCard card = cards.get(i);
-                    String pts = card.getPoints() > 0 ? card.getPoints() + "pt" : " -";
-                    System.out.println("    [" + i + "]  " + gem(card.getBonus())
-                            + "  " + pts + "   cost: " + costStr(card.getCost().getCost().getGems()));
+                if (cards.isEmpty()) {
+                    System.out.println("  (no cards)");
+                } else {
+                    System.out.println(C_LINE);
+                    System.out.println(C_HEAD);
+                    System.out.println(C_LINE);
+                    for (int i = 0; i < cards.size(); i++) {
+                        printCardRow(cards.get(i), i);
+                    }
+                    System.out.println(C_LINE);
                 }
             } catch (UnavailableCardException e) {
-                System.out.println("    (no cards)");
+                System.out.println("  (no cards)");
             }
-
-            if (level > 1) System.out.println();
+            System.out.println();
         }
-        System.out.println();
+    }
+
+    private static void printCardRow(DevelopmentCard c, int index) {
+        Map<GemColor, Integer> cost = c.getCost().getCost().getGems();
+        String pts = c.getPoints() > 0 ? String.valueOf(c.getPoints()) : "-";
+        System.out.printf(C_FMT, index, gemName(c.getBonus()), pts,
+            g(cost, GemColor.DIAMOND), g(cost, GemColor.SAPPHIRE),
+            g(cost, GemColor.EMERALD), g(cost, GemColor.RUBY), g(cost, GemColor.ONYX));
     }
 
     public static void printGemBank(GameState gameState) {
-        heading("GEM BANK");
+        System.out.println("  GEM BANK");
         Map<GemColor, Integer> gems = gameState.getGemBank().getGems();
-        StringBuilder sb = new StringBuilder("  ");
-        for (GemColor c : ALL_COLORS) {
-            sb.append(gem(c)).append(":").append(gems.getOrDefault(c, 0)).append("  ");
-        }
-        System.out.println(sb);
+        System.out.println(B_LINE);
+        System.out.println(B_HEAD);
+        System.out.println(B_LINE);
+        System.out.printf(B_FMT,
+            g(gems, GemColor.DIAMOND), g(gems, GemColor.SAPPHIRE),
+            g(gems, GemColor.EMERALD), g(gems, GemColor.RUBY),
+            g(gems, GemColor.ONYX), g(gems, GemColor.GOLD_JOKER));
+        System.out.println(B_LINE);
         System.out.println();
     }
 
-    public static void printPlayerGem(Player player) {
-        heading("YOUR GEMS & BONUSES");
-        Map<GemColor, Integer> gems = player.getGems().getGems();
-        Map<GemColor, Integer> bonus = player.calculateBonuses();
-
-        StringBuilder sb = new StringBuilder("  ");
-        int total = 0;
-        for (GemColor c : ALL_COLORS) {
-            int count = gems.getOrDefault(c, 0);
-            total += count;
-            int bon = bonus.getOrDefault(c, 0);
-            sb.append(gem(c)).append(":").append(count);
-            if (!c.equals(GemColor.GOLD_JOKER) && bon > 0) {
-                sb.append("+").append(bon);
-            }
-            sb.append("  ");
-        }
-        System.out.println(sb);
-        System.out.println("  Total: " + total + "/10");
+    private static void printBonuses(Player player) {
+        System.out.println("  YOUR BONUSES");
+        Map<GemColor, Integer> b = player.calculateBonuses();
+        System.out.println(BO_LINE);
+        System.out.println(BO_HEAD);
+        System.out.println(BO_LINE);
+        System.out.printf(BO_FMT,
+            g(b, GemColor.DIAMOND), g(b, GemColor.SAPPHIRE),
+            g(b, GemColor.EMERALD), g(b, GemColor.RUBY), g(b, GemColor.ONYX));
+        System.out.println(BO_LINE);
         System.out.println();
     }
 
     public static void printReservedCards(Player player) {
         int count = player.getReservedCards().size();
-        heading("RESERVED CARDS (" + count + "/3)");
+        System.out.println("  RESERVED CARDS (" + count + "/3)");
         if (count == 0) {
             System.out.println("  (none)");
         } else {
+            System.out.println(C_LINE);
+            System.out.println(C_HEAD);
+            System.out.println(C_LINE);
             for (int i = 0; i < count; i++) {
-                DevelopmentCard dc = player.getReservedCards().get(i);
-                String pts = dc.getPoints() > 0 ? dc.getPoints() + "pt" : " -";
-                System.out.println("    [" + i + "]  " + gem(dc.getBonus())
-                        + "  " + pts + "   cost: " + costStr(dc.getCost().getCost().getGems()));
+                printCardRow(player.getReservedCards().get(i), i);
             }
+            System.out.println(C_LINE);
         }
+        System.out.println();
+    }
+
+    public static void printPlayerGem(Player player) {
+        System.out.println("  YOUR GEMS");
+        Map<GemColor, Integer> gems = player.getGems().getGems();
+        System.out.println(B_LINE);
+        System.out.println(B_HEAD);
+        System.out.println(B_LINE);
+        System.out.printf(B_FMT,
+            g(gems, GemColor.DIAMOND), g(gems, GemColor.SAPPHIRE),
+            g(gems, GemColor.EMERALD), g(gems, GemColor.RUBY),
+            g(gems, GemColor.ONYX), g(gems, GemColor.GOLD_JOKER));
+        System.out.println(B_LINE);
+        System.out.println("  Total: " + gemTotal(player) + "/10");
         System.out.println();
     }
 
@@ -257,21 +315,24 @@ public class DisplayUI {
         Player winner = gameRules.getWinner(gameState.getPlayers());
 
         System.out.println();
-        divider();
-        System.out.println("  GAME OVER — " + winner.getName() + " wins with " + winner.getPoints() + " points!");
-        divider();
+        System.out.println("  =========================================================");
+        System.out.println("  GAME OVER -- " + winner.getName() + " wins with " + winner.getPoints() + " points!");
+        System.out.println("  =========================================================");
         System.out.println();
 
         System.out.println("  FINAL STANDINGS");
+        System.out.println(F_LINE);
+        System.out.println(F_HEAD);
+        System.out.println(F_LINE);
         List<Player> sorted = new ArrayList<>(gameState.getPlayers());
         sorted.sort((a, b) -> b.getPoints() - a.getPoints());
-        int rank = 1;
         for (Player p : sorted) {
-            System.out.printf("  %d. %-14s  %dpts  %d cards  %d nobles%n",
-                    rank, p.getName(), p.getPoints(),
-                    p.getPurchasedCards().size(), p.getClaimedNobles().size());
-            rank++;
+            String name = p.getName();
+            if (name.length() > 12) name = name.substring(0, 12);
+            System.out.printf(F_FMT, name, p.getPoints(),
+                p.getPurchasedCards().size(), p.getClaimedNobles().size());
         }
+        System.out.println(F_LINE);
         System.out.println();
     }
 }
