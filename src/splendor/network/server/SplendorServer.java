@@ -461,7 +461,7 @@ public class SplendorServer {
             return "ERROR: Invalid gem color.";
         }
 
-        GemColor col = GameEngine.convertToColor(colorStr);
+        GemColor col = GemColor.convertToColor(colorStr);
 
         if (gameRules.canTakeTwoSameGems(col, gems)) {
             GemCollection add = new GemCollection();
@@ -491,9 +491,9 @@ public class SplendorServer {
         }
 
         GemCollection add = new GemCollection();
-        add.add(GameEngine.convertToColor(c1), 1);
-        add.add(GameEngine.convertToColor(c2), 1);
-        add.add(GameEngine.convertToColor(c3), 1);
+        add.add(GemColor.convertToColor(c1), 1);
+        add.add(GemColor.convertToColor(c2), 1);
+        add.add(GemColor.convertToColor(c3), 1);
 
         if (gameRules.canTakeThreeDifferentGems(add, gems)) {
             player.addGems(add);
