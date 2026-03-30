@@ -1,1 +1,1 @@
-java -cp classes splendor.network.server.SplendorServer
+java -cp "classes:config:data" splendor.network.server.SplendorServer

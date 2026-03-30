@@ -2,14 +2,14 @@ package splendor.rules;
 
 import java.io.*;
 import java.util.*;
-import splendor.entity.*;
-import splendor.entity.card.*;
-import splendor.entity.player.*;
-import splendor.entity.bot.*;
-import splendor.exception.*;
-import splendor.valueobjects.*;
 import splendor.config.*;
 import splendor.display.*;
+import splendor.entity.*;
+import splendor.entity.bot.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.exception.*;
+import splendor.valueobjects.*;
 
 public class GameEngine {
     public static void main(String[] args) {
