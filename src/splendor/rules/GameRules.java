@@ -237,7 +237,7 @@ public class GameRules {
 
         winner = winners.get(0);
         for (Player player: winners) {
-            if (player.getPurchasedCards().size() + player.getClaimedNobles().size() == leastCards) {
+            if (player.getPoints()==mostPoints && player.getPurchasedCards().size() + player.getClaimedNobles().size() == leastCards) {
                 winner = player;
             }
         }
