@@ -13,6 +13,7 @@ import splendor.entity.player.*;
 import splendor.exception.*;
 import splendor.rules.*;
 import splendor.valueobjects.*;
+import splendor.display.*;
 
 
 public class SplendorServer {
@@ -458,25 +459,10 @@ public class SplendorServer {
         if (gameState == null) {
             return;
         }
-
-        StringBuilder stateStr = new StringBuilder();
-        stateStr.append("BOARD_STATE:");
-
-        stateStr.append("BANK=");
-        stateStr.append(gameState.getGemBank().getBankAsString()); 
-        stateStr.append("|");
-
-        stateStr.append("MARKET=");
-        stateStr.append(gameState.getCardMarket().getMarketAsString());
-        stateStr.append("|");
-
-        for (Player p : gameState.getPlayers()) {
-            stateStr.append("PLAYER=").append(p.getName()).append(",");
-            stateStr.append(p.getPlayerStateAsString());
-            stateStr.append("|");
-        }
-
-        // send this massive string to every connected client
-        broadcast(stateStr.toString());
+        String gameBoard = DisplayUI.getGameState(gameState);
+        
+        // need replace \n with @@ cuz the broadcast cant read \n
+        String board = gameBoard.replace("\n", "@@");
+        broadcast("BOARD_STATE:" + board);
     }
 }
