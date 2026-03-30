@@ -1,15 +1,28 @@
+package splendor.network.server;
+
 import java.io.*;
 import java.net.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import splendor.config.*;
+import splendor.display.*;
+import splendor.entity.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.exception.*;
+import splendor.rules.*;
+import splendor.valueobjects.*;
+import splendor.display.*;
+
 
 public class SplendorServer {
     private static final int PORT = 9090;
-    private static List<ClientHandler> clients = new ArrayList<>();
+    private static final List<ClientHandler> clients = new ArrayList<>();
     private static GameState gameState;
     private static GameRules gameRules;
     public static volatile boolean gameStarted = false;
+    public static volatile boolean isLastRound = false;
     public final CardMarket market = gameState.getCardMarket();
     public final List<Noble> nobles = gameState.getAvailableNobles();
 
@@ -116,15 +129,21 @@ public class SplendorServer {
                             id++;
                         }
 
-                        List<Card> levelOneDeck = GameEngine.loadCards("cards.csv", 1);
-                        List<Card> levelTwoDeck = GameEngine.loadCards("cards.csv", 2);
-                        List<Card> levelThreeDeck = GameEngine.loadCards("cards.csv", 3);
+                        GameConfig config = GameConfig.load("config.properties");
+
+                        List<DevelopmentCard> levelOneDeck = GameEngine.loadCards(config.getCardsFile(), 1);
+                        List<DevelopmentCard> levelTwoDeck = GameEngine.loadCards(config.getCardsFile(), 2);
+                        List<DevelopmentCard> levelThreeDeck = GameEngine.loadCards(config.getCardsFile(), 3);
                         CardMarket cardMarket = new CardMarket(levelOneDeck, levelTwoDeck, levelThreeDeck);
 
-                        GemCollection initialGems = GameEngine.buildGemBank(numOfPlayers);
-                        List<Noble> nobles = GameEngine.loadNobles("nobles.csv", numOfPlayers + 1);
+                        List<Noble> nobles = GameEngine.loadNobles(config.getNoblesFile(), numOfPlayers + 1);
 
-                        gameState = new GameState(players, cardMarket, initialGems, nobles, 15);
+                        int standardGemCount = config.getGemCountPerColor(numOfPlayers);
+                        
+                        GemCollection initialGems = GameEngine.buildGemBank(standardGemCount, config);
+
+                        // Initialize GameState with the winning threshold from config
+                        gameState = new GameState(players, cardMarket, initialGems, nobles, config.getWinningThreshold());
                         gameRules = new GameRules(gameState);
 
                         gameStarted = true;
@@ -239,10 +258,10 @@ public class SplendorServer {
 
                         System.out.println("Processing purchase for Card level " + sourceOrLevel + " and Index " + index);
                     }
-                    Card cardToBuy = null;
+                    DevelopmentCard cardToBuy = null;
                     try {
                         if (sourceOrLevel.equals("RESERVED")) {
-                            List<Card> reservedCards = expectedPlayer.getReservedCards();
+                            List<DevelopmentCard> reservedCards = expectedPlayer.getReservedCards();
                             if (index < 0 || index >= reservedCards.size()) {
                                 sendToSpecificPlayer(playerName, "Invalid reserved card index.");
                                 break;
@@ -315,7 +334,7 @@ public class SplendorServer {
                         break;
                     }
 
-                    Card cardToReserve = null;
+                    DevelopmentCard cardToReserve = null;
 
                     try {
                         if (reserveLevel < 1 || reserveLevel > 3 || reserveIndex < 0 || reserveIndex > 3) {
@@ -367,6 +386,24 @@ public class SplendorServer {
 
             if (moveSuccessful) {
                 broadcast(playerName + " did action: " + actionType);
+                // check if they hit the winning threshold and if so, this will be the last round
+                if (expectedPlayer.getPoints() >= gameState.getWinningThreshold() && !isLastRound) { 
+                    isLastRound = true;
+                    broadcast("🚨 " + expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points! This is the final round! 🚨");
+                }
+                
+                // check if is last player
+                List<Player> allPlayers = gameState.getPlayers();
+                boolean isLastPlayer = allPlayers.indexOf(expectedPlayer) == (allPlayers.size() - 1);
+                
+                // end game if both true
+                if (isLastRound && isLastPlayer) {
+                    String winnerScreen = DisplayUI.getWinner(gameState, gameRules).replace("\n", "@@");
+                    broadcast("BOARD_STATE:" + winnerScreen);
+                    broadcast("The game has ended! Thanks for playing.");
+                    System.exit(0);
+                    return;
+                }
                 gameState.advanceToNext();
                 broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
             } else {
@@ -422,25 +459,10 @@ public class SplendorServer {
         if (gameState == null) {
             return;
         }
-
-        StringBuilder stateStr = new StringBuilder();
-        stateStr.append("BOARD_STATE:");
-
-        stateStr.append("BANK=");
-        stateStr.append(gameState.getGemBank().getBankAsString()); 
-        stateStr.append("|");
-
-        stateStr.append("MARKET=");
-        stateStr.append(gameState.getCardMarket().getMarketAsString());
-        stateStr.append("|");
-
-        for (Player p : gameState.getPlayers()) {
-            stateStr.append("PLAYER=").append(p.getName()).append(",");
-            stateStr.append(p.getPlayerStateAsString());
-            stateStr.append("|");
-        }
-
-        // send this massive string to every connected client
-        broadcast(stateStr.toString());
+        String gameBoard = DisplayUI.getGameState(gameState);
+        
+        // need replace \n with @@ cuz the broadcast cant read \n
+        String board = gameBoard.replace("\n", "@@");
+        broadcast("BOARD_STATE:" + board);
     }
 }

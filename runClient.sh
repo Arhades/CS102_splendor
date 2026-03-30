@@ -1,0 +1,1 @@
+java -cp classes splendor.network.client.SplendorClient
