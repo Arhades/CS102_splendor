@@ -5,6 +5,8 @@ import java.net.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import splendor.config.*;
+import splendor.display.*;
 import splendor.entity.*;
 import splendor.entity.card.*;
 import splendor.entity.player.*;
@@ -19,6 +21,7 @@ public class SplendorServer {
     private static GameState gameState;
     private static GameRules gameRules;
     public static volatile boolean gameStarted = false;
+    public static volatile boolean isLastRound = false;
     public final CardMarket market = gameState.getCardMarket();
     public final List<Noble> nobles = gameState.getAvailableNobles();
 
@@ -382,6 +385,24 @@ public class SplendorServer {
 
             if (moveSuccessful) {
                 broadcast(playerName + " did action: " + actionType);
+                // check if they hit the winning threshold and if so, this will be the last round
+                if (expectedPlayer.getPoints() >= gameState.getWinningThreshold() && !isLastRound) { 
+                    isLastRound = true;
+                    broadcast("🚨 " + expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points! This is the final round! 🚨");
+                }
+                
+                // check if is last player
+                List<Player> allPlayers = gameState.getPlayers();
+                boolean isLastPlayer = allPlayers.indexOf(expectedPlayer) == (allPlayers.size() - 1);
+                
+                // end game if both true
+                if (isLastRound && isLastPlayer) {
+                    String winnerScreen = DisplayUI.getWinner(gameState, gameRules).replace("\n", "@@");
+                    broadcast("BOARD_STATE:" + winnerScreen);
+                    broadcast("The game has ended! Thanks for playing.");
+                    System.exit(0);
+                    return;
+                }
                 gameState.advanceToNext();
                 broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
             } else {

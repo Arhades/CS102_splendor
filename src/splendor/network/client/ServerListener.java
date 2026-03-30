@@ -19,7 +19,13 @@ public class ServerListener extends Thread {
                     SplendorClient.gameStarted = true; 
                 }
                 if (serverMessage.startsWith("BOARD_STATE:")) {
-                    SplendorClient.renderBoard(serverMessage); 
+                    String gameBoard = serverMessage.replace("BOARD_STATE:", "");
+                    
+                    // swap back the @@ to \n
+                    String board = gameBoard.replace("@@", "\n");
+                    
+                    System.out.println(board);
+                    SplendorClient.waitingForServer = false;
                 } else {
                     System.out.println("\n[SERVER]: " + serverMessage);
                     System.out.print("> ");

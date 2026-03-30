@@ -1,6 +1,5 @@
 package splendor.network.client;
 
-import splendor.network.server.*;
 import java.io.*;
 import java.net.*;
 import java.time.*;
@@ -155,47 +154,47 @@ public class SplendorClient {
         }
     }
 
-    public static void renderBoard(String rawState) {
-        String cleanState = rawState.replace("BOARD_STATE:", "");
-        String[] sections = cleanState.split("\\|");
+    // public static void renderBoard(String rawState) {
+    //     String cleanState = rawState.replace("BOARD_STATE:", "");
+    //     String[] sections = cleanState.split("\\|");
 
-        System.out.println("\n========================================");
-        System.out.println("           SPLENDOR GAME BOARD          ");
-        System.out.println("========================================");
+    //     System.out.println("\n========================================");
+    //     System.out.println("           SPLENDOR GAME BOARD          ");
+    //     System.out.println("========================================");
 
-        for (String section : sections) {
+    //     for (String section : sections) {
             
-            if (section.startsWith("BANK=")) {
-                System.out.println("\n--- GEM BANK ---");
-                String bankData = section.replace("BANK=", "").replace(",", " | ");
-                System.out.println(bankData);
-            } 
+    //         if (section.startsWith("BANK=")) {
+    //             System.out.println("\n--- GEM BANK ---");
+    //             String bankData = section.replace("BANK=", "").replace(",", " | ");
+    //             System.out.println(bankData);
+    //         } 
             
-            else if (section.startsWith("MARKET=")) {
-                System.out.println("\n--- CARD MARKET ---");
-                String marketData = section.replace("MARKET=", "");
-                String[] levels = marketData.split(";");
-                for (String level : levels) {
-                    System.out.println(level.replace(",", "   "));
-                }
-            } 
+    //         else if (section.startsWith("MARKET=")) {
+    //             System.out.println("\n--- CARD MARKET ---");
+    //             String marketData = section.replace("MARKET=", "");
+    //             String[] levels = marketData.split(";");
+    //             for (String level : levels) {
+    //                 System.out.println(level.replace(",", "   "));
+    //             }
+    //         } 
             
-            else if (section.startsWith("PLAYER=")) {
-                System.out.println("\n--- PLAYER STATS ---");
-                String[] playerParts = section.replace("PLAYER=", "").split(",", 2);
+    //         else if (section.startsWith("PLAYER=")) {
+    //             System.out.println("\n--- PLAYER STATS ---");
+    //             String[] playerParts = section.replace("PLAYER=", "").split(",", 2);
                 
-                String playerName = playerParts[0];
-                String stats = playerParts.length > 1 ? playerParts[1] : "No stats";
+    //             String playerName = playerParts[0];
+    //             String stats = playerParts.length > 1 ? playerParts[1] : "No stats";
                 
-                System.out.println(playerName.toUpperCase() + ":");
-                stats = stats.replace(",TOKENS:", "\n  Tokens: ")
-                             .replace(",BONUSES:", "\n  Bonuses: ")
-                             .replace(",RESERVED:", "\n  Reserved: ");
-                System.out.println("  " + stats);
-            }
-        }
+    //             System.out.println(playerName.toUpperCase() + ":");
+    //             stats = stats.replace(",TOKENS:", "\n  Tokens: ")
+    //                          .replace(",BONUSES:", "\n  Bonuses: ")
+    //                          .replace(",RESERVED:", "\n  Reserved: ");
+    //             System.out.println("  " + stats);
+    //         }
+    //     }
         
-        System.out.println("========================================");
-        System.out.print("Your move > ");
-    }
+    //     System.out.println("========================================");
+    //     System.out.print("Your move > ");
+    // }
 }

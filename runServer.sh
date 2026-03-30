@@ -1,1 +1,1 @@
-java -cp output splendor.network.server.SplendorServer
+java -cp classes splendor.network.server.SplendorServer

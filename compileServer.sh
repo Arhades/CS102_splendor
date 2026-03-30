@@ -1,1 +1,1 @@
-javac -d output -cp "src" src/splendor/network/server/ClientHandler.java src/splendor/network/server/SplendorServer.java   
+javac -d classes -cp "src" src/splendor/network/server/ClientHandler.java src/splendor/network/server/SplendorServer.java   
