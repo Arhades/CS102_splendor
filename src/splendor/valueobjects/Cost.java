@@ -56,7 +56,8 @@ public class Cost{
      * @return a new Cost object representing the remaining cost after bonuses
      */
     public Cost afterBonuses(Map<GemColor, Integer> bonus) {
-        GemCollection newCost = new GemCollection(cost.getGems());
+        GemCollection newCost = new GemCollection();
+        newCost.add(cost);
         Map<GemColor, Integer> bonusCopy = new HashMap<>(bonus);
         bonusCopy.remove(GemColor.GOLD_JOKER);
 
