@@ -230,7 +230,9 @@ public class GameRules {
         
         int leastCards = Integer.MAX_VALUE;
         for (Player player: winners) {
-            leastCards = Math.min(leastCards, player.getPurchasedCards().size() + player.getClaimedNobles().size());
+            if (player.getPoints() == mostPoints) {
+                leastCards = Math.min(leastCards, player.getPurchasedCards().size() + player.getClaimedNobles().size());
+            }
         }
 
         winner = winners.get(0);

@@ -10,5 +10,20 @@ public enum GemColor {
     EMERALD,
     RUBY,
     ONYX,
-    GOLD_JOKER
+    GOLD_JOKER;
+
+    public static GemColor convertToColor(String color) {
+        switch (color) {
+            case "DIAMOND":
+                return GemColor.DIAMOND;
+            case "ONYX":
+                return GemColor.ONYX;
+            case "EMERALD":
+                return GemColor.EMERALD;
+            case "RUBY":
+                return GemColor.RUBY;
+            default:
+                return GemColor.SAPPHIRE;
+        }
+    }
 }
