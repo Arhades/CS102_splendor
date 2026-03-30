@@ -31,6 +31,7 @@ public class ClientHandler implements Runnable {
             System.out.println(playerName + " has joined the server!");
             
             SplendorServer.broadcast("SERVER: " + playerName + " joined the lobby.");
+            SplendorServer.processClientMessage(this, temp);
 
             String clientMessage;
             while ((clientMessage = in.readLine()) != null) {
@@ -40,7 +41,6 @@ public class ClientHandler implements Runnable {
                     break;
                 }
                 
-                // We pass 'this' so the server knows exactly sent the command
                 SplendorServer.processClientMessage(this, clientMessage);
             }
             

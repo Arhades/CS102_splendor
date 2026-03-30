@@ -13,8 +13,6 @@ import splendor.entity.player.*;
 import splendor.exception.*;
 import splendor.rules.*;
 import splendor.valueobjects.*;
-import splendor.display.*;
-
 
 public class SplendorServer {
     private static final int PORT = 9090;
@@ -63,13 +61,9 @@ public class SplendorServer {
     }
 
     // the synchronized keyword ensures that only one thread can be doing an action at any given time
-    public static synchronized void processPlayerAction(String actionCommand, String playerName) {
+    public static synchronized void processPlayerAction(String actionCommand, ClientHandler player) {
+        String playerName = player.getPlayerName();
         System.out.println("Received from " + playerName + ": " + actionCommand);
-
-        // action command example: 
-        // TAKE THREE:RUBY:ONYX:EMERALD
-        // ACTION:PURCHASE:RESERVED:0
-        // ACTION:PURCHASE:1:2
         String[] parts = actionCommand.split(":");
         if (parts.length < 1 || parts[0].trim().isEmpty()) {
             return;
@@ -98,6 +92,7 @@ public class SplendorServer {
         try {
             switch (actionType) {
                 case "START GAME":
+                    int numOfPlayers = clients.size();
                     if (gameStarted) {
                         sendToSpecificPlayer(playerName, "The game has already started!");
                         return; 
@@ -106,29 +101,32 @@ public class SplendorServer {
                         sendToSpecificPlayer(playerName, "You need at least 2 players to start!");
                         return;
                     } 
-                    clients.sort((c1, c2) -> {
-                        if (c1.getBirthDate() == null && c2.getBirthDate() == null) return 0;
-                        if (c1.getBirthDate() == null) return 1;
-                        if (c2.getBirthDate() == null) return -1;
-                        return c2.getBirthDate().compareTo(c1.getBirthDate());
-                    });
-
+                    // wrong way to sort
+                    // clients.sort((c1, c2) -> {
+                    //     if (c1.getBirthDate() == null && c2.getBirthDate() == null) return 0;
+                    //     if (c1.getBirthDate() == null) return 1;
+                    //     if (c2.getBirthDate() == null) return -1;
+                    //     return c2.getBirthDate().compareTo(c1.getBirthDate());
+                    // });
                     String youngestName = clients.get(0).getPlayerName();
+
+                    //===============================
+                    //GUYS FIND A WAY TO DO THE CLOCKWISE THING
+                    //===============================
+
                     if (!playerName.equals(youngestName)) {
                         sendToSpecificPlayer(playerName, "Only the youngest player (" + youngestName + ") can start the game.");
                         sendToSpecificPlayer(playerName, "AND YOU ARE OLD");
-                        return; 
+                        return;
+                    }
+                    DisplayUI.printStartMessage(youngestName);
+                    List<Player> players = new ArrayList<>();
+                    int id = 1;
+                    for (ClientHandler client : clients) {
+                        players.add(new Player(client.getPlayerName(), id));
+                        id++;
                     }
                     try {
-                        System.out.println("Loading cards and nobles...");
-                        int numOfPlayers = clients.size();
-                        List<Player> players = new ArrayList<>();
-                        int id = 1;
-                        for (ClientHandler client : clients) {
-                            players.add(new Player(client.getPlayerName(), id)); 
-                            id++;
-                        }
-
                         GameConfig config = GameConfig.load("config.properties");
 
                         List<DevelopmentCard> levelOneDeck = GameEngine.loadCards(config.getCardsFile(), 1);
@@ -140,9 +138,7 @@ public class SplendorServer {
 
                         int standardGemCount = config.getGemCountPerColor(numOfPlayers);
                         
-                        GemCollection initialGems = GameEngine.buildGemBank(standardGemCount, config);
-
-                        // Initialize GameState with the winning threshold from config
+                        GemCollection initialGems = GameEngine.buildGemBank(numOfPlayers, config);
                         gameState = new GameState(players, cardMarket, initialGems, nobles, config.getWinningThreshold());
                         gameRules = new GameRules(gameState);
 
@@ -170,70 +166,28 @@ public class SplendorServer {
                     return;
                 
                 case "TAKE TWO":
-                    System.out.println("Taking two gems: " + parts[1]);
-                    
-                    // get the color they requested and convert it
-                    String colorStr = parts[1].toUpperCase();
-                    GemColor col = GameEngine.convertToColor(colorStr);
-                    
-                    if (!gameRules.validColor(colorStr) || colorStr.equals("GOLD_JOKER")) {
-                        sendToSpecificPlayer(playerName, "Invalid gem color.");
-                        break;
-                    }
-                    
-                    if (gameRules.canTakeTwoSameGems(col, gameState.getGemBank())) {
-                        GemCollection gemsToTake = new GemCollection();
-                        gemsToTake.add(col, 2);
-                        
-                        expectedPlayer.addGems(gemsToTake);
-                        gameState.getGemBank().subtract(gemsToTake);
-                        
+                    String resultTwo = handleTakeTwoSame(
+                        expectedPlayer, gameState, gameRules, parts[1]
+                    );
+
+                    if (resultTwo.equals("SUCCESS")) {
                         moveSuccessful = true;
-                        broadcast(expectedPlayer.getName() + " took 2 " + colorStr + " gems.");
-                        
+                        broadcast(expectedPlayer.getName() + " took 2 " + parts[1].toUpperCase() + " gems.");
                     } else {
-                        sendToSpecificPlayer(playerName, "Not enough " + colorStr + " gems in the bank to take two.");
+                        sendToSpecificPlayer(playerName, resultTwo.replace("ERROR: ", ""));
                     }
                     break;
                     
                 case "TAKE THREE":
-                    if (parts.length < 4) {
-                        sendToSpecificPlayer(playerName, "You must select exactly 3 gem colors.");
-                        break; 
-                    }
+                        String resultThree = handleTakeThreeDifferent(
+                        expectedPlayer, gameState, gameRules, parts[1], parts[2], parts[3]
+                    );
 
-                    String c1 = parts[1].toUpperCase();
-                    String c2 = parts[2].toUpperCase();
-                    String c3 = parts[3].toUpperCase();
-
-                    System.out.println("Taking three gems: " + c1 + ", " + c2 + ", " + c3);
-
-                    if (c1.equals(c2) || c1.equals(c3) || c2.equals(c3)) {
-                        sendToSpecificPlayer(playerName, "You must choose 3 different gem colors.");
-                        break;
-                    }
-
-                    if (!gameRules.validColor(c1) || c1.equals("GOLD_JOKER") ||
-                        !gameRules.validColor(c2) || c2.equals("GOLD_JOKER") ||
-                        !gameRules.validColor(c3) || c3.equals("GOLD_JOKER")) {
-                        sendToSpecificPlayer(playerName, "Invalid gem colors selected.");
-                        break;
-                    }
-
-                    GemCollection gemsToAdd = new GemCollection();
-                    gemsToAdd.add(GameEngine.convertToColor(c1), 1);
-                    gemsToAdd.add(GameEngine.convertToColor(c2), 1);
-                    gemsToAdd.add(GameEngine.convertToColor(c3), 1);
-
-                    if (gameRules.canTakeThreeDifferentGems(gemsToAdd, gameState.getGemBank())) {
-                        expectedPlayer.addGems(gemsToAdd);
-                        gameState.getGemBank().subtract(gemsToAdd);
-                        // if true, then the turn can go on
+                    if (resultThree.equals("SUCCESS")) {
                         moveSuccessful = true; 
-                        broadcast(expectedPlayer.getName() + " took 1 " + c1 + ", 1 " + c2 + ", and 1 " + c3 + ".");
-                        
+                        broadcast(expectedPlayer.getName() + " took 1 " + parts[1].toUpperCase() + ", 1 " + parts[2].toUpperCase() + ", and 1 " + parts[3].toUpperCase() + ".");
                     } else {
-                        sendToSpecificPlayer(playerName, "The bank does not have enough of those gems.");
+                        sendToSpecificPlayer(playerName, resultThree.replace("ERROR: ", ""));
                     }
                     break;
                     
@@ -242,73 +196,42 @@ public class SplendorServer {
                         sendToSpecificPlayer(playerName, "Invalid purchase command format.");
                         break;
                     }
-                    
-                    // this is the "1", "2", "3", or "RESERVED"
-                    String sourceOrLevel = parts[1].toUpperCase();
-                    int index = 0;
-                    int index2 = 0;
-                    if (!(sourceOrLevel.equals("RESERVED"))) {
-                        try {
-                            index = Integer.parseInt(parts[2]);
-                            index2 = Integer.parseInt(parts[1]);
-                        } catch (NumberFormatException e) {
-                            sendToSpecificPlayer(playerName, "Card index must be a number.");
-                            break;
-                        }
 
-                        System.out.println("Processing purchase for Card level " + sourceOrLevel + " and Index " + index);
-                    }
-                    DevelopmentCard cardToBuy = null;
+                    boolean isReserved = parts[1].equals("RESERVED");
+                    int level = 0;
+                    int index = 0;
+
                     try {
-                        if (sourceOrLevel.equals("RESERVED")) {
-                            List<DevelopmentCard> reservedCards = expectedPlayer.getReservedCards();
-                            if (index < 0 || index >= reservedCards.size()) {
-                                sendToSpecificPlayer(playerName, "Invalid reserved card index.");
-                                break;
-                            }
-                            cardToBuy = reservedCards.get(index);
-                            
-                        } else if ("1".equals(sourceOrLevel) || 
-                                   "2".equals(sourceOrLevel) || 
-                                   "3".equals(sourceOrLevel)) {
-                            int level = Integer.parseInt(sourceOrLevel);
-                            if (level < 1 || level > 3 || index < 0 || index > 3) {
-                                sendToSpecificPlayer(playerName, "Invalid level or card index.");
-                                break;
-                            }
-                            cardToBuy = gameState.getCardMarket().getVisibleCard(level, index);
-                            gameState.getCardMarket().removeCard(level, index);
-                            // remove and replace
-                            gameState.getCardMarket().splitVisible(
-                            gameState.getCardMarket().getDeckCards(level), 
-                            gameState.getCardMarket().getVisibleCards(level)
-                        );
+                        if (isReserved) {
+                            index = Integer.parseInt(parts[2]); 
                         } else {
-                            expectedPlayer.removeReservedCard(cardToBuy);
+                            level = Integer.parseInt(parts[1]);
+                            index = Integer.parseInt(parts[2]);
                         }
                     } catch (NumberFormatException e) {
-                         sendToSpecificPlayer(playerName, "Level must be 1, 2, or 3, or 'RESERVED'.");
-                         break;
-                    } catch (UnavailableCardException e) {
-                        sendToSpecificPlayer(playerName, "That card is no longer available to be bought.");
-                        break;
-                    } catch (NullPointerException e) {
-                        sendToSpecificPlayer(playerName, "You do not have such a reserved card.");
-                    }
-
-                    if (!gameRules.canAffordCard(expectedPlayer, cardToBuy)) {
-                        sendToSpecificPlayer(playerName, "You cannot afford this card.");
+                        sendToSpecificPlayer(playerName, "Card numbers must be integers.");
                         break;
                     }
-                    
-                    GemCollection actualCost = gameRules.calculateActualCost(expectedPlayer, cardToBuy);
-                    
-                    expectedPlayer.deductGems(actualCost);
-                    expectedPlayer.addCard(cardToBuy);
-                    gameState.addGemsToBank(actualCost);
 
-                    moveSuccessful = true;
-                    broadcast(expectedPlayer.getName() + " purchased a card.");
+                    String resultPurchase = handlePurchaseCard(
+                        expectedPlayer, gameState, gameRules, isReserved, level, index
+                    );
+
+                    if (resultPurchase.equals("SUCCESS")) {
+                        moveSuccessful = true;
+                        String location = isReserved ? "their reserved hand" : "the board";
+                        broadcast(expectedPlayer.getName() + " purchased a card from " + location + ".");
+                        
+                        List<Noble> earnedNobles = gameRules.getClaimableNobles(expectedPlayer, gameState.getAvailableNobles());
+                        for (Noble noble : earnedNobles) {
+                            expectedPlayer.claimNoble(noble);
+                            gameState.removeNoble(noble);
+                            broadcast(expectedPlayer.getName() + " was visited by a Noble! (+" + noble.getPoints() + " points)");
+                        }
+
+                    } else {
+                        sendToSpecificPlayer(playerName, resultPurchase.replace("ERROR: ", ""));
+                    }
                     break;
                     
                 case "RESERVE":
@@ -319,77 +242,47 @@ public class SplendorServer {
 
                     int reserveLevel;
                     int reserveIndex;
-
                     try {
-                        reserveLevel = Integer.parseInt(parts[2]);
-                        reserveIndex = Integer.parseInt(parts[3]);
+                        reserveLevel = Integer.parseInt(parts[1]);
+                        reserveIndex = Integer.parseInt(parts[2]);
                     } catch (NumberFormatException e) {
                         sendToSpecificPlayer(playerName, "Level and Index must be numbers.");
                         break;
                     }
 
-                    System.out.println("Reserving card level " + reserveLevel + ", index " + reserveIndex);
-                    if (!gameRules.canReserveCard(expectedPlayer)) {
-                        sendToSpecificPlayer(playerName, "You cannot reserve more than 3 cards.");
-                        break;
-                    }
+                    String resultReserve = handleReserveCard(
+                        expectedPlayer, gameState, gameRules, reserveLevel, reserveIndex
+                    );
 
-                    DevelopmentCard cardToReserve = null;
-
-                    try {
-                        if (reserveLevel < 1 || reserveLevel > 3 || reserveIndex < 0 || reserveIndex > 3) {
-                            sendToSpecificPlayer(playerName, "Invalid level or card index.");
+                    if (resultReserve.startsWith("SUCCESS")) {
+                        moveSuccessful = true;
+                        
+                        String type = (reserveIndex == 4) ? "the top of the deck" : "the board";
+                        String message = expectedPlayer.getName() + " reserved a Level " + reserveLevel + " card from " + type + ".";
+                        
+                        if (resultReserve.equals("SUCCESS_JOKER")) {
+                            message += " They also received 1 Gold Joker.";
                         }
-                        cardToReserve = gameState.getCardMarket().getVisibleCard(reserveLevel, reserveIndex);
-
-                        // remove and replace
-                        gameState.getCardMarket().removeCard(reserveLevel, reserveIndex);
-                        gameState.getCardMarket().splitVisible(
-                        gameState.getCardMarket().getDeckCards(reserveLevel), 
-                        gameState.getCardMarket().getVisibleCards(reserveLevel)
-                        );
                         
-                    } catch (NumberFormatException e) {
-                         sendToSpecificPlayer(playerName, "Level or Card index must be 1, 2, or 3 and 1, 2, 3, 4 respectively.");
-                    } catch (UnavailableCardException e) {
-                        sendToSpecificPlayer(playerName, "That card is no longer available to reserve.");
+                        broadcast(message);
+                    } else {
+                        sendToSpecificPlayer(playerName, resultReserve.replace("ERROR: ", ""));
                     }
-
-                    expectedPlayer.addReservedCard(cardToReserve);
-
-                    GemColor jokerColor = GameEngine.convertToColor("GOLD_JOKER");
-                    boolean gotJoker = false;
-                    
-                    // check joker's availablility
-                    if (gameState.getGemBank().getCount(jokerColor) > 0) {
-                        GemCollection jokerReward = new GemCollection();
-                        jokerReward.add(jokerColor, 1);
-                        
-                        expectedPlayer.addGems(jokerReward);
-                        gameState.getGemBank().subtract(jokerReward);
-                        gotJoker = true;
-                    }
-
-                    moveSuccessful = true;
-                    
-                    String message = expectedPlayer.getName() + " reserved a Level " + reserveLevel + " card.";
-                    if (gotJoker) {
-                        message += " They also received 1 Gold Joker.";
-                    }
-                    broadcast(message);
-                    
                     break;
                     
                 default:
                     sendToSpecificPlayer(playerName, "Unknown command.");
+                    break;
             }
+    
 
             if (moveSuccessful) {
                 broadcast(playerName + " did action: " + actionType);
                 // check if they hit the winning threshold and if so, this will be the last round
                 if (expectedPlayer.getPoints() >= gameState.getWinningThreshold() && !isLastRound) { 
                     isLastRound = true;
-                    broadcast("🚨 " + expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points! This is the final round! 🚨");
+                    broadcast(expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points!");
+                    broadcastGameState();
                 }
                 
                 // check if is last player
@@ -405,6 +298,7 @@ public class SplendorServer {
                     return;
                 }
                 gameState.advanceToNext();
+                broadcastGameState();
                 broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
             } else {
                 sendToSpecificPlayer(playerName, "Illegal move. Try again.");
@@ -441,7 +335,7 @@ public class SplendorServer {
             sender.setBirthDate(date);
             System.out.println(parts[1] + " successfully joined");
         } else {
-            processPlayerAction(message, sender.getPlayerName());
+            processPlayerAction(message, sender);
         }
     }
 
@@ -464,5 +358,149 @@ public class SplendorServer {
         // need replace \n with @@ cuz the broadcast cant read \n
         String board = gameBoard.replace("\n", "@@");
         broadcast("BOARD_STATE:" + board);
+    }
+
+    public static String handlePurchaseCard(Player player, GameState gameState, GameRules gameRules, boolean isReserved, int level, int index) {
+        CardMarket cardMarket = gameState.getCardMarket();
+
+        try {
+            DevelopmentCard chosen = null;
+
+            if (isReserved) {
+                List<DevelopmentCard> reservedCards = player.getReservedCards();
+                if (reservedCards.size() == 0) {
+                    return "ERROR: You do not have any reserved cards.";
+                }
+                if (index < 0 || index >= reservedCards.size()) {
+                    return "ERROR: Invalid reserved card index.";
+                }
+                chosen = reservedCards.get(index);
+
+                if (!gameRules.canAffordCard(player, chosen)) {
+                    return "ERROR: You cannot afford this reserved card.";
+                }
+
+                player.addCard(chosen);
+                GemCollection cost = gameRules.calculateActualCost(player, chosen);
+                player.deductGems(cost);
+                player.removeReservedCard(chosen);
+                gameState.addGemsToBank(cost);
+
+                return "SUCCESS";
+
+            } else {
+                if (level < 1 || level > 3 || index < 0 || index > 3) {
+                    return "ERROR: Invalid card level or index.";
+                }
+                chosen = cardMarket.getVisibleCard(level, index);
+
+                if (!gameRules.canAffordCard(player, chosen)) {
+                    return "ERROR: You cannot afford this card.";
+                }
+                player.addCard(chosen);
+                GemCollection cost = gameRules.calculateActualCost(player, chosen);
+                player.deductGems(cost);
+                
+                cardMarket.removeCard(level, index);
+                cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
+                gameState.addGemsToBank(cost);
+
+                return "SUCCESS";
+            }
+        } catch (UnavailableCardException e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+    
+    public static String handleReserveCard(Player player, GameState gameState, GameRules gameRules, int level, int number) {
+        if (!gameRules.canReserveCard(player)) {
+            return "ERROR: You cannot reserve more than 3 cards.";
+        }
+
+        if (level < 1 || level > 3 || number < 0 || number > 4) {
+            return "ERROR: Invalid level or card index.";
+        }
+
+        CardMarket cardMarket = gameState.getCardMarket();
+        GemCollection gemBank = gameState.getGemBank();
+        boolean gotJoker = false;
+
+        try {
+            DevelopmentCard chosen = null;
+
+            if (number == 4) {
+                chosen = cardMarket.drawCard(level);
+                player.addReservedCard(chosen);
+            } else {
+                chosen = cardMarket.getVisibleCard(level, number);
+                player.addReservedCard(chosen);
+                cardMarket.removeCard(level, number);
+                cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
+            }
+
+            GemColor jokerColor = GemColor.GOLD_JOKER;
+            if (gemBank.getCount(jokerColor) > 0) {
+                GemCollection gems = new GemCollection();
+                gems.add(jokerColor, 1);
+                gemBank.subtract(gems);
+                player.addGems(gems);
+                gotJoker = true;
+            }
+
+            return gotJoker ? "SUCCESS_JOKER" : "SUCCESS_NO_JOKER";
+
+        } catch (UnavailableCardException e) {
+            return "ERROR: That card or deck is no longer available.";
+        }
+    }
+    public static String handleTakeTwoSame(Player player, GameState gameState, GameRules gameRules, String colorStr) {
+        GemCollection gems = gameState.getGemBank();
+        colorStr = colorStr.toUpperCase();
+
+        if (!gameRules.validColor(colorStr) || colorStr.equals("GOLD_JOKER")) {
+            return "ERROR: Invalid gem color.";
+        }
+
+        GemColor col = GameEngine.convertToColor(colorStr);
+
+        if (gameRules.canTakeTwoSameGems(col, gems)) {
+            GemCollection add = new GemCollection();
+            add.add(col, 2);
+            player.addGems(add);
+            gems.subtract(add);
+            return "SUCCESS";
+        } else {
+            return "ERROR: Not enough " + colorStr + " gems in the bank to take two.";
+        }
+    }
+
+    public static String handleTakeThreeDifferent(Player player, GameState gameState, GameRules gameRules, String c1, String c2, String c3) {
+        GemCollection gems = gameState.getGemBank();
+        c1 = c1.toUpperCase();
+        c2 = c2.toUpperCase();
+        c3 = c3.toUpperCase();
+
+        if (c1.equals(c2) || c1.equals(c3) || c2.equals(c3)) {
+            return "ERROR: You must choose 3 different gem colors.";
+        }
+
+        if (!gameRules.validColor(c1) || c1.equals("GOLD_JOKER") ||
+            !gameRules.validColor(c2) || c2.equals("GOLD_JOKER") ||
+            !gameRules.validColor(c3) || c3.equals("GOLD_JOKER")) {
+            return "ERROR: Invalid gem colors selected.";
+        }
+
+        GemCollection add = new GemCollection();
+        add.add(GameEngine.convertToColor(c1), 1);
+        add.add(GameEngine.convertToColor(c2), 1);
+        add.add(GameEngine.convertToColor(c3), 1);
+
+        if (gameRules.canTakeThreeDifferentGems(add, gems)) {
+            player.addGems(add);
+            gems.subtract(add);
+            return "SUCCESS";
+        } else {
+            return "ERROR: The bank does not have enough of those gems.";
+        }
     }
 }

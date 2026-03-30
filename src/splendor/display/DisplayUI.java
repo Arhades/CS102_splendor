@@ -1,12 +1,12 @@
 package splendor.display;
 
 import java.util.*;
-import splendor.entity.player.*;
 import splendor.entity.*;
 import splendor.entity.card.*;
-import splendor.valueobjects.*;
+import splendor.entity.player.*;
 import splendor.exception.*;
 import splendor.rules.*;
+import splendor.valueobjects.*;
 
 /**
  * Handles all display output for the Splendor game.
