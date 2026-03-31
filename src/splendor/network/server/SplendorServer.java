@@ -180,8 +180,6 @@ public class SplendorServer {
                         broadcast("The game has started with " + numOfPlayers + " players with " + youngestName + " being the youngest player!");
                         broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
                         broadcastGameState();
-
-                        // If the first player is a bot, auto-execute their turn(s)
                         runBotTurns();
 
                     } catch (NullPointerException e) {
