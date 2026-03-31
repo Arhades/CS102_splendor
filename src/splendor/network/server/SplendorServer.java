@@ -378,6 +378,8 @@ public class SplendorServer {
     /**
      * Processes a raw message from a client, handling JOINED messages and routing actions.
      * JOINED format: "JOINED:name:dd/MM/yyyy" for humans, or "JOINED:name:dd/MM/yyyy:BOT:2" or "JOINED:name:dd/MM/yyyy:BOT:3" for bots.
+     * Bot JOINED messages are sent by a human client on behalf of the bot, so the server
+     * creates a separate virtual ClientHandler for the bot rather than overwriting the sender.
      *
      * @param sender  the ClientHandler that sent the message
      * @param message the raw message string
@@ -385,18 +387,30 @@ public class SplendorServer {
     public static synchronized void processClientMessage(ClientHandler sender, String message) {
         if (message.startsWith("JOINED:")) {
             String[] parts = message.split(":");
-            sender.setPlayerName(parts[1]);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDate date = LocalDate.parse(parts[2], formatter);
-            sender.setBirthDate(date);
+
             // Check if this is a bot registration: JOINED:name:date:BOT:type
             if (parts.length >= 5 && parts[3].equals("BOT")) {
+                String botName = parts[1];
                 int botType = Integer.parseInt(parts[4]);
-                botPlayerTypes.put(parts[1], botType);
+                botPlayerTypes.put(botName, botType);
+
+                // Create a virtual ClientHandler for the bot (no real socket)
+                // The bot's messages will be broadcast to all real clients
+                ClientHandler botHandler = new ClientHandler(null);
+                botHandler.setPlayerName(botName);
+                botHandler.setBirthDate(date);
+                clients.add(botHandler);
+
+                broadcast("SERVER: " + botName + " (Bot) joined the lobby. (" + clients.size() + "/4)");
+                System.out.println(botName + " (Bot) successfully joined");
             } else {
+                sender.setPlayerName(parts[1]);
+                sender.setBirthDate(date);
                 botPlayerTypes.put(parts[1], 0); // 0 = human
+                System.out.println(parts[1] + " successfully joined");
             }
-            System.out.println(parts[1] + " successfully joined");
         } else {
             processPlayerAction(message, sender);
         }
