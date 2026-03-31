@@ -373,12 +373,12 @@ public class DisplayUI {
         sb.append("\n");
         sb.append("  " + BOLD + "--- S P L E N D O R ---" + RESET + spaces(45) + DIM + "Turn " + (gameState.getTurnCount() + 1) + RESET + "\n");
         sb.append("\n");
-        sb.append(getPlayers(gameState));
-        sb.append(getAllBonuses(gameState));
         sb.append(getNobles(gameState));
         sb.append(getVisibleCards(gameState));
         sb.append(getGemBank(gameState));
         sb.append(getReservedCards(gameState.getCurrentPlayer()));
+        sb.append(getPlayers(gameState));
+        sb.append(getAllBonuses(gameState));
         sb.append("  " + BOLD + "> " + gameState.getCurrentPlayer().getName() + "'s turn" + RESET + "\n");
         return sb.toString();
     }
