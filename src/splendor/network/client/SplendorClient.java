@@ -5,15 +5,22 @@ import java.net.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import splendor.display.*;
 
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
     private static final String SERVER_IP = "localhost"; 
     private static final int SERVER_PORT = 9090;
+    private DisplayUI displayUI = new DisplayUI();
     protected static volatile boolean gameStarted = false;
     protected static volatile boolean waitingForServer = false;
 
+    /**
+     * Entry point for the Splendor client application.
+     *
+     * @param args command-line arguments (not used)
+     */
     public static void main(String[] args) {
         try {
             Socket socket = new Socket(SERVER_IP, SERVER_PORT);
@@ -39,10 +46,6 @@ public class SplendorClient {
                 while (!validDateEntered) {
                     System.out.println("Please enter your birth date in the formal dd/mm/yyyy: ");
                     String clientInput = scanner.nextLine();
-                    if (clientInput == null) {
-                        // for if the client disconnects
-                        break;
-                    }
                     try {
                         playerBirthDate = LocalDate.parse(clientInput, formatter);
                         validDateEntered = true;
@@ -51,7 +54,7 @@ public class SplendorClient {
                     }
 
                 }
-                out.println("JOINED:" + playerName + ":" + playerBirthDate);
+                out.println("JOINED:" + playerName + ":" + playerBirthDate.format(formatter));
                 break;
             }
 
@@ -67,13 +70,14 @@ public class SplendorClient {
                     }
                 }
                 else {
-                    System.out.println("\n=============== YOUR TURN ===============");
-                    System.out.println("1. Take 3 different gems");
-                    System.out.println("2. Take 2 gems of the same color");
-                    System.out.println("3. Purchase a card");
-                    System.out.println("4. Reserve a card");
-                    System.out.println("Type a number (1-4) or QUIT:");
-                    System.out.print("> ");
+                    // System.out.println("\n=============== YOUR TURN ===============");
+                    // System.out.println("1. Take 3 different gems");
+                    // System.out.println("2. Take 2 gems of the same color");
+                    // System.out.println("3. Purchase a card");
+                    // System.out.println("4. Reserve a card");
+                    // System.out.println("Type a number (1-4) or QUIT:");
+                    // System.out.print("> ");
+                    DisplayUI.printActionMenu();
                     
                     String input = scanner.nextLine();
                     
@@ -84,51 +88,39 @@ public class SplendorClient {
 
                     switch (input) {
                         case "1":
-                            System.out.print("Enter first color: ");
-                            String color1 = scanner.nextLine().toUpperCase();
-                            
-                            System.out.print("Enter second color: ");
-                            String color2 = scanner.nextLine().toUpperCase();
-                            
-                            System.out.print("Enter third color: ");
-                            String color3 = scanner.nextLine().toUpperCase();
-                            
+                            List<String> chosenColors = promptTakeThreeDifferent(scanner);
+                            if (chosenColors == null) {
+                                break; 
+                            }
                             waitingForServer = true;
-                            out.println("TAKE THREE:" + color1 + ":" + color2 + ":" + color3);
+                            out.println("TAKE THREE:" + chosenColors.get(0) + ":" + chosenColors.get(1) + ":" + chosenColors.get(2));
                             break;
                             
                         case "2":
-                            System.out.print("Enter the color you want 2 of: ");
-                            String color = scanner.nextLine().toUpperCase();
+                            String chosenColor = promptTakeTwoSame(scanner);
+                            if (chosenColor == null) {
+                                break; 
+                            }
                             waitingForServer = true;
-                            out.println("TAKE TWO:" + color);
+                            out.println("TAKE TWO:" + chosenColor);
                             break;
                             
                         case "3":
-                            System.out.println("From Reserved or Board? : ");
-                            String choice = scanner.nextLine();
-                            if (choice.equalsIgnoreCase("reserved")) {
-                                System.out.println("Which card? (1 for the first card and so on):");
-                                String res = scanner.nextLine();
-                                waitingForServer = true;
-                                out.println("PURCHASE:RESERVED:" + res);
-                            } else {
-                                System.out.print("Which deck level (1-3)? ");
-                                String level = scanner.nextLine();
-                                System.out.print("Which card index (0-3)? ");
-                                String index = scanner.nextLine();
-                                waitingForServer = true;
-                                out.println("PURCHASE:" + level + ":" + index);
+                            String purchaseData = promptPurchase(scanner);
+                            if (purchaseData == null) {
+                                break;
                             }
+                            waitingForServer = true;
+                            out.println("PURCHASE:" + purchaseData);
                             break;
                             
                         case "4":
-                            System.out.print("Which deck level to reserve from (1-3)? ");
-                            String resLevel = scanner.nextLine();
-                            System.out.print("Which card index (0-3)? ");
-                            String resIndex = scanner.nextLine();
+                            String reserveData = promptReserve(scanner);
+                            if (reserveData == null) {
+                                break;
+                            }
                             waitingForServer = true;
-                            out.println("RESERVE:" + resLevel + ":" + resIndex);
+                            out.println("RESERVE:" + reserveData);
                             break;
                             
                         default:
@@ -154,47 +146,125 @@ public class SplendorClient {
         }
     }
 
-    // public static void renderBoard(String rawState) {
-    //     String cleanState = rawState.replace("BOARD_STATE:", "");
-    //     String[] sections = cleanState.split("\\|");
+    /**
+     * Prompts the player to choose three different gem colors to take.
+     *
+     * @param scanner the Scanner to read input from
+     * @return a list of three color strings, or null if the player backs out
+     */
+    private static List<String> promptTakeThreeDifferent(Scanner scanner) {
+        List<String> takenColors = new ArrayList<>();
+        List<String> validColors = Arrays.asList("DIAMOND", "SAPPHIRE", "EMERALD", "RUBY", "ONYX");
 
-    //     System.out.println("\n========================================");
-    //     System.out.println("           SPLENDOR GAME BOARD          ");
-    //     System.out.println("========================================");
+        while (takenColors.size() < 3) {
+            System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx) [\"back\" to return]: ");
+            String input = scanner.nextLine().trim();
 
-    //     for (String section : sections) {
-            
-    //         if (section.startsWith("BANK=")) {
-    //             System.out.println("\n--- GEM BANK ---");
-    //             String bankData = section.replace("BANK=", "").replace(",", " | ");
-    //             System.out.println(bankData);
-    //         } 
-            
-    //         else if (section.startsWith("MARKET=")) {
-    //             System.out.println("\n--- CARD MARKET ---");
-    //             String marketData = section.replace("MARKET=", "");
-    //             String[] levels = marketData.split(";");
-    //             for (String level : levels) {
-    //                 System.out.println(level.replace(",", "   "));
-    //             }
-    //         } 
-            
-    //         else if (section.startsWith("PLAYER=")) {
-    //             System.out.println("\n--- PLAYER STATS ---");
-    //             String[] playerParts = section.replace("PLAYER=", "").split(",", 2);
-                
-    //             String playerName = playerParts[0];
-    //             String stats = playerParts.length > 1 ? playerParts[1] : "No stats";
-                
-    //             System.out.println(playerName.toUpperCase() + ":");
-    //             stats = stats.replace(",TOKENS:", "\n  Tokens: ")
-    //                          .replace(",BONUSES:", "\n  Bonuses: ")
-    //                          .replace(",RESERVED:", "\n  Reserved: ");
-    //             System.out.println("  " + stats);
-    //         }
-    //     }
+            if (input.equalsIgnoreCase("back")) {
+                return null;
+            }
+
+            String color = input.toUpperCase();
+
+            if (!validColors.contains(color)) {
+                System.out.println("Invalid input! Please enter a valid gem color.");
+                continue;
+            }
+
+            if (takenColors.contains(color)) {
+                System.out.println("Already taken! You must choose 3 DIFFERENT colors.");
+                continue;
+            }
+
+            takenColors.add(color);
+        }
         
-    //     System.out.println("========================================");
-    //     System.out.print("Your move > ");
-    // }
+        return takenColors;
+    }
+
+    /**
+     * Prompts the player to choose a gem color to take two of.
+     *
+     * @param scanner the Scanner to read input from
+     * @return the chosen color string, or null if the player backs out
+     */
+    private static String promptTakeTwoSame(Scanner scanner) {
+        List<String> validColors = Arrays.asList("DIAMOND", "SAPPHIRE", "EMERALD", "RUBY", "ONYX");
+
+        while (true) {
+            System.out.print("Colour to take 2 of (Diamond, Sapphire, Emerald, Ruby, Onyx) [\"back\" to return]: ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("back")) {
+                return null;
+            }
+
+            String color = input.toUpperCase();
+
+            if (!validColors.contains(color)) {
+                System.out.println("Invalid input! Please enter a valid gem color.");
+                continue;
+            }
+            return color; 
+        }
+    }
+
+    /**
+     * Prompts the player to select a card to purchase from the table or reserved hand.
+     *
+     * @param scanner the Scanner to read input from
+     * @return a formatted purchase data string, or null if the player backs out
+     */
+    private static String promptPurchase(Scanner scanner) {
+        while (true) {
+            System.out.print("From table or from reserved? [\"back\" to return]: ");
+            String choice = scanner.nextLine().trim();
+
+            if (choice.equalsIgnoreCase("back")) {
+                return null;
+            }
+
+            if (choice.equalsIgnoreCase("reserved")) {
+                System.out.print("Which reserved card number (0, 1, or 2)? [\"back\" to return]: ");
+                String res = scanner.nextLine().trim();
+                if (res.equalsIgnoreCase("back")) return null;
+                
+                return "RESERVED:" + res; 
+
+            } else if (choice.equalsIgnoreCase("table") || choice.equalsIgnoreCase("board")) {
+                System.out.print("Which deck level (1-3)? [\"back\" to return]: ");
+                String levelStr = scanner.nextLine().trim();
+                if (levelStr.equalsIgnoreCase("back")) return null;
+
+                System.out.print("Which card index (0-3)? [\"back\" to return]: ");
+                String indexStr = scanner.nextLine().trim();
+                if (indexStr.equalsIgnoreCase("back")) return null;
+
+                return levelStr + ":" + indexStr;
+            } else {
+                System.out.println("Invalid choice. Please type 'table' or 'reserved'.");
+            }
+        }
+    }
+
+
+    /**
+     * Prompts the player to select a card to reserve from the table.
+     *
+     * @param scanner the Scanner to read input from
+     * @return a formatted reserve data string, or null if the player backs out
+     */
+    private static String promptReserve(Scanner scanner) {
+        while (true) {
+            System.out.print("Which deck level to reserve from (1-3)? [\"back\" to return]: ");
+            String levelStr = scanner.nextLine().trim();
+            if (levelStr.equalsIgnoreCase("back")) return null;
+
+            System.out.print("Which card index (0-3, or 4 for random draw)? [\"back\" to return]: ");
+            String indexStr = scanner.nextLine().trim();
+            if (indexStr.equalsIgnoreCase("back")) return null;
+
+            return levelStr + ":" + indexStr;
+        }
+    }
 }
