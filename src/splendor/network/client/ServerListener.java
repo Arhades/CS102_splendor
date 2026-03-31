@@ -6,6 +6,11 @@ public class ServerListener extends Thread {
     
     private final BufferedReader in;
 
+    /**
+     * Constructs a ServerListener that reads messages from the server.
+     *
+     * @param in the BufferedReader connected to the server's output stream
+     */
     public ServerListener(BufferedReader in) {
         this.in = in;
     }

@@ -26,6 +26,12 @@ public class DisplayUI {
     private static final String BOLD   = "\033[1m";
     private static final String DIM    = "\033[2m";
 
+    /**
+     * Returns the ANSI foreground color code for a gem color.
+     *
+     * @param c the gem color
+     * @return the ANSI escape code string
+     */
     private static String gemFg(GemColor c) {
         switch (c) {
             case DIAMOND:    return "\033[97m"; // bright white
@@ -38,6 +44,12 @@ public class DisplayUI {
         }
     }
 
+    /**
+     * Returns the display name for a gem color.
+     *
+     * @param c the gem color
+     * @return the human-readable gem name
+     */
     private static String gemName(GemColor c) {
         switch (c) {
             case DIAMOND:    return "Diamond";
@@ -50,22 +62,35 @@ public class DisplayUI {
         }
     }
 
-    /** Returns a colored gem header, e.g. blue "Sapphire" */
+    /**
+     * Returns a colored gem header string for table display.
+     *
+     * @param c the gem color
+     * @return the ANSI-colored gem name string
+     */
     private static String coloredGemHeader(GemColor c) {
         return gemFg(c) + gemName(c) + RESET;
     }
 
-    private static void clear() {
-        System.out.print("\033[2J\033[H");
-        System.out.flush();
-    }
-
+    /**
+     * Computes the total number of gems held by a player.
+     *
+     * @param p the player
+     * @return the total gem count
+     */
     private static int gemTotal(Player p) {
         int total = 0;
         for (int v : p.getGems().getGems().values()) total += v;
         return total;
     }
 
+    /**
+     * Safely retrieves a gem count from a map, defaulting to 0.
+     *
+     * @param m the gem color-to-count map
+     * @param c the gem color to look up
+     * @return the count, or 0 if absent
+     */
     private static int g(Map<GemColor, Integer> m, GemColor c) {
         return m.getOrDefault(c, 0);
     }
@@ -169,6 +194,13 @@ public class DisplayUI {
 
     // ── card row helper ──────────────────────────────────────────────
 
+    /**
+     * Formats a single card row for table display.
+     *
+     * @param c     the development card to display
+     * @param index the display index of the card
+     * @return the formatted row string
+     */
     private static String cardRowStr(DevelopmentCard c, int index) {
         Map<GemColor, Integer> cost = c.getCost().getCost().getGems();
         String pts = c.getPoints() > 0 ? String.valueOf(c.getPoints()) : "-";
@@ -182,6 +214,12 @@ public class DisplayUI {
             g(cost, GemColor.EMERALD), g(cost, GemColor.RUBY), g(cost, GemColor.ONYX));
     }
 
+    /**
+     * Returns a string of n space characters.
+     *
+     * @param n the number of spaces
+     * @return a string containing n spaces
+     */
     private static String spaces(int n) {
         if (n <= 0) return "";
         char[] arr = new char[n];
@@ -346,12 +384,11 @@ public class DisplayUI {
     }
 
     /**
-     * Clears the screen and prints the full game board to System.out.
+     * Prints the full game board to System.out.
      *
      * @param gameState  the current game state
      */
     public static void printGameState(GameState gameState) {
-        clear();
         System.out.print(getGameState(gameState));
     }
 
@@ -678,97 +715,5 @@ public class DisplayUI {
      */
     public static void printWinner(GameState gameState, GameRules gameRules) {
         System.out.print(getWinner(gameState, gameRules));
-    }
-
-    // ══════════════════════════════════════════════════════════════════
-    //  PROMPTS (offline/local only — these read from Scanner)
-    // ══════════════════════════════════════════════════════════════════
-
-    /**
-     * Prompts the user for the number of players (2-4) and returns it.
-     * Only used in local/offline mode.
-     *
-     * @param sc  the Scanner to read input from
-     * @return the number of players (2, 3, or 4)
-     */
-    public static int promptNumPlayers(Scanner sc) {
-        clear();
-        printBanner();
-        int num = 0;
-        while (num < 2 || num > 4) {
-            try {
-                System.out.print("  How many players? (2-4): ");
-                num = Integer.parseInt(sc.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("  Please enter 2, 3, or 4.\n");
-                continue;
-            }
-            if (num < 2 || num > 4) {
-                System.out.println("  Please enter 2, 3, or 4.\n");
-            }
-        }
-        System.out.println();
-        return num;
-    }
-
-    /**
-     * Prompts the user to select a player type and returns it.
-     * Only used in local/offline mode.
-     *
-     * @param sc            the Scanner to read input from
-     * @param playerNumber  the player number (1-based) being configured
-     * @return the player type (1=Human, 2=EasyBot, 3=HardBot)
-     */
-    public static int promptPlayerType(Scanner sc, int playerNumber) {
-        while (true) {
-            try {
-                System.out.print("  Player " + playerNumber + " type (1=Human  2=EasyBot  3=HardBot): ");
-                int type = Integer.parseInt(sc.nextLine());
-                if (type >= 1 && type <= 3) return type;
-            } catch (NumberFormatException e) { }
-            System.out.println("  Invalid input.\n");
-        }
-    }
-
-    /**
-     * Prompts the user to enter a player name and returns it.
-     * If the user enters nothing, the default name is returned.
-     * Only used in local/offline mode.
-     *
-     * @param sc            the Scanner to read input from
-     * @param playerNumber  the player number (1-based) being configured
-     * @param defaultName   the default name if the user presses Enter
-     * @return the player name entered, or defaultName if blank
-     */
-    public static String promptPlayerName(Scanner sc, int playerNumber, String defaultName) {
-        System.out.print("  Player " + playerNumber + " name (blank = \"" + defaultName + "\"): ");
-        String name = sc.nextLine().trim();
-        return name.isEmpty() ? defaultName : name;
-    }
-
-    /**
-     * Displays the action menu and prompts the user to pick an action.
-     * Only used in local/offline mode.
-     *
-     * @param sc  the Scanner to read input from
-     * @return the ActionType chosen by the player
-     */
-    public static ActionType promptAction(Scanner sc) {
-        System.out.print(getActionMenu());
-        while (true) {
-            try {
-                int action = Integer.parseInt(sc.nextLine());
-                if (action >= 1 && action <= 4) {
-                    System.out.println();
-                    switch (action) {
-                        case 1: return ActionType.TAKE_THREE_DIFFERENT;
-                        case 2: return ActionType.TAKE_TWO_SAME;
-                        case 3: return ActionType.PURCHASE_CARD;
-                        default: return ActionType.RESERVE_CARD;
-                    }
-                }
-            } catch (NumberFormatException e) { }
-            System.out.print("  Pick 1-4: ");
-        }
     }
 }

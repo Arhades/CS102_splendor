@@ -12,13 +12,21 @@ public class ClientHandler implements Runnable {
     private String playerName;
     private LocalDate playerBirthDate;
     
+    /**
+     * Constructs a ClientHandler for the given client socket.
+     * Pass null for bot players that have no real socket connection.
+     *
+     * @param socket the client's socket connection, or null for bot players
+     */
     public ClientHandler(Socket socket) {
         this.socket = socket;
-        try {
-            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.out = new PrintWriter(socket.getOutputStream(), true);
-        } catch (IOException e) {
-            System.out.println("Error setting up client handler: " + e.getMessage());
+        if (socket != null) {
+            try {
+                this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                this.out = new PrintWriter(socket.getOutputStream(), true);
+            } catch (IOException e) {
+                System.out.println("Error setting up client handler: " + e.getMessage());
+            }
         }
     }
 
@@ -51,22 +59,47 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Sets the player's display name.
+     *
+     * @param name the player name
+     */
     public void setPlayerName(String name) {
         playerName = name;
     }
 
+    /**
+     * Returns the player's display name.
+     *
+     * @return the player name
+     */
     public String getPlayerName() {
         return playerName;
     }
 
+    /**
+     * Sets the player's birth date.
+     *
+     * @param date the player's birth date
+     */
     public void setBirthDate(LocalDate date) {
         playerBirthDate = date;
     }
 
+    /**
+     * Returns the player's birth date.
+     *
+     * @return the player's birth date
+     */
     public LocalDate getBirthDate() {
         return playerBirthDate;
     }
 
+    /**
+     * Sends a message to this client.
+     *
+     * @param message the message string to send
+     */
     public void sendMessage(String message) {
         if (out != null) {
             out.println(message);

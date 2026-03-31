@@ -165,7 +165,7 @@ public class Player {
     /**
      * Deducts the specified gem collection from the player's existing gems.
      * 
-     * @param gems the gems to deduct
+     * @param spentGems the gems to deduct
      */
     public void deductGems(GemCollection spentGems) {
         gems.subtract(spentGems);

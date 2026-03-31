@@ -6,11 +6,29 @@ import splendor.entity.card.*;
 import splendor.entity.player.*;
 import splendor.entity.*;
 
+/**
+ * An advanced bot that uses scoring heuristics including card points, noble synergy,
+ * opponent denial, tier penalties, and strategic gem collection.
+ */
 public class HardBot extends Bot {
+
+    /**
+     * Constructs a HardBot with the given name and turn order.
+     *
+     * @param name      the bot's display name
+     * @param turnOrder the bot's position in the turn order
+     */
     public HardBot(String name, int turnOrder) {
         super(name, turnOrder);
     }
 
+    /**
+     * Chooses and executes a move for this bot's turn using advanced heuristics.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the move chosen
+     */
     @Override
     protected String chooseMove(GameState gameState, GameRules gameRules) {
         boolean nobleFocus = gameState.getPlayers().size() >= 3;
@@ -40,6 +58,15 @@ public class HardBot extends Bot {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
+    /**
+     * Picks the best card choice from a list based on the scoring heuristic.
+     *
+     * @param choices    the list of card choices to evaluate
+     * @param gameState  the current game state
+     * @param gameRules  the game rules for scoring
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return the best CardChoice
+     */
     private CardChoice getBestChoice(List<CardChoice> choices, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         int bestScore = Integer.MIN_VALUE;
         List<CardChoice> bestChoices = new ArrayList<>();
@@ -58,6 +85,15 @@ public class HardBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
+    /**
+     * Returns the highest-priority target cards based on score.
+     *
+     * @param gameState  the current game state
+     * @param gameRules  the game rules for scoring
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @param limit      the maximum number of targets to return
+     * @return a list of priority CardChoices
+     */
     private List<CardChoice> getPriorityTargets(GameState gameState, GameRules gameRules, boolean nobleFocus, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> targets = new ArrayList<>();
@@ -75,6 +111,15 @@ public class HardBot extends Bot {
         return targets;
     }
 
+    /**
+     * Calculates a heuristic score for a card choice.
+     *
+     * @param choice     the card choice to score
+     * @param gameState  the current game state
+     * @param gameRules  the game rules for cost/noble calculations
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return the heuristic score (higher is better)
+     */
     private int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         DevelopmentCard card = choice.getCard();
         int score = card.getPoints() * 4;
@@ -97,6 +142,14 @@ public class HardBot extends Bot {
         return score;
     }
 
+    /**
+     * Calculates how useful a card's bonus is for purchasing future cards.
+     *
+     * @param card       the card to evaluate
+     * @param gameState  the current game state
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return a usefulness score
+     */
     private int getDiscountUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         DevelopmentCard card2 = (DevelopmentCard) card;
         int usefulness = 0;
@@ -131,6 +184,14 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
+    /**
+     * Calculates how useful a card is for progressing toward noble claims.
+     *
+     * @param card       the card to evaluate
+     * @param gameState  the current game state
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return a usefulness score
+     */
     private int getNobleUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         DevelopmentCard card2 = (DevelopmentCard) card;
         int usefulness = 0;
@@ -154,6 +215,14 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
+    /**
+     * Calculates a penalty for buying expensive cards too early in the game.
+     *
+     * @param card      the card to evaluate
+     * @param gameState the current game state
+     * @param gameRules the game rules for cost calculation
+     * @return the tier penalty (higher means worse)
+     */
     private int getTierPenalty(Card card, GameState gameState, GameRules gameRules) {
         DevelopmentCard card2 = (DevelopmentCard) card;
         if (!isEarlyGame(gameState)) {
@@ -173,6 +242,14 @@ public class HardBot extends Bot {
         return 0;
     }
 
+    /**
+     * Calculates a bonus for denying opponents access to a card.
+     *
+     * @param choice    the card choice to evaluate
+     * @param gameState the current game state
+     * @param gameRules the game rules for opponent affordability checks
+     * @return the deny bonus (higher means more valuable to deny)
+     */
     private int getDenyBonus(CardChoice choice, GameState gameState, GameRules gameRules) {
         if (choice.isReserved()) {
             return 0;
@@ -199,6 +276,14 @@ public class HardBot extends Bot {
         return deny;
     }
 
+    /**
+     * Assesses the threat level of an opponent based on their points and card proximity.
+     *
+     * @param player    the opponent to assess
+     * @param gameState the current game state
+     * @param gameRules the game rules for cost calculation
+     * @return a threat score (higher means more dangerous)
+     */
     private int assessThreat(Player player, GameState gameState, GameRules gameRules) {
         int threat = player.getPoints() * 3;
         if (player.getPoints() >= gameState.getWinningThreshold() - 3) {
@@ -232,6 +317,14 @@ public class HardBot extends Bot {
         return threat;
     }
 
+    /**
+     * Chooses a visible card to reserve based on score and deny value.
+     *
+     * @param gameState  the current game state
+     * @param gameRules  the game rules for validation
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return the best CardChoice to reserve, or null if not worth reserving
+     */
     private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         if (!gameRules.canReserveCard(this)) {
             return null;
@@ -261,6 +354,14 @@ public class HardBot extends Bot {
         return null;
     }
 
+    /**
+     * Chooses a gem-taking move based on weighted priorities toward target cards.
+     *
+     * @param gameState  the current game state
+     * @param gameRules  the game rules for validation
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return a description of the gem move taken, or empty string if none possible
+     */
     private String chooseGemMove(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> targets = getPriorityTargets(gameState, gameRules, nobleFocus, 4);
@@ -318,6 +419,12 @@ public class HardBot extends Bot {
         return move;
     }
 
+    /**
+     * Returns the gem colors most demanded by available nobles.
+     *
+     * @param gameState the current game state
+     * @return a list of the top 3 most-needed GemColors for nobles
+     */
     private List<GemColor> getOpeningNobleColors(GameState gameState) {
         Map<GemColor, Integer> counts = new HashMap<>();
         for (GemColor color: GemColor.values()) {
@@ -349,6 +456,13 @@ public class HardBot extends Bot {
         return chosen;
     }
 
+    /**
+     * Decides which deck level to reserve a hidden card from.
+     *
+     * @param gameState  the current game state
+     * @param nobleFocus whether to prioritize noble-related bonuses
+     * @return the deck level (1-3), or 0 if all decks are empty
+     */
     private int getHiddenReserveLevel(GameState gameState, boolean nobleFocus) {
         int preferred = nobleFocus ? 2 : 3;
         if (gameState.getCardMarket().getDeckSize(preferred) > 0) {
