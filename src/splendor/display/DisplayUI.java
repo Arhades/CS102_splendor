@@ -384,6 +384,39 @@ public class DisplayUI {
     }
 
     /**
+     * Returns the full game board as a String, including players, bonuses,
+     * nobles, card market, gem bank, reserved cards, and turn indicator.
+     *
+     * @param gameState  the current game state
+     * @return the full game board as a String
+     */
+    public static String getGameStateSocketWithoutReserved(GameState gameState) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        sb.append("  " + BOLD + "--- S P L E N D O R ---" + RESET + spaces(45) + DIM + "Turn " + (gameState.getTurnCount() + 1) + RESET + "\n");
+        sb.append("\n");
+        sb.append(getNobles(gameState));
+        sb.append(getVisibleCards(gameState));
+        sb.append(getGemBank(gameState));
+        sb.append(getPlayers(gameState));
+        sb.append(getAllBonuses(gameState));
+        return sb.toString();
+    }
+
+    /**
+     * Returns the full game board as a String, including players, bonuses,
+     * nobles, card market, gem bank, and turn indicator.
+     * The reserved card will be sent to the player himself as it is private
+     *
+     * @param gameState  the current game state
+     * @return the full game board as a String
+     */
+    public static String getReservedCard(Player curPlayer) {
+        return getReservedCards(curPlayer);
+    }
+
+
+    /**
      * Prints the full game board to System.out.
      *
      * @param gameState  the current game state

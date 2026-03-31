@@ -15,6 +15,8 @@ public class SplendorClient {
     private DisplayUI displayUI = new DisplayUI();
     protected static volatile boolean gameStarted = false;
     protected static volatile boolean waitingForServer = false;
+    protected static volatile boolean myTurn = false;
+    static String playerName = "";
 
     /**
      * Entry point for the Splendor client application.
@@ -34,7 +36,6 @@ public class SplendorClient {
             listenerThread.start();
             // first request for input is for player's name
             // second request is for host player to START GAME
-            String playerName = null;
             LocalDate playerBirthDate = null;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -73,15 +74,13 @@ public class SplendorClient {
                     }
                 }
                 else {
-                    // System.out.println("\n=============== YOUR TURN ===============");
-                    // System.out.println("1. Take 3 different gems");
-                    // System.out.println("2. Take 2 gems of the same color");
-                    // System.out.println("3. Purchase a card");
-                    // System.out.println("4. Reserve a card");
-                    // System.out.println("Type a number (1-4) or QUIT:");
-                    // System.out.print("> ");
+                    // if (!myTurn) {
+                    //     try {
+                    //         Thread.sleep(100);
+                    //     } catch (InterruptedException e) {}
+                    //     continue;
+                    // }
                     DisplayUI.printActionMenu();
-                    
                     String input = scanner.nextLine();
                     
                     if (input.equalsIgnoreCase("QUIT")) {
@@ -130,9 +129,10 @@ public class SplendorClient {
                             System.out.println("Invalid choice. Please type 1, 2, 3, or 4.");
                             break;
                     }
+                    // myTurn = false;
                     while (waitingForServer) {
                         try {
-                            Thread.sleep(50);
+                            Thread.sleep(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                             System.out.println("The server was interrupted.");
