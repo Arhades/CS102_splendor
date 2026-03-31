@@ -10,5 +10,26 @@ public enum GemColor {
     EMERALD,
     RUBY,
     ONYX,
-    GOLD_JOKER
+    GOLD_JOKER;
+
+    /**
+     * Converts a string representation to its corresponding GemColor enum value.
+     *
+     * @param color the string name of the gem color (e.g. "DIAMOND", "RUBY")
+     * @return the matching GemColor, or SAPPHIRE as the default
+     */
+    public static GemColor convertToColor(String color) {
+        switch (color) {
+            case "DIAMOND":
+                return GemColor.DIAMOND;
+            case "ONYX":
+                return GemColor.ONYX;
+            case "EMERALD":
+                return GemColor.EMERALD;
+            case "RUBY":
+                return GemColor.RUBY;
+            default:
+                return GemColor.SAPPHIRE;
+        }
+    }
 }
