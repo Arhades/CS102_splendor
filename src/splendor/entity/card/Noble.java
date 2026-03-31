@@ -58,6 +58,7 @@ public class Noble extends Card {
      * 
      * @param noble the noble to check
      * @param bonuses the player's current bonus counts
+     * @return true if the noble can be claimed, false otherwise
      */
     public static boolean canBeClaimed(Noble noble, Map<GemColor, Integer> bonuses) {
         for (Map.Entry<GemColor, Integer> req : noble.getRequirements().entrySet()) {

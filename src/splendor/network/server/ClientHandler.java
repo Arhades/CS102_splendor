@@ -4,6 +4,13 @@ import java.io.*;
 import java.net.*;
 import java.time.*;
 
+/**
+ * Handles communication between the server and a single client.
+ * 
+ * This class manages the socket connection, receives messages
+ * from the client, and sends messages back to the client through
+ * the server. Each client connection runs on its own thread.
+ */
 public class ClientHandler implements Runnable {
     
     private Socket socket;

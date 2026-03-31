@@ -7,14 +7,42 @@ import java.time.format.*;
 import java.util.*;
 import splendor.display.*;
 
+/**
+ * Listens for messages from the server and processes them on the client side.
+ */
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
+
+    /**
+     * The port number used to connect to the game server.
+     */
     private static final String SERVER_IP = "localhost"; 
+
+    /**
+     * The port number used to connect to the game server.
+     */
     private static final int SERVER_PORT = 9090;
+
+    /**
+     * The display UI used to print game information.
+     */
     private DisplayUI displayUI = new DisplayUI();
+
+    /**
+     * Indicates whether the game has started.
+     */
     protected static volatile boolean gameStarted = false;
+
+    /**
+     * Indicates whether the client is waiting for a server response.
+     */
     protected static volatile boolean waitingForServer = false;
+
+    /**
+     * Default constructor
+     */
+    public SplendorClient() {}
 
     /**
      * Entry point for the Splendor client application.

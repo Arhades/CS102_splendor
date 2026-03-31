@@ -15,6 +15,11 @@ import splendor.entity.bot.*;
 public class InputHandler {
 
     /**
+     * Default constructor
+     */
+    public InputHandler() {}
+
+    /**
      * Prompts the player to pick three different gem colors from the bank.
      *
      * @param sc        the Scanner to read input from

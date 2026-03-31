@@ -1,9 +1,11 @@
-// REDO THE DOCUMENTATION
 package splendor.entity.card;
 
 import splendor.entity.*;
 import splendor.valueobjects.*;
 
+/**
+ * Represents a development card in the game.
+ */
 public class DevelopmentCard extends Card {
 
     /**
@@ -17,7 +19,7 @@ public class DevelopmentCard extends Card {
     private GemColor bonus;
 
     /**
-     * Constructs a card with the specified level, points, bonus, and cost.
+     * Constructs a DevelopmentCard with the specified level, points, bonus, and cost.
      * 
      * @param level the level of the card
      * @param points the number of points the card gives
