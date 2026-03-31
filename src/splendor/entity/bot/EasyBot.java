@@ -4,11 +4,29 @@ import java.util.*;
 import splendor.rules.*;
 import splendor.entity.*;
 
+/**
+ * A simple bot that uses basic heuristics: buy cheap preferred-color cards,
+ * collect gems toward visible targets, and reserve when nothing else is useful.
+ */
 public class EasyBot extends Bot {
+
+    /**
+     * Constructs an EasyBot with the given name and turn order.
+     *
+     * @param name      the bot's display name
+     * @param turnOrder the bot's position in the turn order
+     */
     public EasyBot(String name, int turnOrder) {
         super(name, turnOrder);
     }
 
+    /**
+     * Chooses and executes a move for this bot's turn.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the move chosen
+     */
     @Override
     protected String chooseMove(GameState gameState, GameRules gameRules) {
         List<GemColor> preferredColors = getPreferredBonusColors(gameState);
@@ -46,6 +64,12 @@ public class EasyBot extends Bot {
         return getName() + " had no useful move.";
     }
 
+    /**
+     * Returns the bot's preferred bonus colors based on noble needs or visible cards.
+     *
+     * @param gameState the current game state
+     * @return a list of preferred GemColors
+     */
     private List<GemColor> getPreferredBonusColors(GameState gameState) {
         List<GemColor> colors = getNeededColorsForNoble(getClosestNoble(gameState));
         if (colors.size() > 0) {
@@ -63,6 +87,13 @@ public class EasyBot extends Bot {
         return fallback;
     }
 
+    /**
+     * Returns the cheapest affordable card from the given choices by discounted cost and waste.
+     *
+     * @param choices   the list of affordable card choices
+     * @param gameRules the game rules for cost calculation
+     * @return the cheapest CardChoice
+     */
     private CardChoice getCheapestAffordableCard(List<CardChoice> choices, GameRules gameRules) {
         int bestCost = Integer.MAX_VALUE;
         int bestWaste = Integer.MAX_VALUE;
@@ -90,6 +121,14 @@ public class EasyBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
+    /**
+     * Chooses a visible card to reserve that matches preferred colors and is closest to affordable.
+     *
+     * @param gameState       the current game state
+     * @param gameRules       the game rules for cost calculation
+     * @param preferredColors the bot's preferred gem colors
+     * @return the best CardChoice to reserve, or null if none
+     */
     private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
         List<CardChoice> visible = getVisibleChoices(gameState);
         List<CardChoice> matching = new ArrayList<>();
@@ -115,6 +154,14 @@ public class EasyBot extends Bot {
         return chosen;
     }
 
+    /**
+     * Chooses a gem-taking move based on weighted color preferences.
+     *
+     * @param gameState       the current game state
+     * @param gameRules       the game rules for validation
+     * @param preferredColors the bot's preferred gem colors
+     * @return a description of the gem move taken, or empty string if none possible
+     */
     private String chooseGemMove(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> visible = getVisibleChoices(gameState);
