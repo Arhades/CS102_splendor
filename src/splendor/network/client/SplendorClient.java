@@ -62,10 +62,13 @@ public class SplendorClient {
             while (true) {
                 if (!gameStarted) {
                     System.out.println("\n=============== WAITING LOBBY ===============");
-                    System.out.println("Type 'START GAME' if you are the youngest, or wait for the game to start. (I'll know if you are not the youngest...)");
+                    System.out.println("Type 'ADD BOT' to add a bot to the game.");
+                    System.out.println("Type 'START GAME' if you are the youngest, or wait for the game to start.");
                     System.out.print("> ");
                     String startGame = scanner.nextLine();
-                    if (startGame.equalsIgnoreCase("START GAME")) {
+                    if (startGame.equalsIgnoreCase("ADD BOT")) {
+                        promptAddBot(scanner, out);
+                    } else if (startGame.equalsIgnoreCase("START GAME")) {
                         out.println("START GAME");
                     }
                 }
@@ -266,5 +269,44 @@ public class SplendorClient {
 
             return levelStr + ":" + indexStr;
         }
+    }
+
+    /**
+     * Prompts the player to configure and add a bot to the game.
+     * Sends a JOINED message to the server on behalf of the bot with the BOT type flag.
+     *
+     * @param scanner the Scanner to read input from
+     * @param out     the PrintWriter to send messages to the server
+     */
+    private static void promptAddBot(Scanner scanner, PrintWriter out) {
+        // Choose bot type
+        int botType = 0;
+        while (botType != 2 && botType != 3) {
+            System.out.print("Bot type (2 = EasyBot, 3 = HardBot): ");
+            String typeStr = scanner.nextLine().trim();
+            try {
+                botType = Integer.parseInt(typeStr);
+                if (botType != 2 && botType != 3) {
+                    System.out.println("Please enter 2 or 3.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter 2 or 3.");
+            }
+        }
+
+        // Choose bot name
+        String defaultName = (botType == 2) ? "EasyBot" : "HardBot";
+        System.out.print("Bot name (blank = \"" + defaultName + "\"): ");
+        String botName = scanner.nextLine().trim();
+        if (botName.isEmpty()) {
+            botName = defaultName;
+        }
+
+        // Bots get a very old birth date so they are never the youngest
+        String botBirthDate = "01/01/1900";
+
+        // Send the bot's JOINED message with the BOT type flag
+        out.println("JOINED:" + botName + ":" + botBirthDate + ":BOT:" + botType);
+        System.out.println(botName + " (" + defaultName + ") has been added to the game!");
     }
 }
