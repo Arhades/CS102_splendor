@@ -381,9 +381,9 @@ public class DisplayUI {
         sb.append(getNobles(gameState));
         sb.append(getVisibleCards(gameState));
         sb.append(getGemBank(gameState));
-        sb.append(getReservedCards(gameState.getCurrentPlayer()));
         sb.append(getPlayers(gameState));
         sb.append(getAllBonuses(gameState));
+        sb.append(getReservedCards(gameState.getCurrentPlayer()));
         sb.append("  " + BOLD + "> " + gameState.getCurrentPlayer().getName() + "'s turn" + RESET + "\n");
         return sb.toString();
     }
