@@ -7,10 +7,27 @@ import splendor.valueobjects.*;
 import splendor.exception.*;
 import splendor.entity.card.*;
 
+/**
+ * Utility class containing static methods that execute player actions
+ * (taking gems, purchasing cards, reserving cards) and modify game state.
+ */
 public final class GameActions {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private GameActions() {
     }
 
+    /**
+     * Takes three different-colored gems from the bank for a player.
+     *
+     * @param player    the player taking the gems
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param colors    the list of three distinct gem colors to take
+     * @return true if the action succeeded, false otherwise
+     */
     public static boolean takeThreeDifferent(Player player, GameState gameState, GameRules gameRules, List<GemColor> colors) {
         if (colors == null || colors.size() != 3) {
             return false;
@@ -41,6 +58,15 @@ public final class GameActions {
         return true;
     }
 
+    /**
+     * Takes two gems of the same color from the bank for a player.
+     *
+     * @param player    the player taking the gems
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param color     the gem color to take two of
+     * @return true if the action succeeded, false otherwise
+     */
     public static boolean takeTwoSame(Player player, GameState gameState, GameRules gameRules, GemColor color) {
         if (color == null || color.equals(GemColor.GOLD_JOKER)) {
             return false;
@@ -57,6 +83,16 @@ public final class GameActions {
         return true;
     }
 
+    /**
+     * Purchases a visible card from the market for a player.
+     *
+     * @param player    the player purchasing the card
+     * @param gameState the current game state
+     * @param gameRules the game rules for affordability checks
+     * @param level     the card market level (1, 2, or 3)
+     * @param index     the index of the card in the visible row
+     * @return true if the purchase succeeded, false otherwise
+     */
     public static boolean purchaseVisibleCard(Player player, GameState gameState, GameRules gameRules, int level, int index) {
         CardMarket cardMarket = gameState.getCardMarket();
         try {
@@ -79,6 +115,15 @@ public final class GameActions {
         }
     }
 
+    /**
+     * Purchases a reserved card from the player's hand.
+     *
+     * @param player    the player purchasing the card
+     * @param gameState the current game state
+     * @param gameRules the game rules for affordability checks
+     * @param index     the index of the card in the player's reserved list
+     * @return true if the purchase succeeded, false otherwise
+     */
     public static boolean purchaseReservedCard(Player player, GameState gameState, GameRules gameRules, int index) {
         if (index < 0 || index >= player.getReservedCards().size()) {
             return false;
@@ -97,6 +142,16 @@ public final class GameActions {
         return true;
     }
 
+    /**
+     * Reserves a visible card from the market for a player, giving a gold joker if available.
+     *
+     * @param player    the player reserving the card
+     * @param gameState the current game state
+     * @param gameRules the game rules for reserve-slot validation
+     * @param level     the card market level (1, 2, or 3)
+     * @param index     the index of the card in the visible row
+     * @return true if the reserve succeeded, false otherwise
+     */
     public static boolean reserveVisibleCard(Player player, GameState gameState, GameRules gameRules, int level, int index) {
         if (!gameRules.canReserveCard(player)) {
             return false;
@@ -117,6 +172,15 @@ public final class GameActions {
         }
     }
 
+    /**
+     * Reserves a hidden card drawn from the top of a deck at the given level.
+     *
+     * @param player    the player reserving the card
+     * @param gameState the current game state
+     * @param gameRules the game rules for reserve-slot validation
+     * @param level     the deck level (1, 2, or 3)
+     * @return true if the reserve succeeded, false otherwise
+     */
     public static boolean reserveHiddenCard(Player player, GameState gameState, GameRules gameRules, int level) {
         if (!gameRules.canReserveCard(player)) {
             return false;
@@ -132,6 +196,12 @@ public final class GameActions {
         }
     }
 
+    /**
+     * Gives a gold joker gem to a player from the bank, if any are available.
+     *
+     * @param player    the player to receive the joker
+     * @param gameState the current game state
+     */
     private static void giveGoldJoker(Player player, GameState gameState) {
         if (gameState.getGemBank().getCount(GemColor.GOLD_JOKER) < 1) {
             return;
