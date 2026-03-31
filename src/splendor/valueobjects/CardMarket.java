@@ -105,7 +105,7 @@ public class CardMarket {
      * @throws InvalidIndexException if the level is not valid
      */
 
-    public DevelopmentCard getVisibleCard(int level, int index) {
+    public DevelopmentCard getVisibleCard(int level, int index) throws InvalidIndexException {
         DevelopmentCard card = null;
         switch (level) {
             case 1 -> card = levelOneVisible.get(index);
@@ -215,6 +215,11 @@ public class CardMarket {
         cards.remove(index);
     }
 
+    /**
+     * Returns a network-friendly string representation of the card market.
+     *
+     * @return a formatted string encoding all visible cards across all levels
+     */
     public String getMarketAsString() {
         StringBuilder sb = new StringBuilder();
         try {
