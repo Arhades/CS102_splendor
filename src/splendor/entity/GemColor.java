@@ -5,11 +5,34 @@ package splendor.entity;
  * Includes standard gem colors and the special GOLD_JOKER which can act as a wildcard (can b any color).
  */
 public enum GemColor {
+    /**
+     * Diamond gem color.
+     */
     DIAMOND,
+
+    /**
+     * Sapphire gem color.
+     */
     SAPPHIRE,
+
+    /**
+     * Emerald gem color.
+     */
     EMERALD,
+
+    /**
+     * Ruby gem color.
+     */
     RUBY,
+
+    /**
+     * Onyx gem color.
+     */
     ONYX,
+
+    /**
+     * Gold joker gem that can substitute for any color.
+     */
     GOLD_JOKER;
 
     /**

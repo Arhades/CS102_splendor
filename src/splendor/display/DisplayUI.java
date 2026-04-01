@@ -21,6 +21,11 @@ import splendor.valueobjects.*;
  */
 public class DisplayUI {
 
+    /** 
+     * default constructor
+     */
+    public DisplayUI() {}
+
     // ── ANSI codes ───────────────────────────────────────────────────
     private static final String RESET  = "\033[0m";
     private static final String BOLD   = "\033[1m";
@@ -373,11 +378,11 @@ public class DisplayUI {
         sb.append("\n");
         sb.append("  " + BOLD + "--- S P L E N D O R ---" + RESET + spaces(45) + DIM + "Turn " + (gameState.getTurnCount() + 1) + RESET + "\n");
         sb.append("\n");
-        sb.append(getPlayers(gameState));
-        sb.append(getAllBonuses(gameState));
         sb.append(getNobles(gameState));
         sb.append(getVisibleCards(gameState));
         sb.append(getGemBank(gameState));
+        sb.append(getPlayers(gameState));
+        sb.append(getAllBonuses(gameState));
         sb.append(getReservedCards(gameState.getCurrentPlayer()));
         sb.append("  " + BOLD + "> " + gameState.getCurrentPlayer().getName() + "'s turn" + RESET + "\n");
         return sb.toString();
@@ -507,8 +512,6 @@ public class DisplayUI {
         return sb.toString();
     }
 
-    // ── nobles ───────────────────────────────────────────────────────
-
     /**
      * Returns the nobles table showing all available nobles and their
      * bonus card requirements.
@@ -548,8 +551,6 @@ public class DisplayUI {
     public static void printNobles(GameState gameState) {
         System.out.print(getNobles(gameState));
     }
-
-    // ── card market ──────────────────────────────────────────────────
 
     /**
      * Returns the card market showing all visible development cards
@@ -599,8 +600,6 @@ public class DisplayUI {
         System.out.print(getVisibleCards(gameState));
     }
 
-    // ── gem bank ─────────────────────────────────────────────────────
-
     /**
      * Returns the gem bank table showing how many gems of each color
      * are available in the bank.
@@ -631,8 +630,6 @@ public class DisplayUI {
     public static void printGemBank(GameState gameState) {
         System.out.print(getGemBank(gameState));
     }
-
-    // ── reserved cards ───────────────────────────────────────────────
 
     /**
      * Returns the reserved cards table for a specific player, showing
@@ -670,8 +667,6 @@ public class DisplayUI {
         System.out.print(getReservedCards(player));
     }
 
-    // ── player gems (standalone, called during gem-taking actions) ───
-
     /**
      * Returns the current player's gem counts in a table, with total.
      * Used standalone during gem-taking and gem-returning actions.
@@ -703,8 +698,6 @@ public class DisplayUI {
     public static void printPlayerGem(Player player) {
         System.out.print(getPlayerGem(player));
     }
-
-    // ── winner ───────────────────────────────────────────────────────
 
     /**
      * Returns the game over screen showing the winner and final standings

@@ -207,6 +207,8 @@ public class GemCollection {
     /**
      * Converts the current gem counts into a network-friendly string.
      * Example output: "DIAMOND-5,ONYX-5,EMERALD-4,RUBY-5,SAPPHIRE-5,GOLD-5"
+     * 
+     * @return a formatted string representing gem counts
      */
     public String getBankAsString() {
         // NOTE: Change these variable names if your class uses 

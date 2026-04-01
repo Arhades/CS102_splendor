@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.*;
 import splendor.exception.*;
 
+/**
+ * Stores configuration settings for the game.
+ */
 public class GameConfig {
     private String cardsFile;
     private String noblesFile;
@@ -37,7 +40,7 @@ public class GameConfig {
     /**
      * Loads a GameConfig from a properties file on the classpath.
      *
-     * @param filename the properties file name
+     * @param filename the properties file name to locate on the classpath
      * @return a fully initialized GameConfig
      * @throws InvalidFileException if the file cannot be found or parsed
      */
@@ -95,7 +98,7 @@ public class GameConfig {
      * Returns the number of gems per color based on the number of players.
      *
      * @param numPlayers the number of players (2, 3, or 4)
-     * @return the gem count per color
+     * @return the gem count per color for the given player count
      */
     public int getGemCountPerColor(int numPlayers) {
         if (numPlayers == 2) {
@@ -117,7 +120,7 @@ public class GameConfig {
     }
 
     /**
-     * Retrieves a required property value, throwing if missing.
+     * Retrieves a required property value, throwing if missing or blank.
      *
      * @param properties the properties object to read from
      * @param key        the property key

@@ -13,7 +13,16 @@ import splendor.entity.player.*;
 import splendor.exception.*;
 import splendor.valueobjects.*;
 
+/**
+ * Controls the main flow of the Splendor game.
+ */
 public class GameEngine {
+
+    /**
+     * Default constructor
+     */
+    public GameEngine() {}
+
     /**
      * Entry point for the local Splendor game.
      *
@@ -221,6 +230,9 @@ public class GameEngine {
         return new GemCollection(map);
     }
 
+    /**
+    * Runs the main game loop for the Splendor game.
+    */
     public static void runGame() {
         try {
             Scanner sc = new Scanner(System.in);

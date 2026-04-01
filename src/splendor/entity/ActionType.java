@@ -1,5 +1,5 @@
 package splendor.entity;
-/*
+/**
  * Enumeration of all possible player actions in the game.
  
  *   TAKE_THREE_DIFFERENT – take three gems of different colors
@@ -9,9 +9,24 @@ package splendor.entity;
  * 
 */
 public enum ActionType {
+    /**
+     * Take three gems of different colors from the gem bank.
+     */
     TAKE_THREE_DIFFERENT,
+
+    /**
+     * Take two gems of the same color from the gem bank.
+     */
     TAKE_TWO_SAME,
+    
+    /**
+     * Purchase a development card using available gems.
+     */
     PURCHASE_CARD,
+
+    /**
+     * Reserve a development card for future purchase.
+     */
     RESERVE_CARD
 
     

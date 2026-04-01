@@ -2,6 +2,9 @@ package splendor.network.client;
 
 import java.io.*;
 
+/**
+ * Listens for messages from the server and processes them on the client side.
+ */
 public class ServerListener extends Thread {
     
     private final BufferedReader in;

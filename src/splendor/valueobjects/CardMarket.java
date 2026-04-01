@@ -66,7 +66,7 @@ public class CardMarket {
      * @return the list of visible cards at the specified level
      * @throws InvalidIndexException if the level is not valid
      */
-    public List<DevelopmentCard> getVisibleCards(int level) throws UnavailableCardException {
+    public List<DevelopmentCard> getVisibleCards(int level) throws InvalidIndexException {
         List<DevelopmentCard> cards = null;
         switch (level) {
             case 1 -> cards = levelOneVisible;
@@ -85,7 +85,7 @@ public class CardMarket {
      * @throws InvalidIndexException if the level is not valid
      */
 
-    public List<DevelopmentCard> getDeckCards(int level) throws UnavailableCardException {
+    public List<DevelopmentCard> getDeckCards(int level) throws InvalidIndexException {
         List<DevelopmentCard> cards = null;
         switch (level) {
             case 1 -> cards = levelOneDeck;
