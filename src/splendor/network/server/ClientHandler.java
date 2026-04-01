@@ -38,7 +38,7 @@ public class ClientHandler implements Runnable {
             playerName = parts[1];
             System.out.println(playerName + " has joined the server!");
             
-            SplendorServer.broadcast("SERVER: " + playerName + " joined the lobby.");
+            SplendorServer.broadcast("[SERVER]: " + playerName + " joined the lobby.");
             SplendorServer.processClientMessage(this, temp);
 
             String clientMessage;

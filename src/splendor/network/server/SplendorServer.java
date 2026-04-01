@@ -120,7 +120,6 @@ public class SplendorServer {
                         return;
                     } 
 
-                    // Find the youngest player (latest birth date)
                     int youngestIdx = 0;
                     LocalDate youngestBirth = clients.get(0).getBirthDate();
                     for (int i = 1; i < clients.size(); i++) {
