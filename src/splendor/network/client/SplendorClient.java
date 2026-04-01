@@ -17,12 +17,12 @@ public class SplendorClient {
     /**
      * The port number used to connect to the game server.
      */
-    private static final String SERVER_IP = "172.20.10.7"; 
+    private static final String SERVER_IP = "10.124.138.3"; 
 
     /**
      * The port number used to connect to the game server.
      */
-    private static final int SERVER_PORT = 9091;
+    private static final int SERVER_PORT = 9097;
 
     /**
      * The display UI used to print game information.

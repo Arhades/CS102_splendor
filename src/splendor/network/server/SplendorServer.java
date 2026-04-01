@@ -22,7 +22,7 @@ public class SplendorServer {
     /**
      * The IP address of the game server.
      */
-    private static final int PORT = 9091;
+    private static final int PORT = 9097;
 
     /**
      * The list of all connected clients.
