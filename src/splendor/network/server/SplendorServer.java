@@ -22,7 +22,7 @@ public class SplendorServer {
     /**
      * The IP address of the game server.
      */
-    private static final int PORT = 9090;
+    private static final int PORT = 9091;
 
     /**
      * The list of all connected clients.
@@ -68,7 +68,7 @@ public class SplendorServer {
     public static void main(String[] args) {
         System.out.println("Splendor Server is starting...");
         
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT, 50, InetAddress.getByName("0.0.0.0"))) {
             System.out.println("Server is listening on port " + PORT);
             while (!gameStarted) {
                 if (clients.size() >= 4) {
