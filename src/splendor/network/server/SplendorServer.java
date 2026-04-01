@@ -16,18 +16,49 @@ import splendor.rules.*;
 import splendor.valueobjects.*;
 
 /**
- * The Splendor server that manages multiplayer games over sockets.
- * Supports both human clients and server-side bots.
- */
+* Supports both human clients and server-side bots.
+*/
 public class SplendorServer {
+    /**
+     * The IP address of the game server.
+     */
     private static final int PORT = 9090;
+
+    /**
+     * The list of all connected clients.
+     */
     private static final List<ClientHandler> clients = new ArrayList<>();
-    /** Maps client player names to their bot type: 0=human, 2=EasyBot, 3=HardBot */
+    
+    /** 
+     * Maps client player names to their bot type: 
+     * 0=human, 2=EasyBot, 3=HardBot 
+     */
     private static final Map<String, Integer> botPlayerTypes = new HashMap<>();
+
+    /**
+     * The current game state.
+     */
     private static GameState gameState;
+
+    /**
+     * The game rules used for validating actions.
+     */
     private static GameRules gameRules;
+
+    /**
+     * Indicates whether the game has started.
+     */
     public static volatile boolean gameStarted = false;
+
+    /**
+     * Indicates whether the game is in the final round.
+     */
     public static volatile boolean isLastRound = false;
+
+    /**
+     * Default constructor
+     */
+    public SplendorServer() {}
 
     /**
      * Entry point for the Splendor server application.
