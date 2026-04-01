@@ -583,7 +583,7 @@ public class DisplayUI {
                     }
                     sb.append(C_LINE).append("\n");
                 }
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
                 sb.append("  (no cards)\n");
             }
             sb.append("\n");

@@ -1,13 +1,13 @@
 package splendor.display;
 
 import java.util.*;
-import splendor.valueobjects.*;
-import splendor.rules.*;
 import splendor.entity.*;
-import splendor.exception.*;
+import splendor.entity.bot.*;
 import splendor.entity.card.*;
 import splendor.entity.player.*;
-import splendor.entity.bot.*;
+import splendor.exception.*;
+import splendor.rules.*;
+import splendor.valueobjects.*;
 
 /**
  * Handles all user input prompts for the Splendor game.
@@ -198,7 +198,7 @@ public class InputHandler {
                 return chosen;
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input");
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
                 System.out.println(e.getMessage());
             }
         }

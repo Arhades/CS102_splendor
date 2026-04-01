@@ -1,11 +1,11 @@
 package splendor.rules;
 
 import java.util.*;
-import splendor.entity.player.*;
 import splendor.entity.*;
-import splendor.valueobjects.*;
-import splendor.exception.*;
 import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.exception.*;
+import splendor.valueobjects.*;
 
 /**
  * Utility class containing static methods that execute player actions
@@ -108,7 +108,7 @@ public final class GameActions {
             cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
             gameState.addGemsToBank(cost);
             return true;
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return false;
         } catch (IndexOutOfBoundsException e) {
             return false;
@@ -165,7 +165,7 @@ public final class GameActions {
             cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
             giveGoldJoker(player, gameState);
             return true;
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return false;
         } catch (IndexOutOfBoundsException e) {
             return false;

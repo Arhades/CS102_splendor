@@ -1,11 +1,11 @@
 package splendor.entity.bot;
 
 import java.util.*;
-import splendor.rules.*;
-import splendor.entity.player.*;
-import splendor.entity.card.*;
 import splendor.entity.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
 import splendor.exception.*;
+import splendor.rules.*;
 import splendor.valueobjects.*;
 
 /**
@@ -85,7 +85,7 @@ public abstract class Bot extends Player {
                 for (int i = 0; i < cards.size(); i++) {
                     choices.add(CardChoice.createVisible(cards.get(i), level, i));
                 }
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
             }
         }
         return choices;

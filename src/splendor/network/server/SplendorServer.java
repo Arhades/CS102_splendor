@@ -597,7 +597,7 @@ public class SplendorServer {
 
                 return "SUCCESS";
             }
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return "ERROR: " + e.getMessage();
         }
     }

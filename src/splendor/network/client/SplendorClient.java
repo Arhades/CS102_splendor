@@ -17,7 +17,7 @@ public class SplendorClient {
     /**
      * The port number used to connect to the game server.
      */
-    private static final String SERVER_IP = "localhost"; 
+    private static final String SERVER_IP = "172.20.10.7"; 
 
     /**
      * The port number used to connect to the game server.
@@ -200,11 +200,11 @@ public class SplendorClient {
             if (!validColors.contains(color)) {
                 System.out.println("Invalid input! Please enter a valid gem color.");
                 continue;
-            }
-
-            if (takenColors.contains(color)) {
+            } else if (takenColors.contains(color)) {
                 System.out.println("Already taken! You must choose 3 DIFFERENT colors.");
                 continue;
+            } else {
+                System.out.println("Valid option");
             }
 
             takenColors.add(color);

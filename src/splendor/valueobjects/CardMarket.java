@@ -243,7 +243,7 @@ public class CardMarket {
                 }
                 sb.append(";");
             }
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             System.out.println("Invalid Level");
         }
         
