@@ -20,45 +20,14 @@ import splendor.valueobjects.*;
  * Supports both human clients and server-side bots.
  */
 public class SplendorServer {
-    /**
-     * The IP address of the game server.
-     */
     private static final int PORT = 9090;
-
-    /**
-     * The list of all connected clients.
-     */
     private static final List<ClientHandler> clients = new ArrayList<>();
-    /** 
-     * Maps client player names to their bot type: 
-     * 0=human, 2=EasyBot, 3=HardBot 
-     */
+    /** Maps client player names to their bot type: 0=human, 2=EasyBot, 3=HardBot */
     private static final Map<String, Integer> botPlayerTypes = new HashMap<>();
-
-    /**
-     * The current game state.
-     */
     private static GameState gameState;
-
-    /**
-     * The game rules used for validating actions.
-     */
     private static GameRules gameRules;
-
-    /**
-     * Indicates whether the game has started.
-     */
     public static volatile boolean gameStarted = false;
-
-    /**
-     * Indicates whether the game is in the final round.
-     */
     public static volatile boolean isLastRound = false;
-
-    /**
-     * Default constructor
-     */
-    public SplendorServer() {}
 
     /**
      * Entry point for the Splendor server application.
@@ -148,6 +117,15 @@ public class SplendorServer {
                         return;
                     } 
 
+                    // Ensure all connected players have entered their name and birth date
+                    for (ClientHandler client : clients) {
+                        if (client.getPlayerName() == null || client.getPlayerName().isEmpty()
+                                || client.getBirthDate() == null) {
+                            sendToSpecificPlayer(playerName, "Not all players are ready! Everyone must enter their name and birth date first.");
+                            return;
+                        }
+                    }
+
                     // Find the youngest player (latest birth date)
                     int youngestIdx = 0;
                     LocalDate youngestBirth = clients.get(0).getBirthDate();
@@ -211,6 +189,8 @@ public class SplendorServer {
                         broadcast("The game has started with " + numOfPlayers + " players with " + youngestName + " being the youngest player!");
                         broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
                         broadcastGameState();
+
+                        // If the first player is a bot, auto-execute their turn(s)
                         runBotTurns();
 
                     } catch (NullPointerException e) {
@@ -408,7 +388,8 @@ public class SplendorServer {
      * Processes a raw message from a client, handling JOINED messages and routing actions.
      * JOINED format: "JOINED:name:dd/MM/yyyy" for humans, or "JOINED:name:dd/MM/yyyy:BOT:2" or "JOINED:name:dd/MM/yyyy:BOT:3" for bots.
      * Bot JOINED messages are sent by a human client on behalf of the bot, so the server
-     * creates a separate virtual ClientHandler for the bot rather than overwriting the sender.
+     * creates a separate virtual ClientHandler for the bot and inserts it right after the
+     * sender to preserve clockwise seating order.
      *
      * @param sender  the ClientHandler that sent the message
      * @param message the raw message string
@@ -421,16 +402,28 @@ public class SplendorServer {
 
             // Check if this is a bot registration: JOINED:name:date:BOT:type
             if (parts.length >= 5 && parts[3].equals("BOT")) {
+                // Enforce 4-player limit (humans + bots)
+                if (clients.size() >= 4) {
+                    sender.sendMessage("The lobby is full (4/4). Cannot add more bots.");
+                    return;
+                }
+
                 String botName = parts[1];
                 int botType = Integer.parseInt(parts[4]);
                 botPlayerTypes.put(botName, botType);
 
                 // Create a virtual ClientHandler for the bot (no real socket)
-                // The bot's messages will be broadcast to all real clients
                 ClientHandler botHandler = new ClientHandler(null);
                 botHandler.setPlayerName(botName);
                 botHandler.setBirthDate(date);
-                clients.add(botHandler);
+
+                // Insert the bot right after the sender to preserve seating order
+                int senderIndex = clients.indexOf(sender);
+                if (senderIndex >= 0 && senderIndex < clients.size() - 1) {
+                    clients.add(senderIndex + 1, botHandler);
+                } else {
+                    clients.add(botHandler);
+                }
 
                 broadcast("SERVER: " + botName + " (Bot) joined the lobby. (" + clients.size() + "/4)");
                 System.out.println(botName + " (Bot) successfully joined");
