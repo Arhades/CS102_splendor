@@ -38,6 +38,10 @@ public class SplendorClient {
      * Indicates whether the client is waiting for a server response.
      */
     protected static volatile boolean waitingForServer = false;
+
+    /**
+     * Indicates whether it is currently this player's turn.
+     */
     protected static volatile boolean myTurn = false;
     static String playerName = "";
 
