@@ -17,12 +17,12 @@ public class SplendorClient {
     /**
      * The port number used to connect to the game server.
      */
-    private static final String SERVER_IP = "localhost"; 
+    private static final String SERVER_IP = "10.124.138.3"; 
 
     /**
      * The port number used to connect to the game server.
      */
-    private static final int SERVER_PORT = 9090;
+    private static final int SERVER_PORT = 9097;
 
     /**
      * The display UI used to print game information.
@@ -38,6 +38,12 @@ public class SplendorClient {
      * Indicates whether the client is waiting for a server response.
      */
     protected static volatile boolean waitingForServer = false;
+
+    /**
+     * Indicates whether it is currently this player's turn.
+     */
+    protected static volatile boolean myTurn = false;
+    static String playerName = "";
 
     /**
      * Default constructor
@@ -62,7 +68,6 @@ public class SplendorClient {
             listenerThread.start();
             // first request for input is for player's name
             // second request is for host player to START GAME
-            String playerName = null;
             LocalDate playerBirthDate = null;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -101,15 +106,13 @@ public class SplendorClient {
                     }
                 }
                 else {
-                    // System.out.println("\n=============== YOUR TURN ===============");
-                    // System.out.println("1. Take 3 different gems");
-                    // System.out.println("2. Take 2 gems of the same color");
-                    // System.out.println("3. Purchase a card");
-                    // System.out.println("4. Reserve a card");
-                    // System.out.println("Type a number (1-4) or QUIT:");
-                    // System.out.print("> ");
+                    // if (!myTurn) {
+                    //     try {
+                    //         Thread.sleep(100);
+                    //     } catch (InterruptedException e) {}
+                    //     continue;
+                    // }
                     DisplayUI.printActionMenu();
-                    
                     String input = scanner.nextLine();
                     
                     if (input.equalsIgnoreCase("QUIT")) {
@@ -158,9 +161,10 @@ public class SplendorClient {
                             System.out.println("Invalid choice. Please type 1, 2, 3, or 4.");
                             break;
                     }
+                    // myTurn = false;
                     while (waitingForServer) {
                         try {
-                            Thread.sleep(50);
+                            Thread.sleep(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                             System.out.println("The server was interrupted.");
@@ -200,11 +204,11 @@ public class SplendorClient {
             if (!validColors.contains(color)) {
                 System.out.println("Invalid input! Please enter a valid gem color.");
                 continue;
-            }
-
-            if (takenColors.contains(color)) {
+            } else if (takenColors.contains(color)) {
                 System.out.println("Already taken! You must choose 3 DIFFERENT colors.");
                 continue;
+            } else {
+                System.out.println("Valid option");
             }
 
             takenColors.add(color);

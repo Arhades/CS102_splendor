@@ -22,7 +22,7 @@ public class SplendorServer {
     /**
      * The IP address of the game server.
      */
-    private static final int PORT = 9090;
+    private static final int PORT = 9097;
 
     /**
      * The list of all connected clients.
@@ -68,7 +68,7 @@ public class SplendorServer {
     public static void main(String[] args) {
         System.out.println("Splendor Server is starting...");
         
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT, 50, InetAddress.getByName("0.0.0.0"))) {
             System.out.println("Server is listening on port " + PORT);
             while (!gameStarted) {
                 if (clients.size() >= 4) {
@@ -134,6 +134,9 @@ public class SplendorServer {
 
 
         boolean moveSuccessful = false;
+        String message = "";
+        boolean gotNoble = false;
+        String messageNoble = "";
 
         try {
             switch (actionType) {
@@ -218,10 +221,8 @@ public class SplendorServer {
                         System.out.println("Game board successfully initialized!");
                         
                         broadcast("The game has started with " + numOfPlayers + " players with " + youngestName + " being the youngest player!");
-                        broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
                         broadcastGameState();
-
-                        // If the first player is a bot, auto-execute their turn(s)
+                        broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.\n");
                         runBotTurns();
 
                     } catch (NullPointerException e) {
@@ -247,7 +248,7 @@ public class SplendorServer {
 
                     if (resultTwo.equals("SUCCESS")) {
                         moveSuccessful = true;
-                        broadcast(expectedPlayer.getName() + " took 2 " + parts[1].toUpperCase() + " gems.");
+                        message = expectedPlayer.getName() + " took 2 " + parts[1].toUpperCase() + " gems.";
                     } else {
                         sendToSpecificPlayer(playerName, resultTwo.replace("ERROR: ", ""));
                     }
@@ -260,7 +261,7 @@ public class SplendorServer {
 
                     if (resultThree.equals("SUCCESS")) {
                         moveSuccessful = true; 
-                        broadcast(expectedPlayer.getName() + " took 1 " + parts[1].toUpperCase() + ", 1 " + parts[2].toUpperCase() + ", and 1 " + parts[3].toUpperCase() + ".");
+                        message = expectedPlayer.getName() + " took 1 " + parts[1].toUpperCase() + ", 1 " + parts[2].toUpperCase() + ", and 1 " + parts[3].toUpperCase() + ".";
                     } else {
                         sendToSpecificPlayer(playerName, resultThree.replace("ERROR: ", ""));
                     }
@@ -295,13 +296,14 @@ public class SplendorServer {
                     if (resultPurchase.equals("SUCCESS")) {
                         moveSuccessful = true;
                         String location = isReserved ? "their reserved hand" : "the board";
-                        broadcast(expectedPlayer.getName() + " purchased a card from " + location + ".");
+                        message = expectedPlayer.getName() + " purchased a card from " + location + ".";
                         
                         List<Noble> earnedNobles = gameRules.getClaimableNobles(expectedPlayer, gameState.getAvailableNobles());
                         for (Noble noble : earnedNobles) {
                             expectedPlayer.claimNoble(noble);
                             gameState.removeNoble(noble);
-                            broadcast(expectedPlayer.getName() + " was visited by a Noble! (+" + noble.getPoints() + " points)");
+                            gotNoble = true;
+                            messageNoble = expectedPlayer.getName() + " was visited by a Noble! (+" + noble.getPoints() + " points)";
                         }
 
                     } else {
@@ -333,13 +335,11 @@ public class SplendorServer {
                         moveSuccessful = true;
                         
                         String type = (reserveIndex == 4) ? "the top of the deck" : "the board";
-                        String message = expectedPlayer.getName() + " reserved a Level " + reserveLevel + " card from " + type + ".";
+                        message = expectedPlayer.getName() + " reserved a Level " + reserveLevel + " card from " + type + ".";
                         
                         if (resultReserve.equals("SUCCESS_JOKER")) {
                             message += " They also received 1 Gold Joker.";
                         }
-                        
-                        broadcast(message);
                     } else {
                         sendToSpecificPlayer(playerName, resultReserve.replace("ERROR: ", ""));
                     }
@@ -350,14 +350,17 @@ public class SplendorServer {
                     break;
             }
     
-
+            message += '\n';
             if (moveSuccessful) {
-                broadcast(playerName + " did action: " + actionType);
                 // check if they hit the winning threshold and if so, this will be the last round
                 if (expectedPlayer.getPoints() >= gameState.getWinningThreshold() && !isLastRound) { 
                     isLastRound = true;
-                    broadcast(expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points!");
                     broadcastGameState();
+                    broadcast(message);
+                    if (gotNoble) {
+                        broadcast(messageNoble);
+                    }
+                    broadcast(expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points!");
                 }
                 
                 // check if is last player
@@ -367,15 +370,22 @@ public class SplendorServer {
                 // end game if both true
                 if (isLastRound && isLastPlayer) {
                     String winnerScreen = DisplayUI.getWinner(gameState, gameRules).replace("\n", "@@");
-                    broadcast("BOARD_STATE:" + winnerScreen);
+                    broadcast(message);
+                    if (gotNoble) {
+                        broadcast(messageNoble);
+                    }
+                    broadcast(winnerScreen);
                     broadcast("The game has ended! Thanks for playing.");
                     System.exit(0);
                     return;
                 }
                 gameState.advanceToNext();
                 broadcastGameState();
+                broadcast(message);
+                    if (gotNoble) {
+                        broadcast(messageNoble);
+                    }
                 broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.");
-
                 // If the next player(s) are bots, auto-execute their turns
                 runBotTurns();
             } else {
@@ -456,7 +466,7 @@ public class SplendorServer {
                     clients.add(botHandler);
                 }
 
-                broadcast("SERVER: " + botName + " (Bot) joined the lobby. (" + clients.size() + "/4)");
+                broadcast("[SERVER]: " + botName + " (Bot) joined the lobby. (" + clients.size() + "/4)");
                 System.out.println(botName + " (Bot) successfully joined");
             } else {
                 sender.setPlayerName(parts[1]);
@@ -491,11 +501,28 @@ public class SplendorServer {
         if (gameState == null) {
             return;
         }
-        String gameBoard = DisplayUI.getGameState(gameState);
+        String gameBoard = DisplayUI.getGameStateSocketWithoutReserved(gameState);
         
         // need replace \n with @@ cuz the broadcast cant read \n
         String board = gameBoard.replace("\n", "@@");
-        broadcast("BOARD_STATE:" + board);
+        broadcast(board);
+        for (ClientHandler client : clients) {
+            Player clientPlayer = getPlayerByName(client.getPlayerName()); 
+            
+            if (clientPlayer != null) {
+                String reservedSection = DisplayUI.getReservedCards(clientPlayer).replace("\n", "@@");
+                client.sendMessage(reservedSection); 
+            }
+        }
+    }
+
+    private static Player getPlayerByName(String name) {
+        for (Player p : gameState.getPlayers()) {
+            if (p.getName().equals(name)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     /**
@@ -507,14 +534,13 @@ public class SplendorServer {
         while (gameState != null && !gameState.isGameOver()) {
             Player currentPlayer = gameState.getCurrentPlayer();
             if (!(currentPlayer instanceof Bot)) {
-                break; // It's a human player's turn; stop and wait for their input
+                break;
             }
 
             Bot bot = (Bot) currentPlayer;
             String moveDescription = bot.takeTurn(gameState, gameRules);
             broadcast("[BOT] " + moveDescription);
 
-            // Handle noble claims for the bot
             List<Noble> earnedNobles = gameRules.getClaimableNobles(currentPlayer, gameState.getAvailableNobles());
             for (Noble noble : earnedNobles) {
                 currentPlayer.claimNoble(noble);
@@ -522,19 +548,17 @@ public class SplendorServer {
                 broadcast(currentPlayer.getName() + " was visited by a Noble! (+" + noble.getPoints() + " points)");
             }
 
-            // Check winning threshold
             if (currentPlayer.getPoints() >= gameState.getWinningThreshold() && !isLastRound) {
                 isLastRound = true;
                 broadcast(currentPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points!");
             }
 
-            // Check if game should end (last round and last player)
             List<Player> allPlayers = gameState.getPlayers();
             boolean isLastPlayer = allPlayers.indexOf(currentPlayer) == (allPlayers.size() - 1);
 
             if (isLastRound && isLastPlayer) {
                 String winnerScreen = DisplayUI.getWinner(gameState, gameRules).replace("\n", "@@");
-                broadcast("BOARD_STATE:" + winnerScreen);
+                broadcast(winnerScreen);
                 broadcast("The game has ended! Thanks for playing.");
                 System.exit(0);
                 return;
@@ -604,7 +628,7 @@ public class SplendorServer {
 
                 return "SUCCESS";
             }
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return "ERROR: " + e.getMessage();
         }
     }

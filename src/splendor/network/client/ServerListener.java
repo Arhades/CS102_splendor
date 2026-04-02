@@ -26,18 +26,17 @@ public class ServerListener extends Thread {
                 if (serverMessage.contains("The game has started") || serverMessage.contains("GAME STARTED")) {
                     SplendorClient.gameStarted = true; 
                 }
-                if (serverMessage.startsWith("BOARD_STATE:")) {
-                    String gameBoard = serverMessage.replace("BOARD_STATE:", "");
-                    
-                    // swap back the @@ to \n
-                    String board = gameBoard.replace("@@", "\n");
-                    
-                    System.out.println(board);
-                    SplendorClient.waitingForServer = false;
-                } else {
-                    System.out.println("\n[SERVER]: " + serverMessage);
-                    System.out.print("> ");
-                }
+                // swap back the @@ to \n
+                String board = serverMessage.replace("@@", "\n"); 
+                System.out.println(board);
+            //  System.out.println("Press ENTER for the option menu.");
+                // if (serverMessage.contains("It is now " + SplendorClient.playerName + "'s turn.")) {
+                //     SplendorClient.myTurn = true;
+                // }
+                // // still my turn
+                // if (serverMessage.contains("Invalid") || serverMessage.contains("ERROR") || serverMessage.contains("Not enough") || serverMessage.contains("You must")) {
+                //     SplendorClient.myTurn = true;
+                // }
 
                 SplendorClient.waitingForServer = false;
             }

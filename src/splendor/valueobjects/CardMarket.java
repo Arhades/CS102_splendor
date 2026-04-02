@@ -69,10 +69,17 @@ public class CardMarket {
     public List<DevelopmentCard> getVisibleCards(int level) throws InvalidIndexException {
         List<DevelopmentCard> cards = null;
         switch (level) {
-            case 1 -> cards = levelOneVisible;
-            case 2 -> cards = levelTwoVisible;
-            case 3 -> cards = levelThreeVisible;
-            default -> throw new InvalidIndexException("Card level not valid");
+            case 1:
+                cards = levelOneVisible;
+                break;
+            case 2:
+                cards = levelTwoVisible;
+                break;
+            case 3:
+                cards = levelThreeVisible;
+                break;
+            default:
+                throw new InvalidIndexException("Card level not valid");
         }
         return cards;
     }
@@ -88,10 +95,17 @@ public class CardMarket {
     public List<DevelopmentCard> getDeckCards(int level) throws InvalidIndexException {
         List<DevelopmentCard> cards = null;
         switch (level) {
-            case 1 -> cards = levelOneDeck;
-            case 2 -> cards = levelTwoDeck;
-            case 3 -> cards = levelThreeDeck;
-            default -> throw new InvalidIndexException("Card level not valid");
+            case 1:
+                cards = levelOneDeck;
+                break;
+            case 2:
+                cards = levelTwoDeck;
+                break;
+            case 3:
+                cards = levelThreeDeck;
+                break;
+            default:
+                throw new InvalidIndexException("Card level not valid");
         }
         return cards;
     }
@@ -108,10 +122,17 @@ public class CardMarket {
     public DevelopmentCard getVisibleCard(int level, int index) throws InvalidIndexException {
         DevelopmentCard card = null;
         switch (level) {
-            case 1 -> card = levelOneVisible.get(index);
-            case 2 -> card = levelTwoVisible.get(index);
-            case 3 -> card = levelThreeVisible.get(index);
-            default -> throw new InvalidIndexException("Card level not valid");
+            case 1:
+                card = levelOneVisible.get(index);
+                break;
+            case 2:
+                card = levelTwoVisible.get(index);
+                break;
+            case 3:
+                card = levelThreeVisible.get(index);
+                break;
+            default:
+                throw new InvalidIndexException("Card level not valid");
         }
         return card;
     }
@@ -125,10 +146,17 @@ public class CardMarket {
     public int getDeckSize(int level) {
         int size = 0;
         switch (level) {
-            case 1 -> size = levelOneDeck.size();
-            case 2 -> size = levelTwoDeck.size();
-            case 3 -> size = levelThreeDeck.size();
-            default -> throw new InvalidIndexException("Deck level not valid");
+            case 1:
+                size = levelOneDeck.size();
+                break;
+            case 2:
+                size = levelTwoDeck.size();
+                break;
+            case 3:
+                size = levelThreeDeck.size();
+                break;
+            default:
+                throw new InvalidIndexException("Deck level not valid");
         }
         return size;
     }
@@ -243,7 +271,7 @@ public class CardMarket {
                 }
                 sb.append(";");
             }
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             System.out.println("Invalid Level");
         }
         

@@ -176,6 +176,18 @@ public class GemCollection {
         return true;
     }
 
+    /**
+     * Converts the gem collection into a list of gem colors.
+     * @return a list of gem colors in this collection
+     */
+    public List<GemColor> toList() {
+        List<GemColor> lst = new ArrayList<>();
+        for (GemColor key: gems.keySet()) {
+            lst.add(key);
+        }
+        return lst;
+    }
+
         /**
      * Returns the number of gold jokers needed for this collection
      * to satisfy another collection's required gems.
@@ -183,8 +195,6 @@ public class GemCollection {
      * @param other the gem collection representing the required gems
      * @return the number of gold jokers required to make up the shortage
      */
-
-
     public int jokerNeeded(GemCollection other) {
         int joker = gems.get(GemColor.GOLD_JOKER);
         for (GemColor color: other.getGems().keySet()) {

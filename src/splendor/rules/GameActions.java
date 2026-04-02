@@ -1,11 +1,11 @@
 package splendor.rules;
 
 import java.util.*;
-import splendor.entity.player.*;
 import splendor.entity.*;
-import splendor.valueobjects.*;
-import splendor.exception.*;
 import splendor.entity.card.*;
+import splendor.entity.player.*;
+import splendor.exception.*;
+import splendor.valueobjects.*;
 
 /**
  * Utility class containing static methods that execute player actions
@@ -76,8 +76,7 @@ public final class GameActions {
         }
 
         GemCollection add = new GemCollection();
-        add.add(color, 1);
-        add.add(color, 1);
+        add.add(color, 2);
         player.addGems(add);
         gameState.removeGemsFromBank(add);
         return true;
@@ -108,7 +107,7 @@ public final class GameActions {
             cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
             gameState.addGemsToBank(cost);
             return true;
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return false;
         } catch (IndexOutOfBoundsException e) {
             return false;
@@ -165,7 +164,7 @@ public final class GameActions {
             cardMarket.splitVisible(cardMarket.getDeckCards(level), cardMarket.getVisibleCards(level));
             giveGoldJoker(player, gameState);
             return true;
-        } catch (UnavailableCardException e) {
+        } catch (InvalidIndexException e) {
             return false;
         } catch (IndexOutOfBoundsException e) {
             return false;
@@ -202,7 +201,7 @@ public final class GameActions {
      * @param player    the player to receive the joker
      * @param gameState the current game state
      */
-    private static void giveGoldJoker(Player player, GameState gameState) {
+    public static void giveGoldJoker(Player player, GameState gameState) {
         if (gameState.getGemBank().getCount(GemColor.GOLD_JOKER) < 1) {
             return;
         }
