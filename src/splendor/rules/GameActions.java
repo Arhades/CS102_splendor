@@ -76,8 +76,7 @@ public final class GameActions {
         }
 
         GemCollection add = new GemCollection();
-        add.add(color, 1);
-        add.add(color, 1);
+        add.add(color, 2);
         player.addGems(add);
         gameState.removeGemsFromBank(add);
         return true;
@@ -202,7 +201,7 @@ public final class GameActions {
      * @param player    the player to receive the joker
      * @param gameState the current game state
      */
-    private static void giveGoldJoker(Player player, GameState gameState) {
+    public static void giveGoldJoker(Player player, GameState gameState) {
         if (gameState.getGemBank().getCount(GemColor.GOLD_JOKER) < 1) {
             return;
         }

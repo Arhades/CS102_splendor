@@ -335,9 +335,9 @@ public class GameEngine {
             return false;
         }
 
-        player.addGems(add);
-        gameState.removeGemsFromBank(add);
-        return true;
+        List<GemColor> colors = add.toList();
+
+        return GameActions.takeThreeDifferent(player, gameState, gameRules, colors);
     }
 
     /**
@@ -357,11 +357,7 @@ public class GameEngine {
             return false;
         }
 
-        GemCollection add = new GemCollection();
-        add.add(col, 2);
-        player.addGems(add);
-        gameState.removeGemsFromBank(add);
-        return true;
+        return GameActions.takeTwoSame(player, gameState, gameRules, col);
     }
 
     /**
@@ -412,14 +408,7 @@ public class GameEngine {
             return false;
         }
 
-        GemCollection gemBank = gameState.getGemBank();
-        
-        if (gemBank.getCount(GemColor.GOLD_JOKER) > 0) {
-            GemCollection gems = new GemCollection();
-            gems.add(GemColor.GOLD_JOKER, 1);
-            gemBank.subtract(gems);
-            player.addGems(gems);
-        }
+        GameActions.giveGoldJoker(player, gameState);
         player.addReservedCard(chosen);
         return true;
         
