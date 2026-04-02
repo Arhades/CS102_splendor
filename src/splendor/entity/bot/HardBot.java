@@ -30,11 +30,7 @@ public class HardBot extends Bot {
      * @return a description of the move chosen
      */
     @Override
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
-    protected String chooseMove(GameState gameState, GameRules gameRules) {
-=======
-    public String chooseMove(BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:HardBot.java
+    public String chooseMove(GameState gameState, GameRules gameRules) {
         boolean nobleFocus = gameState.getPlayers().size() >= 3;
         List<CardChoice> affordable = getAffordableChoices(gameState, gameRules);
         if (affordable.size() > 0) {
@@ -62,7 +58,6 @@ public class HardBot extends Bot {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Picks the best card choice from a list based on the scoring heuristic.
      *
@@ -72,10 +67,7 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return the best CardChoice
      */
-    private CardChoice getBestChoice(List<CardChoice> choices, GameState gameState, GameRules gameRules, boolean nobleFocus) {
-=======
-    public CardChoice getBestChoice(List<CardChoice> choices, BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
+    public CardChoice getBestChoice(List<CardChoice> choices, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         int bestScore = Integer.MIN_VALUE;
         List<CardChoice> bestChoices = new ArrayList<>();
 
@@ -93,7 +85,6 @@ public class HardBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Returns the highest-priority target cards based on score.
      *
@@ -103,10 +94,7 @@ public class HardBot extends Bot {
      * @param limit      the maximum number of targets to return
      * @return a list of priority CardChoices
      */
-    private List<CardChoice> getPriorityTargets(GameState gameState, GameRules gameRules, boolean nobleFocus, int limit) {
-=======
-    public List<CardChoice> getPriorityTargets(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus, int limit) {
->>>>>>> Stashed changes:HardBot.java
+    public List<CardChoice> getPriorityTargets(GameState gameState, GameRules gameRules, boolean nobleFocus, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> targets = new ArrayList<>();
 
@@ -123,7 +111,6 @@ public class HardBot extends Bot {
         return targets;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Calculates a heuristic score for a card choice.
      *
@@ -133,14 +120,9 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return the heuristic score (higher is better)
      */
-    private int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
+    public int getCardScore(CardChoice choice, GameState gameState, GameRules gameRules, boolean nobleFocus) {
         DevelopmentCard card = choice.getCard();
         int score = card.getPoints() * 4;
-=======
-    public int getCardScore(CardChoice choice, BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
-        Card card = choice.getCard();
-        int score = card.getPoints() * 10;
->>>>>>> Stashed changes:HardBot.java
         score += getDiscountUsefulness(card, gameState, nobleFocus);
         score += getNobleUsefulness(card, gameState, nobleFocus);
         score -= getMissingGems(gameRules, card) * 2;
@@ -160,7 +142,6 @@ public class HardBot extends Bot {
         return score;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Calculates how useful a card's bonus is for purchasing future cards.
      *
@@ -169,11 +150,8 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return a usefulness score
      */
-    private int getDiscountUsefulness(Card card, GameState gameState, boolean nobleFocus) {
+    public int getDiscountUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         DevelopmentCard card2 = (DevelopmentCard) card;
-=======
-    public int getDiscountUsefulness(Card card, BotGameState gameState, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
@@ -206,7 +184,6 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Calculates how useful a card is for progressing toward noble claims.
      *
@@ -215,11 +192,8 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return a usefulness score
      */
-    private int getNobleUsefulness(Card card, GameState gameState, boolean nobleFocus) {
+    public int getNobleUsefulness(Card card, GameState gameState, boolean nobleFocus) {
         DevelopmentCard card2 = (DevelopmentCard) card;
-=======
-    public int getNobleUsefulness(Card card, BotGameState gameState, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
         int usefulness = 0;
         Map<GemColor, Integer> bonuses = calculateBonuses();
 
@@ -241,7 +215,6 @@ public class HardBot extends Bot {
         return usefulness;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Calculates a penalty for buying expensive cards too early in the game.
      *
@@ -250,11 +223,8 @@ public class HardBot extends Bot {
      * @param gameRules the game rules for cost calculation
      * @return the tier penalty (higher means worse)
      */
-    private int getTierPenalty(Card card, GameState gameState, GameRules gameRules) {
+    public int getTierPenalty(Card card, GameState gameState, GameRules gameRules) {
         DevelopmentCard card2 = (DevelopmentCard) card;
-=======
-    public int getTierPenalty(Card card, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:HardBot.java
         if (!isEarlyGame(gameState)) {
             return 0;
         }
@@ -272,7 +242,6 @@ public class HardBot extends Bot {
         return 0;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Calculates a bonus for denying opponents access to a card.
      *
@@ -281,10 +250,7 @@ public class HardBot extends Bot {
      * @param gameRules the game rules for opponent affordability checks
      * @return the deny bonus (higher means more valuable to deny)
      */
-    private int getDenyBonus(CardChoice choice, GameState gameState, GameRules gameRules) {
-=======
-    public int getDenyBonus(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:HardBot.java
+    public int getDenyBonus(CardChoice choice, GameState gameState, GameRules gameRules) {
         if (choice.isReserved()) {
             return 0;
         }
@@ -310,7 +276,6 @@ public class HardBot extends Bot {
         return deny;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Assesses the threat level of an opponent based on their points and card proximity.
      *
@@ -319,10 +284,7 @@ public class HardBot extends Bot {
      * @param gameRules the game rules for cost calculation
      * @return a threat score (higher means more dangerous)
      */
-    private int assessThreat(Player player, GameState gameState, GameRules gameRules) {
-=======
-    public int assessThreat(Player player, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:HardBot.java
+    public int assessThreat(Player player, GameState gameState, GameRules gameRules) {
         int threat = player.getPoints() * 3;
         if (player.getPoints() >= gameState.getWinningThreshold() - 3) {
             threat += 10;
@@ -355,7 +317,6 @@ public class HardBot extends Bot {
         return threat;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Chooses a visible card to reserve based on score and deny value.
      *
@@ -364,10 +325,7 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return the best CardChoice to reserve, or null if not worth reserving
      */
-    private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, boolean nobleFocus) {
-=======
-    public CardChoice getReserveChoice(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
+    public CardChoice getReserveChoice(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         if (!gameRules.canReserveCard(this)) {
             return null;
         }
@@ -396,7 +354,6 @@ public class HardBot extends Bot {
         return null;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Chooses a gem-taking move based on weighted priorities toward target cards.
      *
@@ -405,10 +362,7 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return a description of the gem move taken, or empty string if none possible
      */
-    private String chooseGemMove(GameState gameState, GameRules gameRules, boolean nobleFocus) {
-=======
-    public String chooseGemMove(BotGameState gameState, BotGameRules gameRules, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
+    public String chooseGemMove(GameState gameState, GameRules gameRules, boolean nobleFocus) {
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> targets = getPriorityTargets(gameState, gameRules, nobleFocus, 4);
 
@@ -465,17 +419,13 @@ public class HardBot extends Bot {
         return move;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Returns the gem colors most demanded by available nobles.
      *
      * @param gameState the current game state
      * @return a list of the top 3 most-needed GemColors for nobles
      */
-    private List<GemColor> getOpeningNobleColors(GameState gameState) {
-=======
-    public List<GemColor> getOpeningNobleColors(BotGameState gameState) {
->>>>>>> Stashed changes:HardBot.java
+    public List<GemColor> getOpeningNobleColors(GameState gameState) {
         Map<GemColor, Integer> counts = new HashMap<>();
         for (GemColor color: GemColor.values()) {
             counts.put(color, 0);
@@ -506,7 +456,6 @@ public class HardBot extends Bot {
         return chosen;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/HardBot.java
     /**
      * Decides which deck level to reserve a hidden card from.
      *
@@ -514,10 +463,7 @@ public class HardBot extends Bot {
      * @param nobleFocus whether to prioritize noble-related bonuses
      * @return the deck level (1-3), or 0 if all decks are empty
      */
-    private int getHiddenReserveLevel(GameState gameState, boolean nobleFocus) {
-=======
-    public int getHiddenReserveLevel(BotGameState gameState, boolean nobleFocus) {
->>>>>>> Stashed changes:HardBot.java
+    public int getHiddenReserveLevel(GameState gameState, boolean nobleFocus) {
         int preferred = nobleFocus ? 2 : 3;
         if (gameState.getCardMarket().getDeckSize(preferred) > 0) {
             return preferred;

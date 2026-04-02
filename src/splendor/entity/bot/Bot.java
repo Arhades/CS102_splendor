@@ -43,7 +43,6 @@ public abstract class Bot extends Player {
         return move;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Chooses and executes a move for this bot's turn.
      *
@@ -51,14 +50,14 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return a description of the move chosen
      */
-    protected abstract String chooseMove(GameState gameState, GameRules gameRules);
+    public abstract String chooseMove(GameState gameState, GameRules gameRules);
 
     /**
      * Returns the bot's random number generator.
      *
      * @return the Random instance
      */
-    protected Random getRandom() {
+    public Random getRandom() {
         return random;
     }
 
@@ -68,7 +67,7 @@ public abstract class Bot extends Player {
      * @param gameState the current game state
      * @return true if it is still the early game
      */
-    protected boolean isEarlyGame(GameState gameState) {
+    public boolean isEarlyGame(GameState gameState) {
         return gameState.getTurnCount() < gameState.getPlayers().size() * 2;
     }
 
@@ -78,20 +77,7 @@ public abstract class Bot extends Player {
      * @param gameState the current game state
      * @return a list of CardChoice objects for visible market cards
      */
-    protected List<CardChoice> getVisibleChoices(GameState gameState) {
-=======
-    public abstract String chooseMove(BotGameState gameState, BotGameRules gameRules);
-
-    public Random getRandom() {
-        return random;
-    }
-
-    public boolean isEarlyGame(BotGameState gameState) {
-        return gameState.getTurnCount() < gameState.getPlayers().size() * 2;
-    }
-
-    public List<CardChoice> getVisibleChoices(BotGameState gameState) {
->>>>>>> Stashed changes:Bot.java
+    public List<CardChoice> getVisibleChoices(GameState gameState) {
         List<CardChoice> choices = new ArrayList<>();
         for (int level = 1; level <= 3; level++) {
             try {
@@ -105,16 +91,12 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns card choices from this bot's reserved hand.
      *
      * @return a list of CardChoice objects for reserved cards
      */
-    protected List<CardChoice> getReservedChoices() {
-=======
     public List<CardChoice> getReservedChoices() {
->>>>>>> Stashed changes:Bot.java
         List<CardChoice> choices = new ArrayList<>();
         for (int i = 0; i < getReservedCards().size(); i++) {
             choices.add(CardChoice.createReserved(getReservedCards().get(i), i));
@@ -122,23 +104,18 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns all card choices, both visible and reserved.
      *
      * @param gameState the current game state
      * @return a combined list of all available card choices
      */
-    protected List<CardChoice> getAllChoices(GameState gameState) {
-=======
-    public List<CardChoice> getAllChoices(BotGameState gameState) {
->>>>>>> Stashed changes:Bot.java
+    public List<CardChoice> getAllChoices(GameState gameState) {
         List<CardChoice> choices = getVisibleChoices(gameState);
         choices.addAll(getReservedChoices());
         return choices;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns all card choices that the bot can currently afford.
      *
@@ -146,10 +123,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for affordability checks
      * @return a list of affordable card choices
      */
-    protected List<CardChoice> getAffordableChoices(GameState gameState, GameRules gameRules) {
-=======
-    public List<CardChoice> getAffordableChoices(BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public List<CardChoice> getAffordableChoices(GameState gameState, GameRules gameRules) {
         List<CardChoice> choices = new ArrayList<>();
         List<CardChoice> allChoices = getAllChoices(gameState);
         for (CardChoice choice: allChoices) {
@@ -160,24 +134,19 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Selects a random card choice from the given list.
      *
      * @param choices the list of card choices to pick from
      * @return a randomly selected CardChoice, or null if the list is empty
      */
-    protected CardChoice chooseRandomChoice(List<CardChoice> choices) {
-=======
     public CardChoice chooseRandomChoice(List<CardChoice> choices) {
->>>>>>> Stashed changes:Bot.java
         if (choices.size() == 0) {
             return null;
         }
         return choices.get(random.nextInt(choices.size()));
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the number of gems the bot is missing to afford a card.
      *
@@ -185,7 +154,7 @@ public abstract class Bot extends Player {
      * @param card      the card to check
      * @return the number of missing gems
      */
-    protected int getMissingGems(GameRules gameRules, Card card) {
+    public int getMissingGems(GameRules gameRules, Card card) {
         return gameRules.countMissingGems(this, card);
     }
 
@@ -196,14 +165,7 @@ public abstract class Bot extends Player {
      * @param card      the card to evaluate
      * @return the total discounted gem cost
      */
-    protected int getDiscountedCostTotal(GameRules gameRules, Card card) {
-=======
-    public int getMissingGems(BotGameRules gameRules, Card card) {
-        return gameRules.countMissingGems(this, card);
-    }
-
-    public int getDiscountedCostTotal(BotGameRules gameRules, Card card) {
->>>>>>> Stashed changes:Bot.java
+    public int getDiscountedCostTotal(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int total = 0;
         for (GemColor color: GemColor.values()) {
@@ -215,7 +177,6 @@ public abstract class Bot extends Player {
         return total;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Counts how many of the bot's gems would be wasted (not needed) when buying a card.
      *
@@ -223,10 +184,7 @@ public abstract class Bot extends Player {
      * @param card      the card to evaluate
      * @return the number of wasted gems
      */
-    protected int getWasteCount(GameRules gameRules, Card card) {
-=======
-    public int getWasteCount(BotGameRules gameRules, Card card) {
->>>>>>> Stashed changes:Bot.java
+    public int getWasteCount(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int waste = 0;
         for (GemColor color: GemColor.values()) {
@@ -244,17 +202,13 @@ public abstract class Bot extends Player {
         return waste;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the total base (undiscounted) cost of a card.
      *
      * @param card the card to evaluate
      * @return the total base gem cost
      */
-    protected int getBaseCostTotal(Card card) {
-=======
     public int getBaseCostTotal(Card card) {
->>>>>>> Stashed changes:Bot.java
         int total = 0;
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -265,17 +219,13 @@ public abstract class Bot extends Player {
         return total;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Finds the noble closest to being claimable by this bot.
      *
      * @param gameState the current game state
      * @return the closest Noble, or null if none are available
      */
-    protected Noble getClosestNoble(GameState gameState) {
-=======
-    public Noble getClosestNoble(BotGameState gameState) {
->>>>>>> Stashed changes:Bot.java
+    public Noble getClosestNoble(GameState gameState) {
         Noble best = null;
         int bestColors = Integer.MAX_VALUE;
         int bestBonuses = Integer.MAX_VALUE;
@@ -292,17 +242,13 @@ public abstract class Bot extends Player {
         return best;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Counts how many bonus colors the bot still needs to claim a noble.
      *
      * @param noble the noble to check
      * @return the number of remaining colors needed
      */
-    protected int countRemainingNobleColors(Noble noble) {
-=======
     public int countRemainingNobleColors(Noble noble) {
->>>>>>> Stashed changes:Bot.java
         int remaining = 0;
         Map<GemColor, Integer> bonus = calculateBonuses();
         for (Map.Entry<GemColor, Integer> entry: noble.getRequirements().entrySet()) {
@@ -313,17 +259,13 @@ public abstract class Bot extends Player {
         return remaining;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Counts the total number of individual bonuses the bot still needs for a noble.
      *
      * @param noble the noble to check
      * @return the total number of remaining bonus cards needed
      */
-    protected int countRemainingNobleBonuses(Noble noble) {
-=======
     public int countRemainingNobleBonuses(Noble noble) {
->>>>>>> Stashed changes:Bot.java
         int remaining = 0;
         Map<GemColor, Integer> bonus = calculateBonuses();
         for (Map.Entry<GemColor, Integer> entry: noble.getRequirements().entrySet()) {
@@ -334,17 +276,13 @@ public abstract class Bot extends Player {
         return remaining;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the gem colors still needed to claim a noble.
      *
      * @param noble the noble to check (may be null)
      * @return a list of GemColors still needed
      */
-    protected List<GemColor> getNeededColorsForNoble(Noble noble) {
-=======
     public List<GemColor> getNeededColorsForNoble(Noble noble) {
->>>>>>> Stashed changes:Bot.java
         List<GemColor> colors = new ArrayList<>();
         if (noble == null) {
             return colors;
@@ -359,7 +297,6 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the gem colors the bot still needs to buy a specific card.
      *
@@ -367,10 +304,7 @@ public abstract class Bot extends Player {
      * @param card      the card to evaluate
      * @return a list of GemColors still needed
      */
-    protected List<GemColor> getNeededColorsForCard(GameRules gameRules, Card card) {
-=======
-    public List<GemColor> getNeededColorsForCard(BotGameRules gameRules, Card card) {
->>>>>>> Stashed changes:Bot.java
+    public List<GemColor> getNeededColorsForCard(GameRules gameRules, Card card) {
         List<GemColor> colors = new ArrayList<>();
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
 
@@ -398,23 +332,18 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Adds a non-joker color to a list if it is not already present.
      *
      * @param colors the list to add to
      * @param color  the GemColor to add
      */
-    protected void addColor(List<GemColor> colors, GemColor color) {
-=======
     public void addColor(List<GemColor> colors, GemColor color) {
->>>>>>> Stashed changes:Bot.java
         if (!colors.contains(color) && !color.equals(GemColor.GOLD_JOKER)) {
             colors.add(color);
         }
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Executes a purchase action for the given card choice.
      *
@@ -423,10 +352,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return a description of the purchase result
      */
-    protected String buyChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
-=======
-    public String buyChoice(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public String buyChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success;
         if (choice.isReserved()) {
             success = GameActions.purchaseReservedCard(this, gameState, gameRules, choice.getIndex());
@@ -440,7 +366,6 @@ public abstract class Bot extends Player {
         return getName() + " bought " + describeChoice(choice) + ".";
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Executes a reserve action for the given visible card choice.
      *
@@ -449,10 +374,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return a description of the reserve result
      */
-    protected String reserveChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
-=======
-    public String reserveChoice(CardChoice choice, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public String reserveChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveVisibleCard(this, gameState, gameRules, choice.getLevel(), choice.getIndex());
         if (!success) {
             return getName() + " could not reserve the target card.";
@@ -460,7 +382,6 @@ public abstract class Bot extends Player {
         return getName() + " reserved " + describeChoice(choice) + ".";
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Reserves a hidden card from the top of a deck at the given level.
      *
@@ -469,10 +390,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return a description of the reserve result
      */
-    protected String reserveHidden(int level, GameState gameState, GameRules gameRules) {
-=======
-    public String reserveHidden(int level, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public String reserveHidden(int level, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveHiddenCard(this, gameState, gameRules, level);
         if (!success) {
             return getName() + " could not reserve a hidden card.";
@@ -480,17 +398,13 @@ public abstract class Bot extends Player {
         return getName() + " reserved a hidden level " + level + " card.";
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the list of non-joker gem colors that have stock in the bank.
      *
      * @param gameState the current game state
      * @return a list of available GemColors
      */
-    protected List<GemColor> getAvailableColors(GameState gameState) {
-=======
-    public List<GemColor> getAvailableColors(BotGameState gameState) {
->>>>>>> Stashed changes:Bot.java
+    public List<GemColor> getAvailableColors(GameState gameState) {
         List<GemColor> colors = new ArrayList<>();
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -503,7 +417,6 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Adds a weight value to a color in the weights map.
      *
@@ -511,10 +424,7 @@ public abstract class Bot extends Player {
      * @param color   the GemColor to weight
      * @param amount  the weight to add
      */
-    protected void addWeight(Map<GemColor, Integer> weights, GemColor color, int amount) {
-=======
     public void addWeight(Map<GemColor, Integer> weights, GemColor color, int amount) {
->>>>>>> Stashed changes:Bot.java
         if (color == null || color.equals(GemColor.GOLD_JOKER)) {
             return;
         }
@@ -525,7 +435,6 @@ public abstract class Bot extends Player {
         weights.put(color, value + amount);
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the weight of a color from the weights map.
      *
@@ -533,17 +442,13 @@ public abstract class Bot extends Player {
      * @param color   the GemColor to look up
      * @return the weight, or 0 if absent
      */
-    protected int getWeight(Map<GemColor, Integer> weights, GemColor color) {
-=======
     public int getWeight(Map<GemColor, Integer> weights, GemColor color) {
->>>>>>> Stashed changes:Bot.java
         if (!weights.containsKey(color)) {
             return 0;
         }
         return weights.get(color);
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the best gem colors sorted by weight, limited to available colors in the bank.
      *
@@ -552,10 +457,7 @@ public abstract class Bot extends Player {
      * @param limit     the maximum number of colors to return
      * @return a list of the best GemColors
      */
-    protected List<GemColor> getBestColors(Map<GemColor, Integer> weights, GameState gameState, int limit) {
-=======
-    public List<GemColor> getBestColors(Map<GemColor, Integer> weights, BotGameState gameState, int limit) {
->>>>>>> Stashed changes:Bot.java
+    public List<GemColor> getBestColors(Map<GemColor, Integer> weights, GameState gameState, int limit) {
         List<GemColor> available = getAvailableColors(gameState);
         List<GemColor> best = new ArrayList<>();
 
@@ -578,7 +480,6 @@ public abstract class Bot extends Player {
         return best;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the best color for a take-two-same action based on weights.
      *
@@ -587,10 +488,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return the best GemColor for doubling, or null if none qualify
      */
-    protected GemColor getBestDoubleColor(Map<GemColor, Integer> weights, GameState gameState, GameRules gameRules) {
-=======
-    public GemColor getBestDoubleColor(Map<GemColor, Integer> weights, BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public GemColor getBestDoubleColor(Map<GemColor, Integer> weights, GameState gameState, GameRules gameRules) {
         GemColor chosen = null;
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -616,7 +514,6 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Takes gems using a weighted strategy, choosing between take-three and take-two.
      *
@@ -625,10 +522,7 @@ public abstract class Bot extends Player {
      * @param weights   the map of color weights guiding the decision
      * @return a description of the gem move taken
      */
-    protected String takeWeightedGemMove(GameState gameState, GameRules gameRules, Map<GemColor, Integer> weights) {
-=======
-    public String takeWeightedGemMove(BotGameState gameState, BotGameRules gameRules, Map<GemColor, Integer> weights) {
->>>>>>> Stashed changes:Bot.java
+    public String takeWeightedGemMove(GameState gameState, GameRules gameRules, Map<GemColor, Integer> weights) {
         List<GemColor> best = getBestColors(weights, gameState, 3);
         if (best.size() == 3 && gameRules.canTakeThreeDifferentGems(gameState.getGemBank())) {
             if (GameActions.takeThreeDifferent(this, gameState, gameRules, best)) {
@@ -653,7 +547,6 @@ public abstract class Bot extends Player {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Takes a random gem move as a fallback when no strategic option is available.
      *
@@ -661,10 +554,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for validation
      * @return a description of the gem move taken
      */
-    protected String fallbackRandomGemMove(GameState gameState, GameRules gameRules) {
-=======
-    public String fallbackRandomGemMove(BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public String fallbackRandomGemMove(GameState gameState, GameRules gameRules) {
         List<GemColor> available = getAvailableColors(gameState);
         Collections.shuffle(available, random);
 
@@ -698,7 +588,6 @@ public abstract class Bot extends Player {
         return getName() + " had no useful move.";
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns the closest cards (by missing gems) from all available choices.
      *
@@ -707,10 +596,7 @@ public abstract class Bot extends Player {
      * @param limit     the maximum number of choices to return
      * @return a list of the closest CardChoices
      */
-    protected List<CardChoice> getClosestChoices(GameState gameState, GameRules gameRules, int limit) {
-=======
-    public List<CardChoice> getClosestChoices(BotGameState gameState, BotGameRules gameRules, int limit) {
->>>>>>> Stashed changes:Bot.java
+    public List<CardChoice> getClosestChoices(GameState gameState, GameRules gameRules, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> chosen = new ArrayList<>();
 
@@ -733,7 +619,6 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Chooses which gem color to return when the bot exceeds the 10-gem limit.
      *
@@ -741,10 +626,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for cost/noble checks
      * @return the GemColor to return, or null if no gems can be returned
      */
-    protected GemColor chooseGemToReturn(GameState gameState, GameRules gameRules) {
-=======
-    public GemColor chooseGemToReturn(BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public GemColor chooseGemToReturn(GameState gameState, GameRules gameRules) {
         List<GemColor> important = new ArrayList<>();
         List<GemColor> nobleColors = getNeededColorsForNoble(getClosestNoble(gameState));
         for (GemColor color: nobleColors) {
@@ -785,7 +667,6 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns extra gems to the bank until the bot is at or below 10 gems.
      *
@@ -793,10 +674,7 @@ public abstract class Bot extends Player {
      * @param gameRules the game rules for gem limit checks
      * @return a description of the gems returned, or an empty string if none
      */
-    protected String returnExtraGems(GameState gameState, GameRules gameRules) {
-=======
-    public String returnExtraGems(BotGameState gameState, BotGameRules gameRules) {
->>>>>>> Stashed changes:Bot.java
+    public String returnExtraGems(GameState gameState, GameRules gameRules) {
         List<GemColor> returned = new ArrayList<>();
         while (gameRules.mustReturnGems(this)) {
             GemColor color = chooseGemToReturn(gameState, gameRules);
@@ -816,7 +694,6 @@ public abstract class Bot extends Player {
         return "Returned " + formatColors(returned) + ".";
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Formats a list of gem colors as a comma-separated string.
      *
@@ -824,9 +701,6 @@ public abstract class Bot extends Player {
      * @return a formatted string like "DIAMOND, RUBY, ONYX"
      */
     protected String formatColors(List<GemColor> colors) {
-=======
-    public String formatColors(List<GemColor> colors) {
->>>>>>> Stashed changes:Bot.java
         String result = "";
         for (int i = 0; i < colors.size(); i++) {
             if (i > 0) {
@@ -837,7 +711,6 @@ public abstract class Bot extends Player {
         return result;
     }
 
-<<<<<<< Updated upstream:src/splendor/entity/bot/Bot.java
     /**
      * Returns a human-readable description of a card choice.
      *
@@ -845,9 +718,6 @@ public abstract class Bot extends Player {
      * @return a string describing the choice
      */
     protected String describeChoice(CardChoice choice) {
-=======
-    public String describeChoice(CardChoice choice) {
->>>>>>> Stashed changes:Bot.java
         if (choice.isReserved()) {
             return "reserved[" + choice.getIndex() + "] " + choice.getCard().toString();
         }
