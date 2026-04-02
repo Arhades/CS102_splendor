@@ -1,23 +1,26 @@
 package splendor.network.server;
 
-import java.io.*;
-import java.net.*;
-import java.time.*;
-import java.time.format.*;
 import java.util.*;
-import splendor.config.*;
-import splendor.display.*;
 import splendor.entity.*;
-import splendor.entity.bot.*;
 import splendor.entity.card.*;
 import splendor.entity.player.*;
 import splendor.exception.*;
 import splendor.rules.*;
 import splendor.valueobjects.*;
 
-
+/**
+ * Handles server-side validation and execution of player game actions
+ * (taking gems, purchasing cards, reserving cards).
+ * Each method returns a result string: "SUCCESS" variants on success,
+ * or "ERROR: description" on failure.
+ */
 public class ServerInputHandler {
+
+    /**
+     * Default constructor.
+     */
     public ServerInputHandler() {}
+
     /**
      * Handles a take-three-different-gems action on the server side.
      *
@@ -140,6 +143,7 @@ public class ServerInputHandler {
             return "ERROR: That card or deck is no longer available.";
         }
     }
+
     /**
      * Handles a card purchase action on the server side.
      *

@@ -10,6 +10,7 @@ import java.time.*;
  * This class manages the socket connection, receives messages
  * from the client, and sends messages back to the client through
  * the server. Each client connection runs on its own thread.
+ * Pass null for bot players that have no real socket connection.
  */
 public class ClientHandler implements Runnable {
     
@@ -37,10 +38,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Main loop for this client's thread. Reads the initial JOINED message,
+     * then continuously reads and routes subsequent messages (game actions,
+     * CHAT messages, bot additions) to ServerHelper for processing.
+     */
     @Override
     public void run() {
         try {
-            String temp =  in.readLine();
+            String temp = in.readLine();
+            if (temp == null) return;
             String[] parts = temp.split(":");
             playerName = parts[1];
             System.out.println(playerName + " has joined the server!");
@@ -103,7 +110,7 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Sends a message to this client.
+     * Sends a message to this client. Does nothing for bot players (null socket).
      *
      * @param message the message string to send
      */
@@ -113,6 +120,9 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Disconnects this client, closes streams, removes from server, and notifies others.
+     */
     private void disconnect() {
         try {
             ServerHelper.removeClient(this, SplendorServer.getClients());

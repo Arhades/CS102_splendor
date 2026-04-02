@@ -4,6 +4,7 @@ import java.io.*;
 
 /**
  * Listens for messages from the server and processes them on the client side.
+ * Runs on a separate thread so the client can send and receive simultaneously.
  */
 public class ServerListener extends Thread {
     
@@ -18,12 +19,18 @@ public class ServerListener extends Thread {
         this.in = in;
     }
 
+    /**
+     * Continuously reads messages from the server and processes them.
+     * Handles special control messages like PROMPT_RETURN_GEM and game start signals.
+     * Chat messages prefixed with [CHAT] are displayed directly to the player.
+     */
     @Override
     public void run() {
         try {
             String serverMessage;
             while ((serverMessage = in.readLine()) != null) {
-                if (serverMessage.equals("PROMPT RETURN GEM")) {
+                // Handle the gem return prompt signal
+                if (serverMessage.equals("PROMPT_RETURN_GEM")) {
                     SplendorClient.needsToReturnGem = true;
                     SplendorClient.waitingForServer = false;
                     continue;

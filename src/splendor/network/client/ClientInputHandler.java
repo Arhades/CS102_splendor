@@ -7,7 +7,17 @@ import java.time.format.*;
 import java.util.*;
 import splendor.display.*;
 
+/**
+ * Handles all client-side input prompts for the Splendor multiplayer game.
+ * Each method gathers player input and returns formatted strings to send to the server.
+ */
 public class ClientInputHandler {
+
+    /**
+     * Default constructor.
+     */
+    public ClientInputHandler() {}
+
     /**
      * Prompts the player to choose three different gem colors to take.
      *
@@ -108,7 +118,6 @@ public class ClientInputHandler {
             }
         }
     }
-
 
     /**
      * Prompts the player to select a card to reserve from the table.

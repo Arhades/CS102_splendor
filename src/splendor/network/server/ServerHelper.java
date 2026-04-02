@@ -5,23 +5,35 @@ import java.time.format.*;
 import java.util.*;
 import splendor.config.*;
 import splendor.display.*;
+import splendor.entity.*;
 import splendor.entity.bot.*;
 import splendor.entity.card.*;
 import splendor.entity.player.*;
 import splendor.rules.*;
 import splendor.valueobjects.*;
 
+/**
+ * Centralizes all server-side message handling, broadcasting, and game action processing.
+ * All public methods are synchronized to ensure thread safety when multiple
+ * ClientHandler threads call them concurrently.
+ */
 public class ServerHelper {
+
+    /**
+     * Default constructor.
+     */
     public ServerHelper() {}
+
     /**
      * Sends a message to a specific player by name.
      *
      * @param targetPlayerName the name of the target player
      * @param message          the message to send
+     * @param clients          the list of connected clients
      */
     public static synchronized void sendToSpecificPlayer(String targetPlayerName, String message, List<ClientHandler> clients) {
         for (ClientHandler client : clients) {
-            if (client.getPlayerName().equals(targetPlayerName)) {
+            if (client.getPlayerName() != null && client.getPlayerName().equals(targetPlayerName)) {
                 client.sendMessage(message);
                 break;
             }
@@ -30,8 +42,12 @@ public class ServerHelper {
 
     /**
      * Broadcasts the full game board state to all connected clients.
+     * Each player receives their own reserved cards privately.
+     *
+     * @param gameState the current game state
+     * @param clients   the list of connected clients
      */
-    public static void broadcastGameState(GameState gameState, List<ClientHandler> clients) {
+    public static synchronized void broadcastGameState(GameState gameState, List<ClientHandler> clients) {
         if (gameState == null) {
             return;
         }
@@ -49,6 +65,14 @@ public class ServerHelper {
             }
         }
     }
+
+    /**
+     * Finds a Player object by name from the game state's player list.
+     *
+     * @param name      the player name to search for
+     * @param gameState the current game state
+     * @return the matching Player, or null if not found
+     */
     private static Player getPlayerByName(String name, GameState gameState) {
         for (Player p : gameState.getPlayers()) {
             if (p.getName().equals(name)) {
@@ -57,10 +81,13 @@ public class ServerHelper {
         }
         return null;
     }
+
     /**
      * Removes a client from the server and handles disconnection cleanup.
+     * If the game has already started, ends the game for all players.
      *
-     * @param client the ClientHandler to remove
+     * @param client  the ClientHandler to remove
+     * @param clients the list of connected clients
      */
     public static synchronized void removeClient(ClientHandler client, List<ClientHandler> clients) {
         clients.remove(client);
@@ -73,14 +100,18 @@ public class ServerHelper {
     }
     
     /**
-     * Processes a raw message from a client, handling JOINED messages and routing actions.
-     * JOINED format: "JOINED:name:dd/MM/yyyy" for humans, or "JOINED:name:dd/MM/yyyy:BOT:2" or "JOINED:name:dd/MM/yyyy:BOT:3" for bots.
-     * Bot JOINED messages are sent by a human client on behalf of the bot, so the server
-     * creates a separate virtual ClientHandler for the bot and inserts it right after the
-     * sender to preserve clockwise seating order.
+     * Processes a raw message from a client, handling JOINED messages, CHAT messages,
+     * and routing game actions.
+     * JOINED format: "JOINED:name:dd/MM/yyyy" for humans,
+     * or "JOINED:name:dd/MM/yyyy:BOT:2" / "JOINED:name:dd/MM/yyyy:BOT:3" for bots.
+     * CHAT format: "CHAT:message text" — broadcasts to all players.
      *
-     * @param sender  the ClientHandler that sent the message
-     * @param message the raw message string
+     * @param sender         the ClientHandler that sent the message
+     * @param message        the raw message string
+     * @param gameState      the current game state (may be null before game starts)
+     * @param gameRules      the current game rules (may be null before game starts)
+     * @param clients        the list of connected clients
+     * @param botPlayerTypes map of player names to bot types
      */
     public static synchronized void processClientMessage(ClientHandler sender, String message, GameState gameState, GameRules gameRules, List<ClientHandler> clients, Map<String, Integer> botPlayerTypes) {
         if (message.startsWith("JOINED:")) {
@@ -104,7 +135,13 @@ public class ServerHelper {
                 botHandler.setPlayerName(botName);
                 botHandler.setBirthDate(date);
 
-                clients.add(botHandler);
+                // Insert after the sender to preserve seating order
+                int senderIndex = clients.indexOf(sender);
+                if (senderIndex >= 0 && senderIndex < clients.size() - 1) {
+                    clients.add(senderIndex + 1, botHandler);
+                } else {
+                    clients.add(botHandler);
+                }
 
                 broadcast("[SERVER]: " + botName + " (Bot) joined the lobby. (" + clients.size() + "/4)", clients);
                 System.out.println(botName + " (Bot) successfully joined");
@@ -114,25 +151,40 @@ public class ServerHelper {
                 botPlayerTypes.put(parts[1], 0);
                 System.out.println(parts[1] + " successfully joined");
             }
+        } else if (message.startsWith("CHAT:")) {
+            // Chat message — broadcast to all players with sender's name
+            String chatContent = message.substring(5).trim();
+            String senderName = sender.getPlayerName();
+            if (senderName == null) senderName = "Unknown";
+            broadcast("[CHAT] " + senderName + ": " + chatContent, clients);
         } else {
             processPlayerAction(message, sender, gameState, gameRules, clients, botPlayerTypes);
         }
     }
+
     /**
      * Broadcasts a message to all connected clients.
      *
      * @param message the message to broadcast
+     * @param clients the list of connected clients
      */
     public static synchronized void broadcast(String message, List<ClientHandler> clients) {
         for (ClientHandler client : clients) {
             client.sendMessage(message);
         }
     }
+
     /**
      * Processes a player action command received from a client.
+     * Handles START GAME, TAKE TWO, TAKE THREE, PURCHASE, RESERVE,
+     * RETURN GEM, and CHAT commands.
      *
-     * @param actionCommand the raw action string from the client
-     * @param player        the ClientHandler that sent the command
+     * @param actionCommand  the raw action string from the client
+     * @param player         the ClientHandler that sent the command
+     * @param gameState      the current game state
+     * @param gameRules      the current game rules
+     * @param clients        the list of connected clients
+     * @param botPlayerTypes map of player names to bot types
      */
     public static synchronized void processPlayerAction(String actionCommand, ClientHandler player, GameState gameState, GameRules gameRules, List<ClientHandler> clients, Map<String, Integer> botPlayerTypes) {
         String playerName = player.getPlayerName();
@@ -151,7 +203,7 @@ public class ServerHelper {
         }
 
         Player expectedPlayer = null;
-        if (gameState != null && !actionType.equals("START GAME")) {
+        if (gameState != null && !actionType.equals("START GAME") && !actionType.equals("RETURN GEM")) {
             expectedPlayer = gameState.getCurrentPlayer();
             if (!playerName.equals(expectedPlayer.getName())) {
                 sendToSpecificPlayer(playerName, "It is not your turn yet.", clients);
@@ -242,7 +294,7 @@ public class ServerHelper {
                         
                         GemCollection initialGems = GameEngine.buildGemBank(numOfPlayers, config);
                         gameState = new GameState(players, cardMarket, initialGems, nobles, config.getWinningThreshold());
-                        gameRules = new GameRules(SplendorServer.getGameState());
+                        gameRules = new GameRules(gameState);
 
                         SplendorServer.setGameState(gameState);
                         SplendorServer.setGameRules(gameRules);
@@ -280,7 +332,7 @@ public class ServerHelper {
                         moveSuccessful = true;
                         message = expectedPlayer.getName() + " took 2 " + parts[1].toUpperCase() + " gems.";
                     } else {
-                    
+                        sendToSpecificPlayer(playerName, resultTwo.replace("ERROR: ", ""), clients);
                     }
                     break;
                     
@@ -374,22 +426,53 @@ public class ServerHelper {
                         sendToSpecificPlayer(playerName, resultReserve.replace("ERROR: ", ""), clients);
                     }
                     break;
+
                 case "RETURN GEM":
-                    String colorStr = parts[1].toUpperCase();
+                    // Get the current player who needs to return gems
+                    expectedPlayer = gameState.getCurrentPlayer();
+                    String colorStr = parts[1].trim().toUpperCase();
+                    GemColor gemColor = GemColor.convertToColor(colorStr);
+
+                    if (expectedPlayer.getSpecificGem(gemColor) < 1) {
+                        sendToSpecificPlayer(playerName, "You don't have any " + colorStr + " gems to return.", clients);
+                        sendToSpecificPlayer(playerName, "PROMPT_RETURN_GEM", clients);
+                        return;
+                    }
+
                     GemCollection gemsToReturn = new GemCollection();
+                    gemsToReturn.add(gemColor, 1);
                     expectedPlayer.deductGems(gemsToReturn);
                     gameState.addGemsToBank(gemsToReturn);
+                    broadcast(playerName + " returned 1 " + colorStr + " gem.", clients);
+
+                    // Check if they still need to return more
                     if (gameRules.mustReturnGems(expectedPlayer)) {
-                        ServerHelper.broadcastGameState(gameState, clients);
-                        ServerHelper.sendToSpecificPlayer(playerName, "PROMPT RETURN GEM", clients);
+                        broadcastGameState(gameState, clients);
+                        sendToSpecificPlayer(playerName, "PROMPT_RETURN_GEM", clients);
                         return;
                     }
                     
+                    // Done returning — check win condition and advance turn
+                    if (expectedPlayer.getPoints() >= gameState.getWinningThreshold() && !SplendorServer.isLastRound) {
+                        SplendorServer.isLastRound = true;
+                        broadcast(expectedPlayer.getName() + " has reached " + gameState.getWinningThreshold() + " points!", clients);
+                    }
+
+                    List<Player> allPlayersReturn = gameState.getPlayers();
+                    boolean isLastPlayerReturn = allPlayersReturn.indexOf(expectedPlayer) == (allPlayersReturn.size() - 1);
+                    if (SplendorServer.isLastRound && isLastPlayerReturn) {
+                        String winnerScreen = DisplayUI.getWinner(gameState, gameRules).replace("\n", "@@");
+                        broadcast(winnerScreen, clients);
+                        broadcast("The game has ended! Thanks for playing.", clients);
+                        System.exit(0);
+                        return;
+                    }
+
                     gameState.advanceToNext();
-                    ServerHelper.broadcastGameState(gameState, clients);
-                    ServerHelper.broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.", clients);
+                    broadcastGameState(gameState, clients);
+                    broadcast("It is now " + gameState.getCurrentPlayer().getName() + "'s turn.", clients);
                     ServerBotHandler.runBotTurns(gameState, gameRules, clients);
-                    break;
+                    return;
                     
                 default:
                     sendToSpecificPlayer(playerName, "Unknown command.", clients);
@@ -399,10 +482,10 @@ public class ServerHelper {
             message += '\n';
             if (moveSuccessful) {
                 if (gameRules.mustReturnGems(expectedPlayer)) {
-                    ServerHelper.broadcastGameState(gameState, clients);
-                    ServerHelper.broadcast(message, clients);
-                    // Send a secret code just to this player
-                    ServerHelper.sendToSpecificPlayer(playerName, "PROMPT_RETURN_GEM", clients);
+                    broadcastGameState(gameState, clients);
+                    broadcast(message, clients);
+                    // Send the prompt signal to this player
+                    sendToSpecificPlayer(playerName, "PROMPT_RETURN_GEM", clients);
                     return;
                 }
                 // check if they hit the winning threshold and if so, this will be the last round

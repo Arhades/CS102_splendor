@@ -6,32 +6,35 @@ import java.util.*;
 import splendor.rules.*;
 
 /**
-* Supports both human clients and server-side bots.
-*/
+ * The main Splendor game server. Listens for client connections on the configured port,
+ * manages the lobby, and holds the shared game state. Supports both human clients
+ * and server-side bots. Chat messages are routed through ServerHelper.
+ */
 public class SplendorServer {
+
     /**
-     * The IP address of the game server.
+     * The port number the server listens on.
      */
     private static final int PORT = 9091;
 
     /**
-     * The list of all connected clients.
+     * The list of all connected clients (including virtual bot handlers).
      */
     private static final List<ClientHandler> clients = new ArrayList<>();
     
     /** 
      * Maps client player names to their bot type: 
-     * 0=human, 2=EasyBot, 3=HardBot 
+     * 0=human, 2=EasyBot, 3=HardBot.
      */
     private static final Map<String, Integer> botPlayerTypes = new HashMap<>();
 
     /**
-     * The current game state.
+     * The current game state. Null before the game starts.
      */
     private static GameState gameState;
 
     /**
-     * The game rules used for validating actions.
+     * The game rules used for validating actions. Null before the game starts.
      */
     private static GameRules gameRules;
 
@@ -46,12 +49,14 @@ public class SplendorServer {
     public static volatile boolean isLastRound = false;
 
     /**
-     * Default constructor
+     * Default constructor.
      */
     public SplendorServer() {}
 
     /**
      * Entry point for the Splendor server application.
+     * Listens for connections, adds clients to the lobby, and blocks
+     * until the game is started by the youngest player.
      *
      * @param args command-line arguments (not used)
      */
@@ -63,7 +68,6 @@ public class SplendorServer {
             while (!gameStarted) {
                 if (clients.size() >= 4) {
                     System.out.println("Lobby is full. Waiting for the host to start game");
-                    // wait a bit so we don't spam the CPU
                     try { 
                         Thread.sleep(2000); 
                     } catch (InterruptedException e) {
@@ -90,23 +94,59 @@ public class SplendorServer {
             System.out.println("Server Error: " + e.getMessage());
         }
     }
+
+    /**
+     * Returns the current game state.
+     *
+     * @return the game state, or null if the game hasn't started
+     */
     public static GameState getGameState() { 
         return gameState; 
-        }
+    }
+
+    /**
+     * Returns the current game rules.
+     *
+     * @return the game rules, or null if the game hasn't started
+     */
     public static GameRules getGameRules() { 
         return gameRules; 
-        }
+    }
+
+    /**
+     * Returns the list of all connected client handlers.
+     *
+     * @return the clients list
+     */
     public static List<ClientHandler> getClients() { 
         return clients; 
-        }
+    }
+
+    /**
+     * Returns the map of player names to bot types.
+     *
+     * @return the bot player types map
+     */
     public static Map<String, Integer> getBotPlayerTypes() { 
         return botPlayerTypes; 
-        }
+    }
+
+    /**
+     * Sets the game state. Called when the game is initialized.
+     *
+     * @param state the new game state
+     */
     public static void setGameState(GameState state) { 
         gameState = state; 
-        }
+    }
+
+    /**
+     * Sets the game rules. Called when the game is initialized.
+     *
+     * @param rules the new game rules
+     */
     public static void setGameRules(GameRules rules) { 
         gameRules = rules; 
-        }
+    }
     
 }

@@ -8,16 +8,19 @@ import java.util.*;
 import splendor.display.*;
 
 /**
- * Listens for messages from the server and processes them on the client side.
+ * The Splendor game client that connects to a server over sockets.
+ * Handles player input, sends commands to the server, and displays
+ * server responses. Supports chat messages at any time by typing
+ * "CHAT: message" during the game.
  */
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
 
     /**
-     * The port number used to connect to the game server.
+     * The IP address of the game server.
      */
-    private static final String SERVER_IP = "10.124.138.3"; 
+    private static final String SERVER_IP = "localhost"; 
 
     /**
      * The port number used to connect to the game server.
@@ -39,17 +42,26 @@ public class SplendorClient {
      */
     protected static volatile boolean waitingForServer = false;
 
+    /**
+     * Indicates whether the player needs to return a gem (over 10 limit).
+     */
     protected static volatile boolean needsToReturnGem = false;
 
+    /**
+     * The local player's name.
+     */
     static String playerName = "";
 
     /**
-     * Default constructor
+     * Default constructor.
      */
     public SplendorClient() {}
 
     /**
      * Entry point for the Splendor client application.
+     * Connects to the server, prompts for name and birth date, then enters
+     * the lobby/game loop. Players can type "CHAT: message" at any input
+     * prompt to send a chat message to all players.
      *
      * @param args command-line arguments (not used)
      */
@@ -92,10 +104,14 @@ public class SplendorClient {
                 if (!gameStarted) {
                     System.out.println("\n=============== WAITING LOBBY ===============");
                     System.out.println("Type 'ADD BOT' to add a bot to the game.");
+                    System.out.println("Type 'CHAT: <message>' to send a chat message.");
                     System.out.println("Type 'START GAME' if you are the youngest, or wait for the game to start.");
                     System.out.print("> ");
                     String startGame = scanner.nextLine();
-                    if (startGame.equalsIgnoreCase("ADD BOT")) {
+                    if (startGame.toUpperCase().startsWith("CHAT:")) {
+                        String chatMsg = startGame.substring(5).trim();
+                        out.println("CHAT:" + chatMsg);
+                    } else if (startGame.equalsIgnoreCase("ADD BOT")) {
                         ClientInputHandler.promptAddBot(scanner, out);
                     } else if (startGame.equalsIgnoreCase("START GAME")) {
                         out.println("START GAME");
@@ -103,7 +119,15 @@ public class SplendorClient {
                 }
                 else {
                     DisplayUI.printActionMenu();
+                    System.out.println("  (Type 'CHAT: <message>' to chat anytime)");
                     String input = scanner.nextLine();
+
+                    // Allow chat at any time during the game
+                    if (input.toUpperCase().startsWith("CHAT:")) {
+                        String chatMsg = input.substring(5).trim();
+                        out.println("CHAT:" + chatMsg);
+                        continue;
+                    }
                     
                     if (input.equalsIgnoreCase("QUIT")) {
                         out.println("QUIT");
@@ -174,13 +198,11 @@ public class SplendorClient {
                         needsToReturnGem = false;
                         out.println("RETURN GEM:" + colorToReturn);
                         continue;
+                    }
                 }
             }
-
             socket.close();
             scanner.close();
-            }
-
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
