@@ -23,25 +23,24 @@ public class ServerListener extends Thread {
         try {
             String serverMessage;
             while ((serverMessage = in.readLine()) != null) {
+                if (serverMessage.equals("PROMPT RETURN GEM")) {
+                    SplendorClient.needsToReturnGem = true;
+                    SplendorClient.waitingForServer = false;
+                    continue;
+                }
+
                 if (serverMessage.contains("The game has started") || serverMessage.contains("GAME STARTED")) {
                     SplendorClient.gameStarted = true; 
                 }
                 // swap back the @@ to \n
                 String board = serverMessage.replace("@@", "\n"); 
                 System.out.println(board);
-            //  System.out.println("Press ENTER for the option menu.");
-                // if (serverMessage.contains("It is now " + SplendorClient.playerName + "'s turn.")) {
-                //     SplendorClient.myTurn = true;
-                // }
-                // // still my turn
-                // if (serverMessage.contains("Invalid") || serverMessage.contains("ERROR") || serverMessage.contains("Not enough") || serverMessage.contains("You must")) {
-                //     SplendorClient.myTurn = true;
-                // }
 
                 SplendorClient.waitingForServer = false;
             }
         } catch (IOException e) {
             System.out.println("Disconnected from server.");
+            System.exit(0);
         }
     }
     

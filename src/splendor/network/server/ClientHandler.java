@@ -45,8 +45,8 @@ public class ClientHandler implements Runnable {
             playerName = parts[1];
             System.out.println(playerName + " has joined the server!");
             
-            SplendorServer.broadcast("[SERVER]: " + playerName + " joined the lobby.");
-            SplendorServer.processClientMessage(this, temp);
+            ServerHelper.broadcast("[SERVER]: " + playerName + " joined the lobby.", SplendorServer.getClients());
+            ServerHelper.processClientMessage(this, temp, SplendorServer.getGameState(), SplendorServer.getGameRules(), SplendorServer.getClients(), SplendorServer.getBotPlayerTypes());
 
             String clientMessage;
             while ((clientMessage = in.readLine()) != null) {
@@ -56,7 +56,7 @@ public class ClientHandler implements Runnable {
                     break;
                 }
                 
-                SplendorServer.processClientMessage(this, clientMessage);
+                ServerHelper.processClientMessage(this, clientMessage, SplendorServer.getGameState(), SplendorServer.getGameRules(), SplendorServer.getClients(), SplendorServer.getBotPlayerTypes());
             }
             
         } catch (IOException e) {
@@ -115,8 +115,8 @@ public class ClientHandler implements Runnable {
 
     private void disconnect() {
         try {
-            SplendorServer.removeClient(this);
-            SplendorServer.broadcast("SERVER: " + playerName + " has left the game.");
+            ServerHelper.removeClient(this, SplendorServer.getClients());
+            ServerHelper.broadcast("SERVER: " + playerName + " has left the game.", SplendorServer.getClients());
             if (in != null) in.close();
             if (out != null) out.close();
             if (socket != null) socket.close();
