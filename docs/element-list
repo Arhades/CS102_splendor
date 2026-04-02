@@ -1,0 +1,11 @@
+splendor.config
+splendor.display
+splendor.entity
+splendor.entity.bot
+splendor.entity.card
+splendor.entity.player
+splendor.exception
+splendor.network.client
+splendor.network.server
+splendor.rules
+splendor.valueobjects
