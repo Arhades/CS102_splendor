@@ -409,19 +409,6 @@ public class DisplayUI {
     }
 
     /**
-     * Returns the full game board as a String, including players, bonuses,
-     * nobles, card market, gem bank, and turn indicator.
-     * The reserved card will be sent to the player himself as it is private
-     *
-     * @param gameState  the current game state
-     * @return the full game board as a String
-     */
-    public static String getReservedCard(Player curPlayer) {
-        return getReservedCards(curPlayer);
-    }
-
-
-    /**
      * Prints the full game board to System.out.
      *
      * @param gameState  the current game state
