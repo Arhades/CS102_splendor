@@ -1,16 +1,33 @@
 package splendor.display;
 
 import java.util.*;
-import splendor.valueobjects.*;
-import splendor.rules.*;
 import splendor.entity.*;
-import splendor.exception.*;
+import splendor.entity.bot.*;
 import splendor.entity.card.*;
 import splendor.entity.player.*;
-import splendor.entity.bot.*;
+import splendor.exception.*;
+import splendor.rules.*;
+import splendor.valueobjects.*;
 
+/**
+ * Handles all user input prompts for the Splendor game.
+ */
 public class InputHandler {
 
+    /**
+     * Default constructor
+     */
+    public InputHandler() {}
+
+    /**
+     * Prompts the player to pick three different gem colors from the bank.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param display   the display UI for rendering the gem bank
+     * @return a GemCollection of the three chosen gems, or null if the player backs out
+     */
     public GemCollection promptTakeThreeGems(Scanner sc, GameState gameState, GameRules gameRules, DisplayUI display) {
         GemCollection gems = gameState.getGemBank();
         
@@ -56,6 +73,15 @@ public class InputHandler {
         return add;
     }
 
+    /**
+     * Prompts the player to pick a gem color to take two of from the bank.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param display   the display UI for rendering the gem bank
+     * @return the chosen GemColor, or null if the player backs out
+     */
     public GemColor promptTakeTwoGems(Scanner sc, GameState gameState, GameRules gameRules, DisplayUI display) {
         GemCollection gems = gameState.getGemBank();
 
@@ -86,6 +112,16 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Prompts the player to select and purchase a card from the table or reserved hand.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param display   the display UI for rendering cards
+     * @param player    the player attempting the purchase
+     * @return the chosen DevelopmentCard, or null if the player backs out
+     */
     public DevelopmentCard promptPurchaseCard(Scanner sc, GameState gameState, GameRules gameRules, DisplayUI display, Player player) {
         CardMarket cardMarket = gameState.getCardMarket();
 
@@ -162,12 +198,22 @@ public class InputHandler {
                 return chosen;
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input");
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
                 System.out.println(e.getMessage());
             }
         }
     }
 
+    /**
+     * Prompts the player to reserve a card from the visible market or the deck.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param display   the display UI for rendering cards
+     * @param player    the player attempting the reserve
+     * @return the chosen DevelopmentCard, or null if the player backs out
+     */
     public DevelopmentCard promptReserveCard(Scanner sc, GameState gameState, GameRules gameRules, DisplayUI display, Player player) {
         CardMarket cardMarket = gameState.getCardMarket();
         GemCollection gemBank = gameState.getGemBank();
@@ -219,6 +265,14 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Prompts the player to return a gem when they have more than 10.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameRules the game rules for validation
+     * @param player    the player who must return a gem
+     * @return the GemColor the player chose to return
+     */
     public GemColor promptGemReturn(Scanner sc, GameRules gameRules, Player player) {
         while (true) {
             try {
@@ -245,6 +299,15 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Prompts the player to pick a noble to claim, if eligible for more than one.
+     *
+     * @param sc        the Scanner to read input from
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param player    the player attempting to claim a noble
+     * @return the chosen Noble, or null if none are claimable
+     */
     public Noble promptNobelClaim(Scanner sc, GameState gameState, GameRules gameRules, Player player) {
         List<Noble> nobles = gameRules.getClaimableNobles(player, gameState.getAvailableNobles());
         if (nobles.size() == 0) {
@@ -280,7 +343,8 @@ public class InputHandler {
      * Prompts the user for the number of players (2-4) and returns it.
      * Only used in local/offline mode.
      *
-     * @param sc  the Scanner to read input from
+     * @param sc      the Scanner to read input from
+     * @param display the display UI for rendering the banner
      * @return the number of players (2, 3, or 4)
      */
     public static int promptNumPlayers(Scanner sc, DisplayUI display) {
@@ -338,10 +402,30 @@ public class InputHandler {
     }
 
     /**
+     * Prompts the user to enter a birth date string (dd/mm/yyyy) for player ordering.
+     * Only used in local/offline mode.
+     *
+     * @param sc            the Scanner to read input from
+     * @param playerNumber  the player number (1-based) being configured
+     * @return the birth date string entered by the player
+     */
+    public static String promptBirthDate(Scanner sc, int playerNumber) {
+        while (true) {
+            System.out.print("  Player " + playerNumber + " birth date (dd/mm/yyyy): ");
+            String date = sc.nextLine().trim();
+            if (date.matches("\\d{2}/\\d{2}/\\d{4}")) {
+                return date;
+            }
+            System.out.println("  Invalid format. Please use dd/mm/yyyy.\n");
+        }
+    }
+
+    /**
      * Displays the action menu and prompts the user to pick an action.
      * Only used in local/offline mode.
      *
-     * @param sc  the Scanner to read input from
+     * @param sc      the Scanner to read input from
+     * @param display the display UI for rendering the action menu
      * @return the ActionType chosen by the player
      */
     public static ActionType promptAction(Scanner sc, DisplayUI display) {

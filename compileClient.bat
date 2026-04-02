@@ -1,0 +1,1 @@
+javac -encoding UTF-8 -d classes -cp "src" src\splendor\network\client\SplendorClient.java

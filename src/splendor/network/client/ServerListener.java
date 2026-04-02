@@ -2,39 +2,52 @@ package splendor.network.client;
 
 import java.io.*;
 
+/**
+ * Listens for messages from the server and processes them on the client side.
+ * Runs on a separate thread so the client can send and receive simultaneously.
+ */
 public class ServerListener extends Thread {
     
     private final BufferedReader in;
 
+    /**
+     * Constructs a ServerListener that reads messages from the server.
+     *
+     * @param in the BufferedReader connected to the server's output stream
+     */
     public ServerListener(BufferedReader in) {
         this.in = in;
     }
 
+    /**
+     * Continuously reads messages from the server and processes them.
+     * Handles special control messages like PROMPT_RETURN_GEM and game start signals.
+     * Chat messages prefixed with [CHAT] are displayed directly to the player.
+     */
     @Override
     public void run() {
         try {
             String serverMessage;
             while ((serverMessage = in.readLine()) != null) {
+                // Handle the gem return prompt signal
+                if (serverMessage.equals("PROMPT_RETURN_GEM")) {
+                    SplendorClient.needsToReturnGem = true;
+                    SplendorClient.waitingForServer = false;
+                    continue;
+                }
+
                 if (serverMessage.contains("The game has started") || serverMessage.contains("GAME STARTED")) {
                     SplendorClient.gameStarted = true; 
                 }
-                if (serverMessage.startsWith("BOARD_STATE:")) {
-                    String gameBoard = serverMessage.replace("BOARD_STATE:", "");
-                    
-                    // swap back the @@ to \n
-                    String board = gameBoard.replace("@@", "\n");
-                    
-                    System.out.println(board);
-                    SplendorClient.waitingForServer = false;
-                } else {
-                    System.out.println("\n[SERVER]: " + serverMessage);
-                    System.out.print("> ");
-                }
+                // swap back the @@ to \n
+                String board = serverMessage.replace("@@", "\n"); 
+                System.out.println(board);
 
                 SplendorClient.waitingForServer = false;
             }
         } catch (IOException e) {
             System.out.println("Disconnected from server.");
+            System.exit(0);
         }
     }
     

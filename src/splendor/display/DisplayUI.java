@@ -21,11 +21,22 @@ import splendor.valueobjects.*;
  */
 public class DisplayUI {
 
+    /** 
+     * default constructor
+     */
+    public DisplayUI() {}
+
     // ── ANSI codes ───────────────────────────────────────────────────
     private static final String RESET  = "\033[0m";
     private static final String BOLD   = "\033[1m";
     private static final String DIM    = "\033[2m";
 
+    /**
+     * Returns the ANSI foreground color code for a gem color.
+     *
+     * @param c the gem color
+     * @return the ANSI escape code string
+     */
     private static String gemFg(GemColor c) {
         switch (c) {
             case DIAMOND:    return "\033[97m"; // bright white
@@ -38,6 +49,12 @@ public class DisplayUI {
         }
     }
 
+    /**
+     * Returns the display name for a gem color.
+     *
+     * @param c the gem color
+     * @return the human-readable gem name
+     */
     private static String gemName(GemColor c) {
         switch (c) {
             case DIAMOND:    return "Diamond";
@@ -50,17 +67,35 @@ public class DisplayUI {
         }
     }
 
-    /** Returns a colored gem header, e.g. blue "Sapphire" */
+    /**
+     * Returns a colored gem header string for table display.
+     *
+     * @param c the gem color
+     * @return the ANSI-colored gem name string
+     */
     private static String coloredGemHeader(GemColor c) {
         return gemFg(c) + gemName(c) + RESET;
     }
 
+    /**
+     * Computes the total number of gems held by a player.
+     *
+     * @param p the player
+     * @return the total gem count
+     */
     private static int gemTotal(Player p) {
         int total = 0;
         for (int v : p.getGems().getGems().values()) total += v;
         return total;
     }
 
+    /**
+     * Safely retrieves a gem count from a map, defaulting to 0.
+     *
+     * @param m the gem color-to-count map
+     * @param c the gem color to look up
+     * @return the count, or 0 if absent
+     */
     private static int g(Map<GemColor, Integer> m, GemColor c) {
         return m.getOrDefault(c, 0);
     }
@@ -164,6 +199,13 @@ public class DisplayUI {
 
     // ── card row helper ──────────────────────────────────────────────
 
+    /**
+     * Formats a single card row for table display.
+     *
+     * @param c     the development card to display
+     * @param index the display index of the card
+     * @return the formatted row string
+     */
     private static String cardRowStr(DevelopmentCard c, int index) {
         Map<GemColor, Integer> cost = c.getCost().getCost().getGems();
         String pts = c.getPoints() > 0 ? String.valueOf(c.getPoints()) : "-";
@@ -177,6 +219,12 @@ public class DisplayUI {
             g(cost, GemColor.EMERALD), g(cost, GemColor.RUBY), g(cost, GemColor.ONYX));
     }
 
+    /**
+     * Returns a string of n space characters.
+     *
+     * @param n the number of spaces
+     * @return a string containing n spaces
+     */
     private static String spaces(int n) {
         if (n <= 0) return "";
         char[] arr = new char[n];
@@ -330,13 +378,33 @@ public class DisplayUI {
         sb.append("\n");
         sb.append("  " + BOLD + "--- S P L E N D O R ---" + RESET + spaces(45) + DIM + "Turn " + (gameState.getTurnCount() + 1) + RESET + "\n");
         sb.append("\n");
-        sb.append(getPlayers(gameState));
-        sb.append(getAllBonuses(gameState));
         sb.append(getNobles(gameState));
         sb.append(getVisibleCards(gameState));
         sb.append(getGemBank(gameState));
+        sb.append(getPlayers(gameState));
+        sb.append(getAllBonuses(gameState));
         sb.append(getReservedCards(gameState.getCurrentPlayer()));
         sb.append("  " + BOLD + "> " + gameState.getCurrentPlayer().getName() + "'s turn" + RESET + "\n");
+        return sb.toString();
+    }
+
+    /**
+     * Returns the full game board as a String, including players, bonuses,
+     * nobles, card market, gem bank, reserved cards, and turn indicator.
+     *
+     * @param gameState  the current game state
+     * @return the full game board as a String
+     */
+    public static String getGameStateSocketWithoutReserved(GameState gameState) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        sb.append("  " + BOLD + "--- S P L E N D O R ---" + RESET + spaces(45) + DIM + "Turn " + (gameState.getTurnCount() + 1) + RESET + "\n");
+        sb.append("\n");
+        sb.append(getNobles(gameState));
+        sb.append(getVisibleCards(gameState));
+        sb.append(getGemBank(gameState));
+        sb.append(getPlayers(gameState));
+        sb.append(getAllBonuses(gameState));
         return sb.toString();
     }
 
@@ -431,8 +499,6 @@ public class DisplayUI {
         return sb.toString();
     }
 
-    // ── nobles ───────────────────────────────────────────────────────
-
     /**
      * Returns the nobles table showing all available nobles and their
      * bonus card requirements.
@@ -473,8 +539,6 @@ public class DisplayUI {
         System.out.print(getNobles(gameState));
     }
 
-    // ── card market ──────────────────────────────────────────────────
-
     /**
      * Returns the card market showing all visible development cards
      * for levels 3, 2, and 1, along with remaining deck sizes.
@@ -506,7 +570,7 @@ public class DisplayUI {
                     }
                     sb.append(C_LINE).append("\n");
                 }
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
                 sb.append("  (no cards)\n");
             }
             sb.append("\n");
@@ -522,8 +586,6 @@ public class DisplayUI {
     public static void printVisibleCards(GameState gameState) {
         System.out.print(getVisibleCards(gameState));
     }
-
-    // ── gem bank ─────────────────────────────────────────────────────
 
     /**
      * Returns the gem bank table showing how many gems of each color
@@ -555,8 +617,6 @@ public class DisplayUI {
     public static void printGemBank(GameState gameState) {
         System.out.print(getGemBank(gameState));
     }
-
-    // ── reserved cards ───────────────────────────────────────────────
 
     /**
      * Returns the reserved cards table for a specific player, showing
@@ -594,8 +654,6 @@ public class DisplayUI {
         System.out.print(getReservedCards(player));
     }
 
-    // ── player gems (standalone, called during gem-taking actions) ───
-
     /**
      * Returns the current player's gem counts in a table, with total.
      * Used standalone during gem-taking and gem-returning actions.
@@ -627,8 +685,6 @@ public class DisplayUI {
     public static void printPlayerGem(Player player) {
         System.out.print(getPlayerGem(player));
     }
-
-    // ── winner ───────────────────────────────────────────────────────
 
     /**
      * Returns the game over screen showing the winner and final standings

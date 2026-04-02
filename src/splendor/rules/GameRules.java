@@ -78,6 +78,13 @@ public class GameRules {
         return actualCost;
     }
 
+    /**
+     * Returns the discounted cost of a card for a player after applying bonuses.
+     *
+     * @param player the player whose bonuses to apply
+     * @param card   the card to check
+     * @return a map of gem colors to their discounted required amounts
+     */
     public Map<GemColor, Integer> getDiscountedCost(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();
@@ -97,6 +104,12 @@ public class GameRules {
         return gemBank.contains(requested);
     }
 
+    /**
+     * Checks if there are at least 3 non-joker colors with stock in the bank.
+     *
+     * @param gemBank the current gems available in the bank
+     * @return true if three different colors can be taken, false otherwise
+     */
     public boolean canTakeThreeDifferentGems(GemCollection gemBank) {
         int sum = 0;
         for (GemColor color: gemBank.getGems().keySet()) {
@@ -126,6 +139,12 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Checks if any non-joker color has at least 4 gems in the bank.
+     *
+     * @param gemBank the current gems available in the bank
+     * @return true if two same-color gems can be taken, false otherwise
+     */
     public boolean canTakeTwoSameGems(GemCollection gemBank) {
         for (GemColor color: gemBank.getGems().keySet()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -138,6 +157,12 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Checks whether a player must return gems (i.e. has more than 10).
+     *
+     * @param player the player to check
+     * @return true if the player must return gems, false otherwise
+     */
     public boolean mustReturnGems(Player player) {
         if (player.getGemCount() > 10) {
             return true;
@@ -244,6 +269,12 @@ public class GameRules {
         return winner;
     }
 
+    /**
+     * Checks whether a string is a valid gem color name.
+     *
+     * @param color the string to validate (case-insensitive)
+     * @return true if the string matches a GemColor enum value, false otherwise
+     */
     public boolean validColor(String color) {
         color = color.toUpperCase();
         for (GemColor col: GemColor.values()) {
@@ -254,6 +285,14 @@ public class GameRules {
         return false;
     }
 
+    /**
+     * Counts the number of gems a player is missing to afford a card,
+     * after applying bonuses and accounting for gold jokers.
+     *
+     * @param player the player to check
+     * @param card   the card to evaluate
+     * @return the number of missing gems (0 means affordable)
+     */
     public int countMissingGems(Player player, Card card) {
         Cost cost = card.getCost();
         Map<GemColor, Integer> bonus = player.calculateBonuses();

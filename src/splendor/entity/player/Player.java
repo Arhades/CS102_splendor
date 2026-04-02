@@ -165,7 +165,7 @@ public class Player {
     /**
      * Deducts the specified gem collection from the player's existing gems.
      * 
-     * @param gems the gems to deduct
+     * @param spentGems the gems to deduct
      */
     public void deductGems(GemCollection spentGems) {
         gems.subtract(spentGems);
@@ -224,8 +224,10 @@ public class Player {
     }
 
     /**
-     * Packages the player's score, tokens, and bonuses into a string.
+     * Returns a formatted string representing the player's current state.
      * Example output: "SCORE-15,TOKENS:[DIAMOND-2,ONYX-1...],BONUSES:[RUBY-3,EMERALD-1...]"
+     * 
+     * @return a string representation of the player's state
      */
     public String getPlayerStateAsString() {
         StringBuilder sb = new StringBuilder();

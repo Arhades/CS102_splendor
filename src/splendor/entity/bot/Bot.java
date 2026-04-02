@@ -1,21 +1,39 @@
 package splendor.entity.bot;
 
 import java.util.*;
-import splendor.rules.*;
-import splendor.entity.player.*;
-import splendor.entity.card.*;
 import splendor.entity.*;
+import splendor.entity.card.*;
+import splendor.entity.player.*;
 import splendor.exception.*;
+import splendor.rules.*;
 import splendor.valueobjects.*;
 
+/**
+ * Abstract base class for all bot players.
+ * Provides shared helper methods for gem evaluation, card scoring,
+ * noble tracking, and move execution.
+ */
 public abstract class Bot extends Player {
     private Random random;
 
+    /**
+     * Constructs a Bot with the given name and turn order.
+     *
+     * @param name      the bot's display name
+     * @param turnOrder the bot's position in the turn order
+     */
     public Bot(String name, int turnOrder) {
         super(name, turnOrder);
         this.random = new Random();
     }
 
+    /**
+     * Executes the bot's full turn, including choosing a move and returning extra gems.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the move taken
+     */
     public String takeTurn(GameState gameState, GameRules gameRules) {
         String move = chooseMove(gameState, gameRules);
         String returned = returnExtraGems(gameState, gameRules);
@@ -25,17 +43,41 @@ public abstract class Bot extends Player {
         return move;
     }
 
-    protected abstract String chooseMove(GameState gameState, GameRules gameRules);
+    /**
+     * Chooses and executes a move for this bot's turn.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the move chosen
+     */
+    public abstract String chooseMove(GameState gameState, GameRules gameRules);
 
-    protected Random getRandom() {
+    /**
+     * Returns the bot's random number generator.
+     *
+     * @return the Random instance
+     */
+    public Random getRandom() {
         return random;
     }
 
-    protected boolean isEarlyGame(GameState gameState) {
+    /**
+     * Checks whether the game is still in the early phase.
+     *
+     * @param gameState the current game state
+     * @return true if it is still the early game
+     */
+    public boolean isEarlyGame(GameState gameState) {
         return gameState.getTurnCount() < gameState.getPlayers().size() * 2;
     }
 
-    protected List<CardChoice> getVisibleChoices(GameState gameState) {
+    /**
+     * Returns all visible card choices from the card market.
+     *
+     * @param gameState the current game state
+     * @return a list of CardChoice objects for visible market cards
+     */
+    public List<CardChoice> getVisibleChoices(GameState gameState) {
         List<CardChoice> choices = new ArrayList<>();
         for (int level = 1; level <= 3; level++) {
             try {
@@ -43,13 +85,18 @@ public abstract class Bot extends Player {
                 for (int i = 0; i < cards.size(); i++) {
                     choices.add(CardChoice.createVisible(cards.get(i), level, i));
                 }
-            } catch (UnavailableCardException e) {
+            } catch (InvalidIndexException e) {
             }
         }
         return choices;
     }
 
-    protected List<CardChoice> getReservedChoices() {
+    /**
+     * Returns card choices from this bot's reserved hand.
+     *
+     * @return a list of CardChoice objects for reserved cards
+     */
+    public List<CardChoice> getReservedChoices() {
         List<CardChoice> choices = new ArrayList<>();
         for (int i = 0; i < getReservedCards().size(); i++) {
             choices.add(CardChoice.createReserved(getReservedCards().get(i), i));
@@ -57,13 +104,26 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-    protected List<CardChoice> getAllChoices(GameState gameState) {
+    /**
+     * Returns all card choices, both visible and reserved.
+     *
+     * @param gameState the current game state
+     * @return a combined list of all available card choices
+     */
+    public List<CardChoice> getAllChoices(GameState gameState) {
         List<CardChoice> choices = getVisibleChoices(gameState);
         choices.addAll(getReservedChoices());
         return choices;
     }
 
-    protected List<CardChoice> getAffordableChoices(GameState gameState, GameRules gameRules) {
+    /**
+     * Returns all card choices that the bot can currently afford.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for affordability checks
+     * @return a list of affordable card choices
+     */
+    public List<CardChoice> getAffordableChoices(GameState gameState, GameRules gameRules) {
         List<CardChoice> choices = new ArrayList<>();
         List<CardChoice> allChoices = getAllChoices(gameState);
         for (CardChoice choice: allChoices) {
@@ -74,18 +134,38 @@ public abstract class Bot extends Player {
         return choices;
     }
 
-    protected CardChoice chooseRandomChoice(List<CardChoice> choices) {
+    /**
+     * Selects a random card choice from the given list.
+     *
+     * @param choices the list of card choices to pick from
+     * @return a randomly selected CardChoice, or null if the list is empty
+     */
+    public CardChoice chooseRandomChoice(List<CardChoice> choices) {
         if (choices.size() == 0) {
             return null;
         }
         return choices.get(random.nextInt(choices.size()));
     }
 
-    protected int getMissingGems(GameRules gameRules, Card card) {
+    /**
+     * Returns the number of gems the bot is missing to afford a card.
+     *
+     * @param gameRules the game rules for cost calculation
+     * @param card      the card to check
+     * @return the number of missing gems
+     */
+    public int getMissingGems(GameRules gameRules, Card card) {
         return gameRules.countMissingGems(this, card);
     }
 
-    protected int getDiscountedCostTotal(GameRules gameRules, Card card) {
+    /**
+     * Returns the total discounted cost of a card for this bot.
+     *
+     * @param gameRules the game rules for discount calculation
+     * @param card      the card to evaluate
+     * @return the total discounted gem cost
+     */
+    public int getDiscountedCostTotal(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int total = 0;
         for (GemColor color: GemColor.values()) {
@@ -97,7 +177,14 @@ public abstract class Bot extends Player {
         return total;
     }
 
-    protected int getWasteCount(GameRules gameRules, Card card) {
+    /**
+     * Counts how many of the bot's gems would be wasted (not needed) when buying a card.
+     *
+     * @param gameRules the game rules for cost calculation
+     * @param card      the card to evaluate
+     * @return the number of wasted gems
+     */
+    public int getWasteCount(GameRules gameRules, Card card) {
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
         int waste = 0;
         for (GemColor color: GemColor.values()) {
@@ -115,7 +202,13 @@ public abstract class Bot extends Player {
         return waste;
     }
 
-    protected int getBaseCostTotal(Card card) {
+    /**
+     * Returns the total base (undiscounted) cost of a card.
+     *
+     * @param card the card to evaluate
+     * @return the total base gem cost
+     */
+    public int getBaseCostTotal(Card card) {
         int total = 0;
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -126,7 +219,13 @@ public abstract class Bot extends Player {
         return total;
     }
 
-    protected Noble getClosestNoble(GameState gameState) {
+    /**
+     * Finds the noble closest to being claimable by this bot.
+     *
+     * @param gameState the current game state
+     * @return the closest Noble, or null if none are available
+     */
+    public Noble getClosestNoble(GameState gameState) {
         Noble best = null;
         int bestColors = Integer.MAX_VALUE;
         int bestBonuses = Integer.MAX_VALUE;
@@ -143,7 +242,13 @@ public abstract class Bot extends Player {
         return best;
     }
 
-    protected int countRemainingNobleColors(Noble noble) {
+    /**
+     * Counts how many bonus colors the bot still needs to claim a noble.
+     *
+     * @param noble the noble to check
+     * @return the number of remaining colors needed
+     */
+    public int countRemainingNobleColors(Noble noble) {
         int remaining = 0;
         Map<GemColor, Integer> bonus = calculateBonuses();
         for (Map.Entry<GemColor, Integer> entry: noble.getRequirements().entrySet()) {
@@ -154,7 +259,13 @@ public abstract class Bot extends Player {
         return remaining;
     }
 
-    protected int countRemainingNobleBonuses(Noble noble) {
+    /**
+     * Counts the total number of individual bonuses the bot still needs for a noble.
+     *
+     * @param noble the noble to check
+     * @return the total number of remaining bonus cards needed
+     */
+    public int countRemainingNobleBonuses(Noble noble) {
         int remaining = 0;
         Map<GemColor, Integer> bonus = calculateBonuses();
         for (Map.Entry<GemColor, Integer> entry: noble.getRequirements().entrySet()) {
@@ -165,7 +276,13 @@ public abstract class Bot extends Player {
         return remaining;
     }
 
-    protected List<GemColor> getNeededColorsForNoble(Noble noble) {
+    /**
+     * Returns the gem colors still needed to claim a noble.
+     *
+     * @param noble the noble to check (may be null)
+     * @return a list of GemColors still needed
+     */
+    public List<GemColor> getNeededColorsForNoble(Noble noble) {
         List<GemColor> colors = new ArrayList<>();
         if (noble == null) {
             return colors;
@@ -180,7 +297,14 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-    protected List<GemColor> getNeededColorsForCard(GameRules gameRules, Card card) {
+    /**
+     * Returns the gem colors the bot still needs to buy a specific card.
+     *
+     * @param gameRules the game rules for discount calculation
+     * @param card      the card to evaluate
+     * @return a list of GemColors still needed
+     */
+    public List<GemColor> getNeededColorsForCard(GameRules gameRules, Card card) {
         List<GemColor> colors = new ArrayList<>();
         Map<GemColor, Integer> cost = gameRules.getDiscountedCost(this, card);
 
@@ -208,13 +332,27 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-    protected void addColor(List<GemColor> colors, GemColor color) {
+    /**
+     * Adds a non-joker color to a list if it is not already present.
+     *
+     * @param colors the list to add to
+     * @param color  the GemColor to add
+     */
+    public void addColor(List<GemColor> colors, GemColor color) {
         if (!colors.contains(color) && !color.equals(GemColor.GOLD_JOKER)) {
             colors.add(color);
         }
     }
 
-    protected String buyChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
+    /**
+     * Executes a purchase action for the given card choice.
+     *
+     * @param choice    the card choice to buy
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the purchase result
+     */
+    public String buyChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success;
         if (choice.isReserved()) {
             success = GameActions.purchaseReservedCard(this, gameState, gameRules, choice.getIndex());
@@ -228,7 +366,15 @@ public abstract class Bot extends Player {
         return getName() + " bought " + describeChoice(choice) + ".";
     }
 
-    protected String reserveChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
+    /**
+     * Executes a reserve action for the given visible card choice.
+     *
+     * @param choice    the card choice to reserve
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the reserve result
+     */
+    public String reserveChoice(CardChoice choice, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveVisibleCard(this, gameState, gameRules, choice.getLevel(), choice.getIndex());
         if (!success) {
             return getName() + " could not reserve the target card.";
@@ -236,7 +382,15 @@ public abstract class Bot extends Player {
         return getName() + " reserved " + describeChoice(choice) + ".";
     }
 
-    protected String reserveHidden(int level, GameState gameState, GameRules gameRules) {
+    /**
+     * Reserves a hidden card from the top of a deck at the given level.
+     *
+     * @param level     the deck level (1, 2, or 3)
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the reserve result
+     */
+    public String reserveHidden(int level, GameState gameState, GameRules gameRules) {
         boolean success = GameActions.reserveHiddenCard(this, gameState, gameRules, level);
         if (!success) {
             return getName() + " could not reserve a hidden card.";
@@ -244,7 +398,13 @@ public abstract class Bot extends Player {
         return getName() + " reserved a hidden level " + level + " card.";
     }
 
-    protected List<GemColor> getAvailableColors(GameState gameState) {
+    /**
+     * Returns the list of non-joker gem colors that have stock in the bank.
+     *
+     * @param gameState the current game state
+     * @return a list of available GemColors
+     */
+    public List<GemColor> getAvailableColors(GameState gameState) {
         List<GemColor> colors = new ArrayList<>();
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -257,7 +417,14 @@ public abstract class Bot extends Player {
         return colors;
     }
 
-    protected void addWeight(Map<GemColor, Integer> weights, GemColor color, int amount) {
+    /**
+     * Adds a weight value to a color in the weights map.
+     *
+     * @param weights the map of color weights
+     * @param color   the GemColor to weight
+     * @param amount  the weight to add
+     */
+    public void addWeight(Map<GemColor, Integer> weights, GemColor color, int amount) {
         if (color == null || color.equals(GemColor.GOLD_JOKER)) {
             return;
         }
@@ -268,14 +435,29 @@ public abstract class Bot extends Player {
         weights.put(color, value + amount);
     }
 
-    protected int getWeight(Map<GemColor, Integer> weights, GemColor color) {
+    /**
+     * Returns the weight of a color from the weights map.
+     *
+     * @param weights the map of color weights
+     * @param color   the GemColor to look up
+     * @return the weight, or 0 if absent
+     */
+    public int getWeight(Map<GemColor, Integer> weights, GemColor color) {
         if (!weights.containsKey(color)) {
             return 0;
         }
         return weights.get(color);
     }
 
-    protected List<GemColor> getBestColors(Map<GemColor, Integer> weights, GameState gameState, int limit) {
+    /**
+     * Returns the best gem colors sorted by weight, limited to available colors in the bank.
+     *
+     * @param weights   the map of color weights
+     * @param gameState the current game state
+     * @param limit     the maximum number of colors to return
+     * @return a list of the best GemColors
+     */
+    public List<GemColor> getBestColors(Map<GemColor, Integer> weights, GameState gameState, int limit) {
         List<GemColor> available = getAvailableColors(gameState);
         List<GemColor> best = new ArrayList<>();
 
@@ -298,7 +480,15 @@ public abstract class Bot extends Player {
         return best;
     }
 
-    protected GemColor getBestDoubleColor(Map<GemColor, Integer> weights, GameState gameState, GameRules gameRules) {
+    /**
+     * Returns the best color for a take-two-same action based on weights.
+     *
+     * @param weights   the map of color weights
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return the best GemColor for doubling, or null if none qualify
+     */
+    public GemColor getBestDoubleColor(Map<GemColor, Integer> weights, GameState gameState, GameRules gameRules) {
         GemColor chosen = null;
         for (GemColor color: GemColor.values()) {
             if (color.equals(GemColor.GOLD_JOKER)) {
@@ -324,7 +514,15 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected String takeWeightedGemMove(GameState gameState, GameRules gameRules, Map<GemColor, Integer> weights) {
+    /**
+     * Takes gems using a weighted strategy, choosing between take-three and take-two.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @param weights   the map of color weights guiding the decision
+     * @return a description of the gem move taken
+     */
+    public String takeWeightedGemMove(GameState gameState, GameRules gameRules, Map<GemColor, Integer> weights) {
         List<GemColor> best = getBestColors(weights, gameState, 3);
         if (best.size() == 3 && gameRules.canTakeThreeDifferentGems(gameState.getGemBank())) {
             if (GameActions.takeThreeDifferent(this, gameState, gameRules, best)) {
@@ -349,7 +547,14 @@ public abstract class Bot extends Player {
         return fallbackRandomGemMove(gameState, gameRules);
     }
 
-    protected String fallbackRandomGemMove(GameState gameState, GameRules gameRules) {
+    /**
+     * Takes a random gem move as a fallback when no strategic option is available.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for validation
+     * @return a description of the gem move taken
+     */
+    public String fallbackRandomGemMove(GameState gameState, GameRules gameRules) {
         List<GemColor> available = getAvailableColors(gameState);
         Collections.shuffle(available, random);
 
@@ -383,7 +588,15 @@ public abstract class Bot extends Player {
         return getName() + " had no useful move.";
     }
 
-    protected List<CardChoice> getClosestChoices(GameState gameState, GameRules gameRules, int limit) {
+    /**
+     * Returns the closest cards (by missing gems) from all available choices.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for cost calculation
+     * @param limit     the maximum number of choices to return
+     * @return a list of the closest CardChoices
+     */
+    public List<CardChoice> getClosestChoices(GameState gameState, GameRules gameRules, int limit) {
         List<CardChoice> remaining = new ArrayList<>(getAllChoices(gameState));
         List<CardChoice> chosen = new ArrayList<>();
 
@@ -406,7 +619,14 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected GemColor chooseGemToReturn(GameState gameState, GameRules gameRules) {
+    /**
+     * Chooses which gem color to return when the bot exceeds the 10-gem limit.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for cost/noble checks
+     * @return the GemColor to return, or null if no gems can be returned
+     */
+    public GemColor chooseGemToReturn(GameState gameState, GameRules gameRules) {
         List<GemColor> important = new ArrayList<>();
         List<GemColor> nobleColors = getNeededColorsForNoble(getClosestNoble(gameState));
         for (GemColor color: nobleColors) {
@@ -447,7 +667,14 @@ public abstract class Bot extends Player {
         return chosen;
     }
 
-    protected String returnExtraGems(GameState gameState, GameRules gameRules) {
+    /**
+     * Returns extra gems to the bank until the bot is at or below 10 gems.
+     *
+     * @param gameState the current game state
+     * @param gameRules the game rules for gem limit checks
+     * @return a description of the gems returned, or an empty string if none
+     */
+    public String returnExtraGems(GameState gameState, GameRules gameRules) {
         List<GemColor> returned = new ArrayList<>();
         while (gameRules.mustReturnGems(this)) {
             GemColor color = chooseGemToReturn(gameState, gameRules);
@@ -467,6 +694,12 @@ public abstract class Bot extends Player {
         return "Returned " + formatColors(returned) + ".";
     }
 
+    /**
+     * Formats a list of gem colors as a comma-separated string.
+     *
+     * @param colors the list of GemColors to format
+     * @return a formatted string like "DIAMOND, RUBY, ONYX"
+     */
     protected String formatColors(List<GemColor> colors) {
         String result = "";
         for (int i = 0; i < colors.size(); i++) {
@@ -478,6 +711,12 @@ public abstract class Bot extends Player {
         return result;
     }
 
+    /**
+     * Returns a human-readable description of a card choice.
+     *
+     * @param choice the card choice to describe
+     * @return a string describing the choice
+     */
     protected String describeChoice(CardChoice choice) {
         if (choice.isReserved()) {
             return "reserved[" + choice.getIndex() + "] " + choice.getCard().toString();

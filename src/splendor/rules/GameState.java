@@ -25,7 +25,7 @@ public class GameState {
      * initial gems, and nobles.
      *
      * @param players the list of players in the game
-     * @param market the card market
+     * @param cardMarket the card market
      * @param initialGems the starting gems in the bank
      * @param initialNobles the starting available nobles
      * @param winningThreshold the number of points to win
@@ -112,6 +112,11 @@ public class GameState {
         return winningThreshold;
     }
 
+    /**
+     * Returns the current turn count.
+     *
+     * @return the number of turns elapsed
+     */
     public int getTurnCount() {
         return turnCount;
     }

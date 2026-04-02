@@ -7,15 +7,64 @@ import java.time.format.*;
 import java.util.*;
 import splendor.display.*;
 
+/**
+ * The Splendor game client that connects to a server over sockets.
+ * Handles player input, sends commands to the server, and displays
+ * server responses. Supports chat messages at any time by typing
+ * "CHAT: message" during the game.
+ */
 public class SplendorClient {
     // use localhost for testing on one machine
     // on the second computer, use the actual server IP
+
+    /**
+     * The IP address of the game server.
+     */
     private static final String SERVER_IP = "localhost"; 
-    private static final int SERVER_PORT = 9090;
+
+    /**
+     * The port number used to connect to the game server.
+     */
+    private static final int SERVER_PORT = 9091;
+
+    /**
+     * The display UI used to print game information.
+     */
     private DisplayUI displayUI = new DisplayUI();
+
+    /**
+     * Indicates whether the game has started.
+     */
     protected static volatile boolean gameStarted = false;
+
+    /**
+     * Indicates whether the client is waiting for a server response.
+     */
     protected static volatile boolean waitingForServer = false;
 
+    /**
+     * Indicates whether the player needs to return a gem (over 10 limit).
+     */
+    protected static volatile boolean needsToReturnGem = false;
+
+    /**
+     * The local player's name.
+     */
+    static String playerName = "";
+
+    /**
+     * Default constructor.
+     */
+    public SplendorClient() {}
+
+    /**
+     * Entry point for the Splendor client application.
+     * Connects to the server, prompts for name and birth date, then enters
+     * the lobby/game loop. Players can type "CHAT: message" at any input
+     * prompt to send a chat message to all players.
+     *
+     * @param args command-line arguments (not used)
+     */
     public static void main(String[] args) {
         try {
             Socket socket = new Socket(SERVER_IP, SERVER_PORT);
@@ -27,9 +76,6 @@ public class SplendorClient {
 
             ServerListener listenerThread = new ServerListener(in);
             listenerThread.start();
-            // first request for input is for player's name
-            // second request is for host player to START GAME
-            String playerName = null;
             LocalDate playerBirthDate = null;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -57,24 +103,31 @@ public class SplendorClient {
             while (true) {
                 if (!gameStarted) {
                     System.out.println("\n=============== WAITING LOBBY ===============");
-                    System.out.println("Type 'START GAME' if you are the youngest, or wait for the game to start. (I'll know if you are not the youngest...)");
+                    System.out.println("Type 'ADD BOT' to add a bot to the game.");
+                    System.out.println("Type 'CHAT: <message>' to send a chat message.");
+                    System.out.println("Type 'START GAME' if you are the youngest, or wait for the game to start.");
                     System.out.print("> ");
                     String startGame = scanner.nextLine();
-                    if (startGame.equalsIgnoreCase("START GAME")) {
+                    if (startGame.toUpperCase().startsWith("CHAT:")) {
+                        String chatMsg = startGame.substring(5).trim();
+                        out.println("CHAT:" + chatMsg);
+                    } else if (startGame.equalsIgnoreCase("ADD BOT")) {
+                        ClientInputHandler.promptAddBot(scanner, out);
+                    } else if (startGame.equalsIgnoreCase("START GAME")) {
                         out.println("START GAME");
                     }
                 }
                 else {
-                    // System.out.println("\n=============== YOUR TURN ===============");
-                    // System.out.println("1. Take 3 different gems");
-                    // System.out.println("2. Take 2 gems of the same color");
-                    // System.out.println("3. Purchase a card");
-                    // System.out.println("4. Reserve a card");
-                    // System.out.println("Type a number (1-4) or QUIT:");
-                    // System.out.print("> ");
                     DisplayUI.printActionMenu();
-                    
+                    System.out.println("  (Type 'CHAT: <message>' to chat anytime)");
                     String input = scanner.nextLine();
+
+                    // Allow chat at any time during the game
+                    if (input.toUpperCase().startsWith("CHAT:")) {
+                        String chatMsg = input.substring(5).trim();
+                        out.println("CHAT:" + chatMsg);
+                        continue;
+                    }
                     
                     if (input.equalsIgnoreCase("QUIT")) {
                         out.println("QUIT");
@@ -83,7 +136,7 @@ public class SplendorClient {
 
                     switch (input) {
                         case "1":
-                            List<String> chosenColors = promptTakeThreeDifferent(scanner);
+                            List<String> chosenColors = ClientInputHandler.promptTakeThreeDifferent(scanner);
                             if (chosenColors == null) {
                                 break; 
                             }
@@ -92,7 +145,7 @@ public class SplendorClient {
                             break;
                             
                         case "2":
-                            String chosenColor = promptTakeTwoSame(scanner);
+                            String chosenColor = ClientInputHandler.promptTakeTwoSame(scanner);
                             if (chosenColor == null) {
                                 break; 
                             }
@@ -101,7 +154,7 @@ public class SplendorClient {
                             break;
                             
                         case "3":
-                            String purchaseData = promptPurchase(scanner);
+                            String purchaseData = ClientInputHandler.promptPurchase(scanner);
                             if (purchaseData == null) {
                                 break;
                             }
@@ -110,7 +163,7 @@ public class SplendorClient {
                             break;
                             
                         case "4":
-                            String reserveData = promptReserve(scanner);
+                            String reserveData = ClientInputHandler.promptReserve(scanner);
                             if (reserveData == null) {
                                 break;
                             }
@@ -122,120 +175,36 @@ public class SplendorClient {
                             System.out.println("Invalid choice. Please type 1, 2, 3, or 4.");
                             break;
                     }
+
                     while (waitingForServer) {
                         try {
-                            Thread.sleep(50);
+                            Thread.sleep(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                             System.out.println("The server was interrupted.");
                         }
                     }
+
+                    if (needsToReturnGem) {
+                        System.out.println("You have exceeded the 10 gem limit!");
+                        System.out.print("Enter a gem color to return: ");
+                        
+                        if (!scanner.hasNextLine()) {
+                            break;
+                        }
+                        String colorToReturn = scanner.nextLine();
+                        
+                        waitingForServer = true;
+                        needsToReturnGem = false;
+                        out.println("RETURN GEM:" + colorToReturn);
+                        continue;
+                    }
                 }
             }
-
             socket.close();
             scanner.close();
-
         } catch (IOException e) {
-            System.out.println("Could not connect to server: " + e.getMessage());
+            System.out.println(e.getMessage());
         }
-    }
-
-    private static List<String> promptTakeThreeDifferent(Scanner scanner) {
-        List<String> takenColors = new ArrayList<>();
-        List<String> validColors = Arrays.asList("DIAMOND", "SAPPHIRE", "EMERALD", "RUBY", "ONYX");
-
-        while (takenColors.size() < 3) {
-            System.out.print("Colour to take (Diamond, Sapphire, Emerald, Ruby, Onyx) [\"back\" to return]: ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("back")) {
-                return null;
-            }
-
-            String color = input.toUpperCase();
-
-            if (!validColors.contains(color)) {
-                System.out.println("Invalid input! Please enter a valid gem color.");
-                continue;
-            }
-
-            if (takenColors.contains(color)) {
-                System.out.println("Already taken! You must choose 3 DIFFERENT colors.");
-                continue;
-            }
-
-            takenColors.add(color);
-        }
-        
-        return takenColors;
-    }
-
-    private static String promptTakeTwoSame(Scanner scanner) {
-        List<String> validColors = Arrays.asList("DIAMOND", "SAPPHIRE", "EMERALD", "RUBY", "ONYX");
-
-        while (true) {
-            System.out.print("Colour to take 2 of (Diamond, Sapphire, Emerald, Ruby, Onyx) [\"back\" to return]: ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("back")) {
-                return null;
-            }
-
-            String color = input.toUpperCase();
-
-            if (!validColors.contains(color)) {
-                System.out.println("Invalid input! Please enter a valid gem color.");
-                continue;
-            }
-            return color; 
-        }
-    }
-
-    private static String promptPurchase(Scanner scanner) {
-        while (true) {
-            System.out.print("From table or from reserved? [\"back\" to return]: ");
-            String choice = scanner.nextLine().trim();
-
-            if (choice.equalsIgnoreCase("back")) {
-                return null;
-            }
-
-            if (choice.equalsIgnoreCase("reserved")) {
-                System.out.print("Which reserved card number (0, 1, or 2)? [\"back\" to return]: ");
-                String res = scanner.nextLine().trim();
-                if (res.equalsIgnoreCase("back")) return null;
-                
-                return "RESERVED:" + res; 
-
-            } else if (choice.equalsIgnoreCase("table") || choice.equalsIgnoreCase("board")) {
-                System.out.print("Which deck level (1-3)? [\"back\" to return]: ");
-                String levelStr = scanner.nextLine().trim();
-                if (levelStr.equalsIgnoreCase("back")) return null;
-
-                System.out.print("Which card index (0-3)? [\"back\" to return]: ");
-                String indexStr = scanner.nextLine().trim();
-                if (indexStr.equalsIgnoreCase("back")) return null;
-
-                return levelStr + ":" + indexStr;
-            } else {
-                System.out.println("Invalid choice. Please type 'table' or 'reserved'.");
-            }
-        }
-    }
-
-
-    private static String promptReserve(Scanner scanner) {
-        while (true) {
-            System.out.print("Which deck level to reserve from (1-3)? [\"back\" to return]: ");
-            String levelStr = scanner.nextLine().trim();
-            if (levelStr.equalsIgnoreCase("back")) return null;
-
-            System.out.print("Which card index (0-3, or 4 for random draw)? [\"back\" to return]: ");
-            String indexStr = scanner.nextLine().trim();
-            if (indexStr.equalsIgnoreCase("back")) return null;
-
-            return levelStr + ":" + indexStr;
-        }
-    }
+    } 
 }
