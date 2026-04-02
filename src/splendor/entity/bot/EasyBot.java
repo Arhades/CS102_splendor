@@ -28,7 +28,11 @@ public class EasyBot extends Bot {
      * @return a description of the move chosen
      */
     @Override
+<<<<<<< Updated upstream:src/splendor/entity/bot/EasyBot.java
     protected String chooseMove(GameState gameState, GameRules gameRules) {
+=======
+    public String chooseMove(BotGameState gameState, BotGameRules gameRules) {
+>>>>>>> Stashed changes:EasyBot.java
         List<GemColor> preferredColors = getPreferredBonusColors(gameState);
         List<CardChoice> affordable = getAffordableChoices(gameState, gameRules);
 
@@ -64,6 +68,7 @@ public class EasyBot extends Bot {
         return getName() + " had no useful move.";
     }
 
+<<<<<<< Updated upstream:src/splendor/entity/bot/EasyBot.java
     /**
      * Returns the bot's preferred bonus colors based on noble needs or visible cards.
      *
@@ -71,6 +76,9 @@ public class EasyBot extends Bot {
      * @return a list of preferred GemColors
      */
     private List<GemColor> getPreferredBonusColors(GameState gameState) {
+=======
+    public List<GemColor> getPreferredBonusColors(BotGameState gameState) {
+>>>>>>> Stashed changes:EasyBot.java
         List<GemColor> colors = getNeededColorsForNoble(getClosestNoble(gameState));
         if (colors.size() > 0) {
             return colors;
@@ -87,6 +95,7 @@ public class EasyBot extends Bot {
         return fallback;
     }
 
+<<<<<<< Updated upstream:src/splendor/entity/bot/EasyBot.java
     /**
      * Returns the cheapest affordable card from the given choices by discounted cost and waste.
      *
@@ -95,6 +104,9 @@ public class EasyBot extends Bot {
      * @return the cheapest CardChoice
      */
     private CardChoice getCheapestAffordableCard(List<CardChoice> choices, GameRules gameRules) {
+=======
+    public CardChoice getCheapestAffordableCard(List<CardChoice> choices, BotGameRules gameRules) {
+>>>>>>> Stashed changes:EasyBot.java
         int bestCost = Integer.MAX_VALUE;
         int bestWaste = Integer.MAX_VALUE;
         List<CardChoice> bestChoices = new ArrayList<>();
@@ -121,6 +133,7 @@ public class EasyBot extends Bot {
         return chooseRandomChoice(bestChoices);
     }
 
+<<<<<<< Updated upstream:src/splendor/entity/bot/EasyBot.java
     /**
      * Chooses a visible card to reserve that matches preferred colors and is closest to affordable.
      *
@@ -130,6 +143,9 @@ public class EasyBot extends Bot {
      * @return the best CardChoice to reserve, or null if none
      */
     private CardChoice getReserveChoice(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
+=======
+    public CardChoice getReserveChoice(BotGameState gameState, BotGameRules gameRules, List<GemColor> preferredColors) {
+>>>>>>> Stashed changes:EasyBot.java
         List<CardChoice> visible = getVisibleChoices(gameState);
         List<CardChoice> matching = new ArrayList<>();
 
@@ -154,6 +170,7 @@ public class EasyBot extends Bot {
         return chosen;
     }
 
+<<<<<<< Updated upstream:src/splendor/entity/bot/EasyBot.java
     /**
      * Chooses a gem-taking move based on weighted color preferences.
      *
@@ -163,6 +180,9 @@ public class EasyBot extends Bot {
      * @return a description of the gem move taken, or empty string if none possible
      */
     private String chooseGemMove(GameState gameState, GameRules gameRules, List<GemColor> preferredColors) {
+=======
+    public String chooseGemMove(BotGameState gameState, BotGameRules gameRules, List<GemColor> preferredColors) {
+>>>>>>> Stashed changes:EasyBot.java
         Map<GemColor, Integer> weights = new HashMap<>();
         List<CardChoice> visible = getVisibleChoices(gameState);
         List<CardChoice> targets = new ArrayList<>();

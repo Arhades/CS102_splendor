@@ -195,12 +195,15 @@ public final class GameActions {
         }
     }
 
+<<<<<<< Updated upstream:src/splendor/rules/GameActions.java
     /**
      * Gives a gold joker gem to a player from the bank, if any are available.
      *
      * @param player    the player to receive the joker
      * @param gameState the current game state
      */
+=======
+>>>>>>> Stashed changes:GameActions.java
     public static void giveGoldJoker(Player player, GameState gameState) {
         if (gameState.getGemBank().getCount(GemColor.GOLD_JOKER) < 1) {
             return;
